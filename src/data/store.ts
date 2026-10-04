@@ -5,39 +5,16 @@
  * Hisselerim tarayıcıda saklanır; BIST ve ABD listeleri ayrıdır.
  */
 
+import { createStorage } from '@fintools/shared/storage';
 import type { Industry, MarketData, MarketId, PriceSeries, Stock, StockView } from '../types.ts';
 
 export const MARKETS: MarketId[] = ['BIST', 'US'];
 export const MARKET_LABEL: Record<MarketId, string> = { BIST: 'BIST', US: 'ABD' };
 
-const LS_PREFIX = 'finsights.';
-
 /* ---------- Kalıcı küçük ayarlar ---------- */
 
-export function lsGet<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(LS_PREFIX + key);
-    return raw == null ? fallback : (JSON.parse(raw) as T);
-  } catch {
-    return fallback;
-  }
-}
-
-export function lsSet(key: string, value: unknown): void {
-  try {
-    localStorage.setItem(LS_PREFIX + key, JSON.stringify(value));
-  } catch {
-    /* özel pencere ya da dolu depolama: ayar bu oturumla sınırlı kalır */
-  }
-}
-
-export function lsRemove(key: string): void {
-  try {
-    localStorage.removeItem(LS_PREFIX + key);
-  } catch {
-    /* yok say */
-  }
-}
+export const storage = createStorage('finsights.');
+export const { lsGet, lsSet, lsRemove } = storage;
 
 /* ---------- Olaylar ---------- */
 
