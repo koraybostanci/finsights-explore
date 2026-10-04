@@ -18,8 +18,8 @@ class ConfigError(Exception):
 
 @dataclass(frozen=True)
 class StockSpec:
-    k: str
-    ad: str
+    symbol: str
+    name: str
     market: str
     industry: str
     bank: bool = False
@@ -31,13 +31,13 @@ class StockSpec:
     note_as_of: str | None = None
 
     @property
-    def cur(self) -> str:
+    def currency(self) -> str:
         return CURRENCY[self.market]
 
     @property
     def sid(self) -> str:
         """Id used in file names and by the app: BIST-THYAO, US-AAPL."""
-        return f"{self.market}-{self.k}"
+        return f"{self.market}-{self.symbol}"
 
 
 @dataclass(frozen=True)
@@ -59,11 +59,11 @@ def _schema_errors(doc: Any, schema_path: Path) -> list[str]:
     return out
 
 
-def default_symbols(market: str, k: str) -> tuple[str, str]:
+def default_symbols(market: str, symbol: str) -> tuple[str, str]:
     """(TradingView symbol, Yahoo symbol) when the file does not say otherwise."""
     if market == "BIST":
-        return f"BIST:{k}", f"{k}.IS"
-    return "", k  # US: the exchange cannot be guessed, 'tv' is required by the schema
+        return f"BIST:{symbol}", f"{symbol}.IS"
+    return "", symbol  # US: the exchange cannot be guessed, 'tv' is required by the schema
 
 
 def parse_universe(doc: Any, schema_path: Path | None = None) -> Universe:
@@ -76,17 +76,17 @@ def parse_universe(doc: Any, schema_path: Path | None = None) -> Universe:
     specs: list[StockSpec] = []
     seen: set[tuple[str, str]] = set()
     for i, s in enumerate(doc["stocks"]):
-        label = f"stocks[{i}] {s['market']}:{s['k']}"
-        if (s["market"], s["k"]) in seen:
+        label = f"stocks[{i}] {s['market']}:{s['symbol']}"
+        if (s["market"], s["symbol"]) in seen:
             problems.append(f"{label}: duplicate ticker in the same market")
-        seen.add((s["market"], s["k"]))
+        seen.add((s["market"], s["symbol"]))
         if s["industry"] not in industries:
             problems.append(f"{label}: unknown industry '{s['industry']}'")
         if ("note" in s) != ("noteAsOf" in s):
             problems.append(f"{label}: 'note' and 'noteAsOf' go together")
         if s.get("bank") and s["market"] != "BIST":
             problems.append(f"{label}: 'bank' is BIST-only (no US banks in the universe)")
-        tv_default, yf_default = default_symbols(s["market"], s["k"])
+        tv_default, yf_default = default_symbols(s["market"], s["symbol"])
         tv = s.get("tv", tv_default)
         if s["market"] == "BIST" and not tv.startswith("BIST:"):
             problems.append(f"{label}: BIST stocks must use a BIST: TradingView symbol, got '{tv}'")
@@ -94,8 +94,8 @@ def parse_universe(doc: Any, schema_path: Path | None = None) -> Universe:
             problems.append(f"{label}: US stock with a BIST: TradingView symbol")
         specs.append(
             StockSpec(
-                k=s["k"],
-                ad=s["ad"],
+                symbol=s["symbol"],
+                name=s["name"],
                 market=s["market"],
                 industry=s["industry"],
                 bank=bool(s.get("bank", False)),

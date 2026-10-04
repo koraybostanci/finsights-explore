@@ -8,7 +8,7 @@ from typing import Any, Mapping
 
 from .util import clean_number
 
-FIELDS: tuple[tuple[str, str], ...] = (("fk", "F/K"), ("pd", "PD/DD"), ("fdf", "FD/FAVÖK"))
+FIELDS: tuple[tuple[str, str], ...] = (("pe", "F/K"), ("pb", "PD/DD"), ("evEbitda", "FD/FAVÖK"))
 BIG_GAP = 25.0  # percent; gaps beyond this are counted in the summary
 
 
@@ -39,12 +39,12 @@ def _gap(x: float | None) -> str:
 
 def build_compare(doc: Mapping[str, Any], reference: Mapping[str, Any]) -> CompareResult:
     ref_stocks: Mapping[str, Mapping[str, Any]] = reference.get("stocks", {})
-    new_by_k = {s["k"]: s for s in doc.get("stocks", []) if s.get("market") == reference.get("market", "BIST")}
+    new_by_symbol = {s["symbol"]: s for s in doc.get("stocks", []) if s.get("market") == reference.get("market", "BIST")}
 
     rows: list[dict[str, Any]] = []
     for k, ref in ref_stocks.items():
-        new = new_by_k.get(k)
-        row: dict[str, Any] = {"k": k, "present": new is not None}
+        new = new_by_symbol.get(k)
+        row: dict[str, Any] = {"symbol": k, "present": new is not None}
         for key, _label in FIELDS:
             n = new.get(key) if new else None
             row[key] = {"ref": ref.get(key), "new": n, "gap": gap_pct(n, ref.get(key))}
@@ -74,7 +74,7 @@ def build_compare(doc: Mapping[str, Any], reference: Mapping[str, Any]) -> Compa
     header = ["Stock"] + [f"{label} ref | {label} new | gap" for _k, label in FIELDS]
     lines += ["", "| " + " | ".join(header) + " |", "|---|" + "---:|" * (3 * len(FIELDS))]
     for r in rows:
-        cells = [r["k"] if r["present"] else f"{r['k']} (missing)"]
+        cells = [r["symbol"] if r["present"] else f"{r['symbol']} (missing)"]
         for key, _label in FIELDS:
             cells += [_num(r[key]["ref"]), _num(r[key]["new"]), _gap(r[key]["gap"])]
         lines.append("| " + " | ".join(cells) + " |")
