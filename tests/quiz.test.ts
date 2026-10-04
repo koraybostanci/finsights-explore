@@ -41,13 +41,20 @@ test('hazır soru bankası: biçim, tekil kimlikler, her konu', () => {
   for (const t of Object.keys(TOPICS)) assert.ok(topics.has(t as keyof typeof TOPICS), `${t} konusunda soru var`);
 });
 
+test('dönüş yerleri: her sorunun sekme kimliği uygulamadaki bir sekmedir', () => {
+  // main.ts TABS ile aynı kimlikler
+  const tabs = new Set(['stories', 'multiples', 'glossary', 'steps', 'screener', 'banks', 'calculator', 'quiz', 'settings']);
+  const refs = [...BANK.map((q) => q.ref), ...Object.values(TOPICS).map((t) => t.ref), ...dataQuestions('BIST', views).map((q) => q.ref)];
+  for (const ref of refs) assert.ok(tabs.has(ref.tab), `bilinmeyen sekme: ${ref.tab}`);
+});
+
 test('veri soruları: yalnız istenen piyasa, verisi olan hisseler, iyi biçim', () => {
   const qs = dataQuestions('BIST', views);
   assert.ok(qs.length > 50);
   assert.equal(new Set(qs.map((q) => q.id)).size, qs.length);
   qs.forEach(assertWellFormed);
   assert.ok(qs.every((q) => q.market === 'BIST' && q.kind === 'data'));
-  const usTickers = new Set(us.map((s) => s.k));
+  const usTickers = new Set(us.map((s) => s.symbol));
   assert.ok(qs.every((q) => !q.ticker || !usTickers.has(q.ticker)));
   assert.equal(dataQuestions('US', views).length, 0);
   assert.equal(dataCount('US', views), 0);
@@ -58,7 +65,7 @@ test('veri soruları: sonuç sorusunun yanıtı tarama kurallarıyla aynı', () 
   const qs = dataQuestions('BIST', bist).filter((q) => templateOf(q) === 'verdict');
   assert.equal(qs.length, 25);
   for (const q of qs) {
-    const s = bist.find((x) => x.k === q.ticker);
+    const s = bist.find((x) => x.symbol === q.ticker);
     assert.ok(s);
     const label = VLABEL[evaluate(s, DEF).verdict];
     assert.ok(q.options[q.correct].startsWith(label), `${q.ticker}: ${q.options[q.correct]} ≠ ${label}`);

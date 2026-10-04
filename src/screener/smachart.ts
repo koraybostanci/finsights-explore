@@ -44,15 +44,15 @@ const r1 = (v: number): number => Math.round(v * 10) / 10;
 export function seriesUsable(series: PriceSeries | null | undefined): series is PriceSeries {
   return (
     !!series &&
-    series.c.length >= 2 &&
-    series.c.length === series.t.length &&
-    series.c.every((v) => typeof v === 'number' && Number.isFinite(v))
+    series.closes.length >= 2 &&
+    series.closes.length === series.dates.length &&
+    series.closes.every((v) => typeof v === 'number' && Number.isFinite(v))
   );
 }
 
 export function smaChartModel(series: PriceSeries, W: number, win = SMA_WINDOW): SmaChartModel | null {
   if (!seriesUsable(series) || !(W > 0)) return null;
-  const c = series.c;
+  const c = series.closes;
   const n = c.length;
   const start = Math.max(0, n - win);
   const end = n - 1;
@@ -94,8 +94,8 @@ export function smaChartModel(series: PriceSeries, W: number, win = SMA_WINDOW):
   // Ay başları: ocakta yıl, diğer aylarda ay adı
   const marks: Array<{ i: number; x: number; text: string }> = [];
   for (let i = start + 1; i <= end; i++) {
-    const cur = series.t[i].slice(0, 7);
-    if (cur !== series.t[i - 1].slice(0, 7)) {
+    const cur = series.dates[i].slice(0, 7);
+    if (cur !== series.dates[i - 1].slice(0, 7)) {
       const mo = Number(cur.slice(5, 7));
       marks.push({ i, x: r1(X(i)), text: mo === 1 ? cur.slice(0, 4) : (MONTHS[mo - 1] ?? cur) });
     }

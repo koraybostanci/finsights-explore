@@ -21,11 +21,11 @@ export function fold(text: string): string {
 }
 
 /** Düşük sayı daha iyi eşleşme; eşleşme yoksa -1. */
-export function matchRank(s: { k: string; ad: string }, query: string): number {
+export function matchRank(s: { symbol: string; name: string }, query: string): number {
   const q = fold(query);
   if (!q) return -1;
-  const k = fold(s.k);
-  const ad = fold(s.ad);
+  const k = fold(s.symbol);
+  const ad = fold(s.name);
   const hay = `${k} ${ad}`;
   const tokens = q.split(' ');
   if (!tokens.every((t) => hay.includes(t))) return -1;
@@ -45,7 +45,7 @@ export function searchUniverse(universe: StockView[], query: string, limit = 8):
   return universe
     .map((s) => ({ s, r: matchRank(s, query) }))
     .filter((x) => x.r >= 0)
-    .sort((a, b) => a.r - b.r || a.s.k.localeCompare(b.s.k, 'tr'))
+    .sort((a, b) => a.r - b.r || a.s.symbol.localeCompare(b.s.symbol, 'tr'))
     .slice(0, limit)
     .map((x) => x.s);
 }
@@ -59,5 +59,5 @@ export const removeTicker = (list: string[], k: string): string[] => list.filter
 /** Evrende olup listede olmayan hisseler (yeniden eklenebilecekler), sembol sırasıyla. */
 export function notInList(universe: StockView[], list: string[]): StockView[] {
   const have = new Set(list);
-  return universe.filter((s) => !have.has(s.k)).sort((a, b) => a.k.localeCompare(b.k, 'tr'));
+  return universe.filter((s) => !have.has(s.symbol)).sort((a, b) => a.symbol.localeCompare(b.symbol, 'tr'));
 }

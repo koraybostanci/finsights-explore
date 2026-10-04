@@ -13,7 +13,7 @@ import type { MarketData, StockView } from '../src/types.ts';
 const DATA = JSON.parse(readFileSync(new URL('./fixtures/market.json', import.meta.url), 'utf8')) as MarketData;
 const views: StockView[] = DATA.stocks.map((s) => toView(s, DATA.industries));
 const view = (k: string): StockView => {
-  const v = views.find((s) => s.k === k);
+  const v = views.find((s) => s.symbol === k);
   assert.ok(v, `${k} veride yok`);
   return v;
 };
@@ -65,8 +65,8 @@ test('trend', () => {
 
 test('toView türetilmiş alanları hesaplar', () => {
   const t = view('THYAO');
-  assert.equal(t.sek, 'Havayolu');
-  assert.equal(t.sekEn, 'Airlines');
+  assert.equal(t.industryTr, 'Havayolu');
+  assert.equal(t.industryEn, 'Airlines');
   assert.equal(t.cyclical, true);
   assert.equal(t.hasData, true);
   assert.ok(t.roe != null && Math.abs(t.roe - 11.11) < 0.01);
@@ -84,7 +84,7 @@ test('evaluate ilk sürümle aynı sonuçları verir (2 Ekim 2026 verisi)', () =
   const thy = evaluate(view('THYAO'), DEF);
   assert.equal(thy.verdict, 'bad');
   assert.deepEqual(
-    thy.checks.map((c) => `${c.st}: ${c.s}`),
+    thy.checks.map((c) => `${c.status}: ${c.short}`),
     [
       'good: Kârlı',
       'good: F/K 3,6 ≤ 30',
@@ -102,45 +102,46 @@ test('evaluate ilk sürümle aynı sonuçları verir (2 Ekim 2026 verisi)', () =
 test('evaluate: verisi olmayan hisse ve banka', () => {
   const vz = evaluate(view('VZ'), DEF);
   assert.equal(vz.verdict, 'na');
-  assert.equal(vz.checks[0].s, 'Veri bekliyor');
+  assert.equal(vz.checks[0].short, 'Veri bekliyor');
   const gar = evaluate(view('GARAN'), DEF);
   assert.equal(gar.verdict, 'na');
-  assert.equal(gar.checks[0].n, 'Banka');
+  assert.equal(gar.checks[0].id, 'bank');
+  assert.equal(gar.checks[0].label, 'Banka');
 });
 
 test('cellColor', () => {
-  assert.equal(cellColor('fk', 10, DEF), 'v-good');
-  assert.equal(cellColor('fk', 40, DEF), 'v-bad');
+  assert.equal(cellColor('pe', 10, DEF), 'v-good');
+  assert.equal(cellColor('pe', 40, DEF), 'v-bad');
   assert.equal(cellColor('peg', 0.07, DEF), 'v-warn');
   assert.equal(cellColor('peg', -0.2, DEF), 'v-bad');
-  assert.equal(cellColor('pd', 0.4, DEF), 'v-good');
-  assert.equal(cellColor('pd', 2, DEF), '');
-  assert.equal(cellColor('nb', null, DEF), '');
+  assert.equal(cellColor('pb', 0.4, DEF), 'v-good');
+  assert.equal(cellColor('pb', 2, DEF), '');
+  assert.equal(cellColor('netDebtEbitda', null, DEF), '');
 });
 
 test('industryMedian ve groupByIndustry', () => {
-  const air = views.filter((s) => s.market === 'BIST' && s.ind === 'airlines');
+  const air = views.filter((s) => s.market === 'BIST' && s.industry === 'airlines');
   const m = industryMedian(air);
   assert.equal(m.n, 2);
-  assert.equal(m.fk, 3.6);
-  assert.ok(m.pd != null && Math.abs(m.pd - 0.515) < 1e-9);
+  assert.equal(m.pe, 3.6);
+  assert.ok(m.pb != null && Math.abs(m.pb - 0.515) < 1e-9);
   const groups = groupByIndustry(views.filter((s) => s.market === 'BIST' && !s.bank));
   assert.ok(groups.length >= 15);
-  assert.ok(groups.every((g) => g.stocks.every((s) => s.ind === g.ind)));
+  assert.ok(groups.every((g) => g.stocks.every((s) => s.industry === g.industry)));
 });
 
 test('evaluate: boş F/K zarar mı, eksik veri mi ayrılır', () => {
   const pg = view('PGSUS');
   assert.equal(pg.loss, true);
-  assert.equal(evaluate(pg, DEF).checks[0].s, 'Zarar ediyor (son 12 ay)');
-  assert.equal(evaluate(pg, DEF).checks[0].st, 'bad');
+  assert.equal(evaluate(pg, DEF).checks[0].short, 'Zarar ediyor (son 12 ay)');
+  assert.equal(evaluate(pg, DEF).checks[0].status, 'bad');
   // Aynı hisse, zarar bilgisi olmadan: kaynak F/K vermemiş olabilir, zarar denmez
   const unknown = evaluate({ ...pg, loss: undefined }, DEF);
-  assert.equal(unknown.checks[0].s, 'F/K verisi yok');
-  assert.equal(unknown.checks[0].st, 'warn');
+  assert.equal(unknown.checks[0].short, 'F/K verisi yok');
+  assert.equal(unknown.checks[0].status, 'warn');
   // Seed verisinde F/K'sı boş olan her banka dışı BIST hissesi zarar olarak işaretlidir
-  const blank = views.filter((s) => s.market === 'BIST' && !s.bank && s.hasData && s.fk == null);
-  assert.deepEqual(blank.map((s) => s.k).sort(), ['EKGYO', 'PETKM', 'PGSUS', 'SASA']);
+  const blank = views.filter((s) => s.market === 'BIST' && !s.bank && s.hasData && s.pe == null);
+  assert.deepEqual(blank.map((s) => s.symbol).sort(), ['EKGYO', 'PETKM', 'PGSUS', 'SASA']);
   assert.ok(blank.every((s) => s.loss === true));
 });
 

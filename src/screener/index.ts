@@ -67,7 +67,7 @@ const state = {
   market: (isMarket(savedMarket) ? savedMarket : 'BIST') as MarketId,
   view: (isView(savedView) ? savedView : 'peers') as ViewId,
   /** Piyasa başına son seçilen sektör */
-  ind: (savedInd && typeof savedInd === 'object' ? { ...savedInd } : {}) as Partial<Record<MarketId, string>>,
+  industry: (savedInd && typeof savedInd === 'object' ? { ...savedInd } : {}) as Partial<Record<MarketId, string>>,
   /** Yalnız fiyatı 200 günlük ortalamanın üstünde olanlar */
   aboveSma: lsGet<unknown>('screener.aboveSma', false) === true,
   sort: { peers: { key: 'verdict', dir: 1 }, list: { key: 'verdict', dir: 1 } } as Record<ViewId, SortState>,
@@ -106,13 +106,13 @@ const priceDate = (): string => {
 
 const smaChartId = (id: string): string => `sc-sma-${id}`;
 
-const showBanks = (th: Thresholds): boolean => th.bank && state.market === 'BIST' && state.view === 'list';
+const showBanks = (th: Thresholds): boolean => th.showBanks && state.market === 'BIST' && state.view === 'list';
 
 const compareKey = (ind: string): string => `${state.market}:${ind}`;
 
 /** Bir hissenin kendi piyasasındaki sektör arkadaşları (kendisi dahil) */
 function peersOf(s: StockView): StockView[] {
-  return stocks(s.market, { banks: s.bank ? 'only' : 'exclude' }).filter((x) => x.ind === s.ind);
+  return stocks(s.market, { banks: s.bank ? 'only' : 'exclude' }).filter((x) => x.industry === s.industry);
 }
 
 /* ---------- Sabit iskelet ---------- */
@@ -139,12 +139,12 @@ ${seg('data-view', [['peers', 'Sektör kıyası'], ['list', 'Tüm liste']], 'Gö
 </div>
 <p class="read" id="sc-intro"></p>
 <div class="controls" id="sc-ctl">
-<div class="ctl"><label for="sc-fk">En yüksek F/K <span class="en">(P/E)</span></label><input type="number" id="sc-fk" step="1" min="1" value="${th.fk}"><small>Kârın kaç yılda fiyatı geri ödediği.</small></div>
-<div class="ctl"><label for="sc-peg">En yüksek PEG</label><input type="number" id="sc-peg" step="0.1" min="0.1" value="${th.peg}"><small>1'in altı: büyümesine göre ucuz.</small></div>
-<div class="ctl"><label for="sc-nb">En yüksek Net borç/FAVÖK <span class="en">(Net debt/EBITDA)</span></label><input type="number" id="sc-nb" step="0.5" min="0" value="${th.nb}"><small>Borcu kaç yıllık faaliyet kârıyla öder.</small></div>
-<div class="ctl"><label for="sc-fg">En düşük FAVÖK büy.&nbsp;% <span class="en">(EBITDA growth)</span></label><input type="number" id="sc-fg" step="5" value="${th.fg}"><small>Faaliyetten gelen büyüme.</small></div>
-<div class="ctl check"><input type="checkbox" id="sc-cyc"${th.cyc ? ' checked' : ''}><label for="sc-cyc">Döngüsel sektörleri uyar<br><small>Emtia, rafineri, metal, havayolu.</small></label></div>
-<div class="ctl check" id="sc-bank-ctl"><input type="checkbox" id="sc-bank"${th.bank ? ' checked' : ''}><label for="sc-bank">Bankaları listede göster<br><small>Ayrı yöntemle değerlendirilir.</small></label></div>
+<div class="ctl"><label for="sc-max-pe">En yüksek F/K <span class="en">(P/E)</span></label><input type="number" id="sc-max-pe" step="1" min="1" value="${th.maxPe}"><small>Kârın kaç yılda fiyatı geri ödediği.</small></div>
+<div class="ctl"><label for="sc-max-peg">En yüksek PEG</label><input type="number" id="sc-max-peg" step="0.1" min="0.1" value="${th.maxPeg}"><small>1'in altı: büyümesine göre ucuz.</small></div>
+<div class="ctl"><label for="sc-max-net-debt-ebitda">En yüksek Net borç/FAVÖK <span class="en">(Net debt/EBITDA)</span></label><input type="number" id="sc-max-net-debt-ebitda" step="0.5" min="0" value="${th.maxNetDebtEbitda}"><small>Borcu kaç yıllık faaliyet kârıyla öder.</small></div>
+<div class="ctl"><label for="sc-min-ebitda-growth">En düşük FAVÖK büy.&nbsp;% <span class="en">(EBITDA growth)</span></label><input type="number" id="sc-min-ebitda-growth" step="5" value="${th.minEbitdaGrowth}"><small>Faaliyetten gelen büyüme.</small></div>
+<div class="ctl check"><input type="checkbox" id="sc-warn-cyclical"${th.warnCyclical ? ' checked' : ''}><label for="sc-warn-cyclical">Döngüsel sektörleri uyar<br><small>Emtia, rafineri, metal, havayolu.</small></label></div>
+<div class="ctl check" id="sc-show-banks-ctl"><input type="checkbox" id="sc-show-banks"${th.showBanks ? ' checked' : ''}><label for="sc-show-banks">Bankaları listede göster<br><small>Ayrı yöntemle değerlendirilir.</small></label></div>
 <div class="ctl check"><input type="checkbox" id="sc-sma"${state.aboveSma ? ' checked' : ''}><label for="sc-sma">200 günlük ortalamanın üstünde <span class="en">(Above SMA 200)</span><small>Fiyat uzun vadeli ortalamasının üzerinde.</small></label></div>
 <div class="ctl"><button class="btn" id="sc-reset" type="button">Varsayılan eşikler</button></div>
 </div>
@@ -165,7 +165,7 @@ function syncChrome(): void {
     intro.innerHTML = INTRO[state.view];
     intro.dataset.view = state.view;
   }
-  const bank = q('#sc-bank-ctl');
+  const bank = q('#sc-show-banks-ctl');
   if (bank) bank.hidden = !(state.market === 'BIST' && state.view === 'list');
 }
 
@@ -184,12 +184,12 @@ function syncControls(force = false): void {
     const el = q<HTMLInputElement>('#' + id);
     if (el && el.checked !== v) el.checked = v;
   };
-  num('sc-fk', th.fk, DEF.fk);
-  num('sc-peg', th.peg, DEF.peg);
-  num('sc-nb', th.nb, DEF.nb);
-  num('sc-fg', th.fg, DEF.fg);
-  chk('sc-cyc', th.cyc);
-  chk('sc-bank', th.bank);
+  num('sc-max-pe', th.maxPe, DEF.maxPe);
+  num('sc-max-peg', th.maxPeg, DEF.maxPeg);
+  num('sc-max-net-debt-ebitda', th.maxNetDebtEbitda, DEF.maxNetDebtEbitda);
+  num('sc-min-ebitda-growth', th.minEbitdaGrowth, DEF.minEbitdaGrowth);
+  chk('sc-warn-cyclical', th.warnCyclical);
+  chk('sc-show-banks', th.showBanks);
   chk('sc-sma', state.aboveSma);
 }
 
@@ -208,8 +208,8 @@ interface PeersModel {
 
 function peersModel(th: Thresholds): PeersModel {
   const groups = orderGroups(groupByIndustry(stocks(state.market)));
-  const ind = pickIndustry(groups, state.ind[state.market]);
-  const sel = groups.find((g) => g.ind === ind) ?? null;
+  const ind = pickIndustry(groups, state.industry[state.market]);
+  const sel = groups.find((g) => g.industry === ind) ?? null;
   const list = sel ? sel.stocks : [];
   const all = buildRows(list, th);
   const s = state.sort.peers;
@@ -263,15 +263,15 @@ function bodyRows(rows: Row[], th: Thresholds, colspan: number, rowHtml: (r: Row
 function markersFor(rows: Row[]): Map<string, Marker> {
   const ks = rows
     .filter((r) => r.s.hasData)
-    .map((r) => r.s.k)
+    .map((r) => r.s.symbol)
     .sort((a, b) => a.localeCompare(b, 'tr'));
   return new Map(ks.map((k, i) => [k, markerFor(i)]));
 }
 
 function compareHtml(m: PeersModel): string {
   if (!m.sel) return '';
-  return compareBlockHtml(compareKey(m.sel.ind), compares.get(compareKey(m.sel.ind)), aiStatus(), {
-    sek: m.sel.sek,
+  return compareBlockHtml(compareKey(m.sel.industry), compares.get(compareKey(m.sel.industry)), aiStatus(), {
+    industryTr: m.sel.industryTr,
     withData: m.rows.filter((r) => r.s.hasData).length,
   });
 }
@@ -282,7 +282,7 @@ function peersHtml(th: Thresholds, m: PeersModel): string {
   const chips = m.groups
     .map(
       (g) =>
-        `<button class="chip" type="button" data-ind="${esc(g.ind)}" aria-pressed="${g.ind === sel.ind}">${esc(g.sek)} <span class="en">${esc(g.sekEn)}</span></button>`,
+        `<button class="chip" type="button" data-industry="${esc(g.industry)}" aria-pressed="${g.industry === sel.industry}">${esc(g.industryTr)} <span class="en">${esc(g.industryEn)}</span></button>`,
     )
     .join('');
   const cols = PEER_COLS.length;
@@ -302,7 +302,7 @@ function peersHtml(th: Thresholds, m: PeersModel): string {
   return `<div class="chips" role="group" aria-label="Sektör">${chips}</div>
 <div class="stack">
 <div class="tablebox"><table id="sc-tbl" class="sc-peers"><thead>${headHtml(PEER_COLS, state.sort.peers)}</thead><tbody>${tbody}</tbody></table></div>
-<p class="muted small">${esc(sel.sek)} · ${esc(MARKET_LABEL[state.market])}. "50g ort." ve "200g ort." fiyatın o hareketli ortalamaya <span class="en">(SMA)</span> uzaklığını gösterir. "ÖK kârl." özkaynak kârlılığının yaklaşık değeridir (PD/DD ÷ F/K). Sütun başlıklarına dokunarak sıralayın.${
+<p class="muted small">${esc(sel.industryTr)} · ${esc(MARKET_LABEL[state.market])}. "50g ort." ve "200g ort." fiyatın o hareketli ortalamaya <span class="en">(SMA)</span> uzaklığını gösterir. "ÖK kârl." özkaynak kârlılığının yaklaşık değeridir (PD/DD ÷ F/K). Sütun başlıklarına dokunarak sıralayın.${
     notes.length ? ' ' + esc(notes.join(' ')) : ''
   }</p>
 </div>
@@ -335,7 +335,7 @@ function focusSelector(): string | null {
   const el = document.activeElement as HTMLElement | null;
   if (!el || !body || !body.contains(el)) return null;
   if (el.dataset.f) return attr('data-f', el.dataset.f);
-  if (el.dataset.ind) return attr('data-ind', el.dataset.ind);
+  if (el.dataset.industry) return attr('data-industry', el.dataset.industry);
   if (el.dataset.act) return attr('data-act', el.dataset.act) + (el.dataset.key ? attr('data-key', el.dataset.key) : '');
   return null;
 }
@@ -383,7 +383,7 @@ function drawStrip(): void {
   const defs = buildStripDefs(
     withData.map((r) => r.s),
     m.med,
-    th.nb,
+    th.maxNetDebtEbitda,
   );
   if (!defs.length) {
     box.innerHTML = `<p class="muted small">Süzgeçten geçen hisse olmadığı için grafik boş.</p>`;
@@ -391,10 +391,10 @@ function drawStrip(): void {
   }
   const W = cw(box) - 28;
   if (W <= 0) return;
-  const tickers = withData.map((r) => r.s.k).join(', ');
+  const tickers = withData.map((r) => r.s.symbol).join(', ');
   box.innerHTML = stripSvg(
     layoutStrips(defs, W, markersFor(m.rows)),
-    `${tickers}: çarpanların ${m.sel ? m.sel.sek : ''} sektör ortancasına göre konumu`,
+    `${tickers}: çarpanların ${m.sel ? m.sel.industryTr : ''} sektör ortancasına göre konumu`,
   );
 }
 
@@ -405,7 +405,7 @@ function drawSma(): void {
   if (!box || !seriesUsable(series)) return;
   const W = cw(box) - 28;
   if (W <= 0) return;
-  box.innerHTML = smaChartSvg(series, W, `${series.k}: günlük kapanış ve 20, 50, 200 günlük hareketli ortalamalar`) ?? '';
+  box.innerHTML = smaChartSvg(series, W, `${series.symbol}: günlük kapanış ve 20, 50, 200 günlük hareketli ortalamalar`) ?? '';
 }
 
 function drawCharts(): void {
@@ -453,7 +453,7 @@ function patchComment(id: string): void {
 function patchCompare(key: string): void {
   if (state.view !== 'peers') return;
   const m = peersModel(getThresholds());
-  if (!m.sel || compareKey(m.sel.ind) !== key) return;
+  if (!m.sel || compareKey(m.sel.industry) !== key) return;
   patch(q('#sc-compare'), compareHtml(m));
 }
 
@@ -506,10 +506,10 @@ function runComment(id: string, force: boolean): Promise<void> {
 function runCompare(key: string, force: boolean): Promise<void> {
   if (state.view !== 'peers') return Promise.resolve();
   const m = peersModel(getThresholds());
-  if (!m.sel || compareKey(m.sel.ind) !== key) return Promise.resolve();
+  if (!m.sel || compareKey(m.sel.industry) !== key) return Promise.resolve();
   const input = {
     market: state.market,
-    industry: industry(m.sel.ind),
+    industry: industry(m.sel.industry),
     rows: m.rows.map((r) => ({ stock: r.s, evaluation: r.ev })),
     median: m.med,
   };
@@ -535,36 +535,36 @@ function onBodyClick(e: MouseEvent): void {
   if (act) {
     const key = act.dataset.key ?? '';
     const force = act.dataset.force === '1';
-    if (act.dataset.act === 'goto-settings') location.hash = '#ayarlar';
+    if (act.dataset.act === 'goto-settings') location.hash = '#settings';
     else if (act.dataset.act === 'ai-comment') void runComment(key, force);
     else if (act.dataset.act === 'ai-compare') void runCompare(key, force);
     return;
   }
-  const chip = t.closest<HTMLElement>('button.chip[data-ind]');
-  if (chip?.dataset.ind) {
-    state.ind[state.market] = chip.dataset.ind;
-    lsSet('screener.industry', state.ind);
+  const chip = t.closest<HTMLElement>('button.chip[data-industry]');
+  if (chip?.dataset.industry) {
+    state.industry[state.market] = chip.dataset.industry;
+    lsSet('screener.industry', state.industry);
     renderBody();
     return;
   }
-  const th = t.closest<HTMLElement>('th[data-k]');
-  if (th?.dataset.k) {
-    sortBy(th.dataset.k as SortKey);
+  const th = t.closest<HTMLElement>('th[data-sort]');
+  if (th?.dataset.sort) {
+    sortBy(th.dataset.sort as SortKey);
     return;
   }
   const tr = t.closest<HTMLElement>('tr.row');
-  if (tr?.dataset.k) toggleRow(tr.dataset.k);
+  if (tr?.dataset.symbol) toggleRow(tr.dataset.symbol);
 }
 
 function onBodyKey(e: KeyboardEvent): void {
   if (e.key !== 'Enter' && e.key !== ' ') return;
   const t = e.target as HTMLElement;
-  if (t.matches('tr.row') && t.dataset.k) {
+  if (t.matches('tr.row') && t.dataset.symbol) {
     e.preventDefault();
-    toggleRow(t.dataset.k);
-  } else if (t.matches('th[data-k]') && t.dataset.k) {
+    toggleRow(t.dataset.symbol);
+  } else if (t.matches('th[data-sort]') && t.dataset.sort) {
     e.preventDefault();
-    sortBy(t.dataset.k as SortKey);
+    sortBy(t.dataset.sort as SortKey);
   }
 }
 
@@ -585,23 +585,23 @@ function onHeadClick(e: MouseEvent): void {
 function onControlInput(e: Event): void {
   const el = e.target as HTMLInputElement;
   switch (el.id) {
-    case 'sc-fk':
-      setThresholds({ fk: parseThreshold(el.value, DEF.fk) });
+    case 'sc-max-pe':
+      setThresholds({ maxPe: parseThreshold(el.value, DEF.maxPe) });
       break;
-    case 'sc-peg':
-      setThresholds({ peg: parseThreshold(el.value, DEF.peg) });
+    case 'sc-max-peg':
+      setThresholds({ maxPeg: parseThreshold(el.value, DEF.maxPeg) });
       break;
-    case 'sc-nb':
-      setThresholds({ nb: parseThreshold(el.value, DEF.nb) });
+    case 'sc-max-net-debt-ebitda':
+      setThresholds({ maxNetDebtEbitda: parseThreshold(el.value, DEF.maxNetDebtEbitda) });
       break;
-    case 'sc-fg':
-      setThresholds({ fg: parseThreshold(el.value, DEF.fg) });
+    case 'sc-min-ebitda-growth':
+      setThresholds({ minEbitdaGrowth: parseThreshold(el.value, DEF.minEbitdaGrowth) });
       break;
-    case 'sc-cyc':
-      setThresholds({ cyc: el.checked });
+    case 'sc-warn-cyclical':
+      setThresholds({ warnCyclical: el.checked });
       break;
-    case 'sc-bank':
-      setThresholds({ bank: el.checked });
+    case 'sc-show-banks':
+      setThresholds({ showBanks: el.checked });
       break;
     case 'sc-sma':
       state.aboveSma = el.checked;

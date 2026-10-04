@@ -50,12 +50,12 @@ def validate_market(doc: Any, schema_path: Path | None = None) -> list[str]:
         for i, s in enumerate(doc["stocks"]):
             if not isinstance(s, dict):
                 continue
-            key = (s.get("market"), s.get("k"))
+            key = (s.get("market"), s.get("symbol"))
             if key in seen:
                 problems.append(f"stocks/{i}: duplicate {key[0]}:{key[1]}")
             seen.add(key)
-            if s.get("ind") not in industries:
-                problems.append(f"stocks/{i}: industry '{s.get('ind')}' is not in 'industries'")
+            if s.get("industry") not in industries:
+                problems.append(f"stocks/{i}: industry '{s.get('industry')}' is not in 'industries'")
     return problems
 
 
@@ -63,12 +63,12 @@ def validate_prices(doc: Any, schema_path: Path | None = None) -> list[str]:
     problems: list[str] = []
     _walk_finite(doc, "", problems)
     problems += _errors(doc, schema_path or CONFIG_DIR / "prices.schema.json")
-    if isinstance(doc, dict) and isinstance(doc.get("t"), list) and isinstance(doc.get("c"), list):
-        t, c = doc["t"], doc["c"]
+    if isinstance(doc, dict) and isinstance(doc.get("dates"), list) and isinstance(doc.get("closes"), list):
+        t, c = doc["dates"], doc["closes"]
         if len(t) != len(c):
-            problems.append(f"t has {len(t)} entries but c has {len(c)}")
+            problems.append(f"dates has {len(t)} entries but closes has {len(c)}")
         if any(a >= b for a, b in zip(t, t[1:]) if isinstance(a, str) and isinstance(b, str)):
-            problems.append("t is not strictly ascending")
+            problems.append("dates is not strictly ascending")
     return problems
 
 

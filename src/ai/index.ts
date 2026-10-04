@@ -68,13 +68,13 @@ async function explain(kind: string, id: string, market: MarketId, build: (asOf:
 /** Hisse yorumu: bir hissenin çarpanlarını ve ortalamalarını hikâyelerin diliyle açıklar. */
 export async function commentStock(input: StockCommentInput, opts: AiCallOptions = {}): Promise<AiText> {
   const s = input.stock;
-  return explain('stock', s.k, s.market, (asOf) => stockPrompt(input, { asOf }), opts);
+  return explain('stock', s.symbol, s.market, (asOf) => stockPrompt(input, { asOf }), opts);
 }
 
 /** Sektör karşılaştırması: aynı piyasadaki bir sektörün hisselerini yan yana okur. */
 export async function compareIndustry(input: IndustryCompareInput, opts: AiCallOptions = {}): Promise<AiText> {
   // Sektör kimliği girdide yok; İngilizce ad piyasa içinde tekildir.
-  return explain('industry', input.industry.en, input.market, (asOf) => industryPrompt(input, { asOf }), opts);
+  return explain('industry', input.industry.nameEn, input.market, (asOf) => industryPrompt(input, { asOf }), opts);
 }
 
 /** AiText.text'i güvenli HTML paragraflarına çevirir. */

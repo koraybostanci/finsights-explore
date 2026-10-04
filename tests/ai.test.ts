@@ -40,7 +40,7 @@ const store = new Map<string, string>();
 const DATA = JSON.parse(readFileSync(new URL('./fixtures/market.json', import.meta.url), 'utf8')) as MarketData;
 const views: StockView[] = DATA.stocks.map((s) => toView(s, DATA.industries));
 const view = (k: string): StockView => {
-  const v = views.find((s) => s.k === k);
+  const v = views.find((s) => s.symbol === k);
   assert.ok(v, `${k} veride yok`);
   return v;
 };
@@ -535,7 +535,7 @@ test('önbellek en çok CACHE_MAX kayıt tutar, en eskisini atar', () => {
 
 const stockInput = (k: string) => {
   const stock = view(k);
-  const peers = views.filter((s) => s.market === stock.market && s.ind === stock.ind);
+  const peers = views.filter((s) => s.market === stock.market && s.industry === stock.industry);
   return { stock, evaluation: evaluate(stock, DEF), median: industryMedian(peers), prices: null };
 };
 
@@ -552,20 +552,23 @@ test('stockPrompt: verideki rakamlar, kural sonuçları, ortanca, terimler ve ku
   assert.match(p.user, /Net borç\/FAVÖK = Net debt\/EBITDA/);
 
   const payload = JSON.parse(p.user.slice(p.user.indexOf('Veri (JSON):') + 'Veri (JSON):'.length));
-  assert.equal(payload.veriTarihi, DATA.asOf);
-  assert.equal(payload.piyasa, 'BIST');
-  assert.equal(payload.paraBirimi, 'TRY');
-  assert.equal(payload.hisse.sembol, 'THYAO');
-  assert.equal(payload.hisse.fk, 3.6);
-  assert.equal(payload.hisse.pddd, 0.4);
-  assert.equal(payload.hisse.netBorcFavok, 4.25);
-  assert.equal(payload.hisse.dongusel, true);
-  assert.equal(payload.hisse.fonksiyonelParaBirimi, 'USD');
-  assert.equal(payload.kuralSonucu.sonuc, 'Elendi');
-  assert.ok(payload.kuralSonucu.olcutler.some((c: { olcut: string; durum: string }) => c.olcut === 'Borç' && c.durum === 'kaldı'));
-  assert.equal(payload.sektorOrtancasi.ortancayaGirenHisseSayisi, 2);
-  assert.equal(payload.hareketliOrtalamalar, null);
-  assert.deepEqual(payload.uyanHikayeler, ['Sahil dondurmacısı']);
+  assert.equal(payload.dataDate, DATA.asOf);
+  assert.equal(payload.market, 'BIST');
+  assert.equal(payload.currency, 'TRY');
+  assert.equal(payload.stock.symbol, 'THYAO');
+  assert.equal(payload.stock.pe, 3.6);
+  assert.equal(payload.stock.pb, 0.4);
+  assert.equal(payload.stock.netDebtEbitda, 4.25);
+  assert.equal(payload.stock.cyclical, true);
+  assert.equal(payload.stock.functionalCurrency, 'USD');
+  assert.equal(payload.ruleResult.result, 'Elendi');
+  assert.ok(payload.ruleResult.checks.some((c: { check: string; status: string }) => c.check === 'Borç' && c.status === 'kaldı'));
+  assert.equal(payload.industryMedian.stocksInMedian, 2);
+  assert.equal(payload.movingAverages, null);
+  assert.deepEqual(payload.matchingStories, ['Sahil dondurmacısı']);
+  // İstem metni, verideki anahtarlara adıyla başvurur
+  assert.match(p.system, /"matchingStories"/);
+  assert.match(p.user, /industryMedian ya da movingAverages null ise/);
 });
 
 test('matchingStories: döngüsel, tek seferlik sıçrama, banka', () => {
@@ -580,29 +583,29 @@ test('matchingStories: döngüsel, tek seferlik sıçrama, banka', () => {
 test('smaFigures: verideki ortalamalar ya da fiyat serisinden hesap', () => {
   const base = stockInput('BIMAS');
   assert.equal(smaFigures(base), null);
-  const stored = smaFigures({ ...base, stock: { ...base.stock, f: 120, sma20: 118, sma50: 110, sma200: 100 } });
+  const stored = smaFigures({ ...base, stock: { ...base.stock, price: 120, sma20: 118, sma50: 110, sma200: 100 } });
   assert.deepEqual(stored, {
     sma20: 118,
     sma50: 110,
     sma200: 100,
-    fiyatinSma50yeUzakligiYuzde: 9.1,
-    fiyatinSma200eUzakligiYuzde: 20,
-    egilim: 'yukarı (fiyat > SMA 50 > SMA 200)',
+    priceDistanceFromSma50Pct: 9.1,
+    priceDistanceFromSma200Pct: 20,
+    trend: 'yukarı (fiyat > SMA 50 > SMA 200)',
   });
   const c = Array.from({ length: 260 }, (_, i) => 100 + i);
   const fromPrices = smaFigures({
     ...base,
-    stock: { ...base.stock, f: 359 },
-    prices: { k: 'BIMAS', market: 'BIST', cur: 'TRY', t: c.map((_, i) => `g${i}`), c },
+    stock: { ...base.stock, price: 359 },
+    prices: { symbol: 'BIMAS', market: 'BIST', currency: 'TRY', dates: c.map((_, i) => `g${i}`), closes: c },
   });
   assert.equal(fromPrices?.sma20, 349.5);
   assert.equal(fromPrices?.sma200, 259.5);
-  assert.equal(fromPrices?.son60GundeKesisim, 'yok');
+  assert.equal(fromPrices?.crossLast60Days, 'yok');
 });
 
 test('industryPrompt: tek piyasa, verisi olmayanlar ayrı listede', () => {
   const rowsOf = (market: 'BIST' | 'US') =>
-    views.filter((s) => s.market === market && s.ind === 'airlines').map((stock) => ({ stock, evaluation: evaluate(stock, DEF) }));
+    views.filter((s) => s.market === market && s.industry === 'airlines').map((stock) => ({ stock, evaluation: evaluate(stock, DEF) }));
   const bist = rowsOf('BIST');
   // ABD satırları yanlışlıkla karışsa bile isteme girmez
   const p = industryPrompt(
@@ -611,10 +614,11 @@ test('industryPrompt: tek piyasa, verisi olmayanlar ayrı listede', () => {
   );
   assert.match(p.system, /130–200 kelime/);
   const payload = JSON.parse(p.user.slice(p.user.indexOf('Veri (JSON):') + 'Veri (JSON):'.length));
-  assert.deepEqual(payload.hisseler.map((h: { sembol: string }) => h.sembol).sort(), ['PGSUS', 'THYAO']);
-  assert.deepEqual(payload.verisiOlmayanHisseler, []);
+  assert.deepEqual(payload.stocks.map((h: { symbol: string }) => h.symbol).sort(), ['PGSUS', 'THYAO']);
+  assert.deepEqual(payload.stocksWithoutData, []);
   assert.equal(p.user.includes('DAL'), false);
-  assert.equal(payload.sektor.dongusel, true);
+  assert.equal(payload.industry.cyclical, true);
+  assert.match(p.user, /stocksWithoutData doluysa/);
 
   const us = rowsOf('US');
   const pu = industryPrompt(
@@ -622,10 +626,10 @@ test('industryPrompt: tek piyasa, verisi olmayanlar ayrı listede', () => {
     { asOf: DATA.asOf },
   );
   const pUs = JSON.parse(pu.user.slice(pu.user.indexOf('Veri (JSON):') + 'Veri (JSON):'.length));
-  assert.deepEqual(pUs.hisseler, []);
-  assert.deepEqual(pUs.verisiOlmayanHisseler.sort(), ['DAL', 'LUV', 'UAL']);
-  assert.equal(pUs.sektorOrtancasi, null);
-  assert.equal(pUs.paraBirimi, 'USD');
+  assert.deepEqual(pUs.stocks, []);
+  assert.deepEqual(pUs.stocksWithoutData.sort(), ['DAL', 'LUV', 'UAL']);
+  assert.equal(pUs.industryMedian, null);
+  assert.equal(pUs.currency, 'USD');
 });
 
 /* ---------- Dışa açık işlevler ---------- */
@@ -681,7 +685,7 @@ test('commentStock: sağlayıcıya gider, önbelleğe yazar, force ile yeniler',
     await commentStock(input);
     assert.equal(calls.length, 5);
     // Eşik değişince değerlendirme, dolayısıyla istem ve önbellek anahtarı değişir
-    await commentStock({ ...input, evaluation: evaluate(input.stock, { ...DEF, nb: 5 }) });
+    await commentStock({ ...input, evaluation: evaluate(input.stock, { ...DEF, maxNetDebtEbitda: 5 }) });
     assert.equal(calls.length, 6);
 
     const body = JSON.parse(String(calls[0].init.body));
@@ -724,7 +728,7 @@ test('compareIndustry: önbellek sektör ve piyasa başınadır', async () => {
   }) as typeof fetch;
   try {
     const make = (market: 'BIST' | 'US', ind: string) => {
-      const rows = views.filter((s) => s.market === market && s.ind === ind).map((stock) => ({ stock, evaluation: evaluate(stock, DEF) }));
+      const rows = views.filter((s) => s.market === market && s.industry === ind).map((stock) => ({ stock, evaluation: evaluate(stock, DEF) }));
       return { market, industry: DATA.industries[ind], rows, median: industryMedian(rows.map((r) => r.stock)) };
     };
     const first = await compareIndustry(make('BIST', 'airlines'));

@@ -5,7 +5,7 @@
  */
 
 import type { Check, Evaluation, StockView, Thresholds } from '../types.ts';
-import { evaluate } from '../lib/evaluate.ts';
+import { CHECK_LABEL, evaluate } from '../lib/evaluate.ts';
 
 /** Kutulardaki rakamlar; boş ya da geçersiz kutu NaN'dır. Tutarlar aynı birimdedir (ör. milyar TL). */
 export interface CalcInput {
@@ -61,38 +61,39 @@ export function calcMultiples(i: CalcInput): CalcMultiples {
 /** Hesaplanan çarpanları tarayıcının değerlendirme işlevine verilecek biçime sokar. */
 export function calcStock(i: CalcInput, m: CalcMultiples): StockView {
   return {
-    k: '',
-    ad: '',
+    symbol: '',
+    name: '',
     market: 'BIST',
-    cur: 'TRY',
-    ind: '',
-    f: null,
-    fk: m.fk,
+    currency: 'TRY',
+    industry: '',
+    price: null,
+    pe: m.fk,
     loss: isLoss(i),
-    pd: m.pddd,
-    fdf: m.fdf,
+    pb: m.pddd,
+    evEbitda: m.fdf,
     peg: m.peg,
-    nb: m.nbf,
-    mv: null,
-    fg: Number.isNaN(i.fg) ? null : i.fg,
-    ng: Number.isNaN(i.ng) ? null : i.ng,
-    h: null,
+    netDebtEbitda: m.nbf,
+    marketCap: null,
+    ebitdaGrowth: Number.isNaN(i.fg) ? null : i.fg,
+    netIncomeGrowth: Number.isNaN(i.ng) ? null : i.ng,
+    targetPrice: null,
     sma20: null,
     sma50: null,
     sma200: null,
     roe: m.roe,
-    sek: 'Bu sektör',
-    sekEn: '',
+    industryTr: 'Bu sektör',
+    industryEn: '',
     cyclical: i.cyc,
     hasData: true,
   };
 }
 
 const DEBT_UNKNOWN: Check = {
-  n: 'Borç',
-  st: 'bad',
-  s: 'Borç ölçülemiyor',
-  t: 'Net borç/FAVÖK hesaplanamıyor: FAVÖK sıfır ya da eksi, ya da net borç girilmedi. Borcun kaç yıllık faaliyet kârıyla ödeneceği bilinmiyor.',
+  id: 'debt',
+  label: CHECK_LABEL.debt,
+  status: 'bad',
+  short: 'Borç ölçülemiyor',
+  long: 'Net borç/FAVÖK hesaplanamıyor: FAVÖK sıfır ya da eksi, ya da net borç girilmedi. Borcun kaç yıllık faaliyet kârıyla ödeneceği bilinmiyor.',
 };
 
 /**
@@ -103,8 +104,8 @@ export function calcEvaluate(i: CalcInput, th: Thresholds): { m: CalcMultiples; 
   const m = calcMultiples(i);
   const ev = evaluate(calcStock(i, m), th);
   if (m.nbf != null) return { m, ev };
-  const checks = ev.checks.map((c) => (c.n === 'Borç' ? DEBT_UNKNOWN : c));
-  const warns = checks.filter((c) => c.st === 'warn').length;
-  const bad = checks.some((c) => c.st === 'bad');
+  const checks = ev.checks.map((c) => (c.id === 'debt' ? DEBT_UNKNOWN : c));
+  const warns = checks.filter((c) => c.status === 'warn').length;
+  const bad = checks.some((c) => c.status === 'bad');
   return { m, ev: { checks, verdict: bad ? 'bad' : warns ? 'warn' : 'good', warns } };
 }

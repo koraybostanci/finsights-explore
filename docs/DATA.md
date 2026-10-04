@@ -57,14 +57,14 @@ This file is the only place the job reads tickers from, and it is meant to be ed
 To add a stock, add one object to `stocks`:
 
 ```json
-{ "k": "AAPL", "ad": "Apple", "market": "US", "industry": "consumer_electronics", "tv": "NASDAQ:AAPL", "yf": "AAPL" }
+{ "symbol": "AAPL", "name": "Apple", "market": "US", "industry": "consumer_electronics", "tv": "NASDAQ:AAPL", "yf": "AAPL" }
 ```
 
-- `k`: ticker as shown in the app. `ad`: company name.
+- `symbol`: ticker as shown in the app. `name`: company name.
 - `market`: `"BIST"` or `"US"`. The two are never mixed in the app.
-- `industry`: an id from `industries` in the same file. Stocks of one market with the same industry are compared with each other. To add an industry, add `"id": { "tr": "…", "en": "…", "cyclical": true|false }`.
-- `tv`: TradingView symbol with exchange (`BIST:THYAO`, `NASDAQ:AAPL`, `NYSE:KO`). Required for US stocks; BIST defaults to `BIST:<k>`.
-- `yf`: Yahoo symbol. Defaults to `<k>.IS` for BIST and `<k>` for US (write it out when it differs, e.g. `BRK-B`).
+- `industry`: an id from `industries` in the same file. Stocks of one market with the same industry are compared with each other. To add an industry, add `"id": { "nameTr": "…", "nameEn": "…", "cyclical": true|false }`.
+- `tv`: TradingView symbol with exchange (`BIST:THYAO`, `NASDAQ:AAPL`, `NYSE:KO`). Required for US stocks; BIST defaults to `BIST:<symbol>`.
+- `yf`: Yahoo symbol. Defaults to `<symbol>.IS` for BIST and `<symbol>` for US (write it out when it differs, e.g. `BRK-B`).
 - Optional: `bank` (BIST only for now), `cyc` (overrides the industry's cyclical flag), `usd` (functional currency note), `note` and `noteAsOf` (a hand-written comment). The app shows a note only while the market's data is from the `noteAsOf` day; once newer data arrives the note is hidden, because it could contradict the new figures. To keep a note visible, rewrite it and set `noteAsOf` to the date of the data it describes.
 
 To remove a stock, delete its object. Its price file is removed on the next full run.

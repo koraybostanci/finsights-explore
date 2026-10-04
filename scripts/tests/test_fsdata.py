@@ -49,7 +49,7 @@ logging.disable(logging.CRITICAL)  # the faked failures below are expected
 NOW = datetime(2026, 10, 5, 19, 0, tzinfo=timezone(timedelta(hours=3)))
 UNIVERSE = load_universe(REPO / "config" / "stocks.json")
 BANKS = load_banks(REPO / "config" / "banks_manual.json")
-SEED = json.loads((REPO / "public" / "data" / "market.json").read_text(encoding="utf-8"))
+SEED = json.loads((REPO / "tests" / "fixtures" / "market.json").read_text(encoding="utf-8"))
 
 
 def tv_row(name: str, **over):
@@ -113,7 +113,7 @@ def all_rows():
     rows = {"turkey": {}, "america": {}}
     for s in UNIVERSE.stocks:
         scope = "turkey" if s.market == "BIST" else "america"
-        rows[scope][s.tv] = tv_row(s.k, currency="TRY" if s.market == "BIST" else "USD")
+        rows[scope][s.tv] = tv_row(s.symbol, currency="TRY" if s.market == "BIST" else "USD")
     return rows
 
 
@@ -149,7 +149,7 @@ class Util(unittest.TestCase):
 
 class Mapping(unittest.TestCase):
     def spec(self, k="THYAO"):
-        return next(s for s in UNIVERSE.stocks if s.k == k)
+        return next(s for s in UNIVERSE.stocks if s.symbol == k)
 
     def test_positive(self):
         self.assertEqual(positive(3.456), 3.46)
@@ -183,30 +183,30 @@ class Mapping(unittest.TestCase):
 
     def test_map_row(self):
         fig = map_tv_row(self.spec(), tv_row("THYAO", currency="TRY"))
-        self.assertEqual(fig["f"], 100.0)
-        self.assertEqual(fig["fk"], 12.35)
-        self.assertEqual(fig["pd"], 1.5)
-        self.assertEqual(fig["fdf"], 6.79)
+        self.assertEqual(fig["price"], 100.0)
+        self.assertEqual(fig["pe"], 12.35)
+        self.assertEqual(fig["pb"], 1.5)
+        self.assertEqual(fig["evEbitda"], 6.79)
         self.assertEqual(fig["peg"], 0.8)
-        self.assertEqual(fig["nb"], 1.5)
-        self.assertEqual(fig["mv"], 250.0)
-        self.assertEqual((fig["fg"], fig["ng"]), (12, -8))
-        self.assertEqual(fig["h"], 130.0)
+        self.assertEqual(fig["netDebtEbitda"], 1.5)
+        self.assertEqual(fig["marketCap"], 250.0)
+        self.assertEqual((fig["ebitdaGrowth"], fig["netIncomeGrowth"]), (12, -8))
+        self.assertEqual(fig["targetPrice"], 130.0)
         self.assertEqual((fig["sma20"], fig["sma50"], fig["sma200"]), (98.0, 95.0, 90.0))
 
     def test_map_row_loss_and_turnaround(self):
         fig = map_tv_row(self.spec(), tv_row("X", earnings_per_share_diluted_ttm=-2.0, net_income_yoy_growth_ttm=-300.0))
-        self.assertIsNone(fig["fk"])
+        self.assertIsNone(fig["pe"])
         self.assertIs(fig["loss"], True)
-        self.assertIsNone(fig["ng"])
-        self.assertEqual(fig["ngT"], NET_TO_LOSS)
+        self.assertIsNone(fig["netIncomeGrowth"])
+        self.assertEqual(fig["netIncomeGrowthNote"], NET_TO_LOSS)
         # P/E missing although earnings are positive: no loss flag, the app says "no data"
         fig = map_tv_row(self.spec(), tv_row("X", price_earnings_ttm=None))
-        self.assertIsNone(fig["fk"])
+        self.assertIsNone(fig["pe"])
         self.assertNotIn("loss", fig)
         fig = map_tv_row(self.spec(), tv_row("X", ebitda_yoy_growth_ttm=None, net_income_yoy_growth_ttm=None))
-        self.assertEqual(fig["fgT"], EBITDA_FROM_NEGATIVE)
-        self.assertEqual(fig["ngT"], NET_FROM_LOSS)
+        self.assertEqual(fig["ebitdaGrowthNote"], EBITDA_FROM_NEGATIVE)
+        self.assertEqual(fig["netIncomeGrowthNote"], NET_FROM_LOSS)
 
     def test_map_row_rejects_wrong_currency_and_missing_price(self):
         with self.assertRaises(RowError):
@@ -216,10 +216,10 @@ class Mapping(unittest.TestCase):
 
     def test_bank_has_no_ebitda_figures(self):
         fig = map_tv_row(self.spec("GARAN"), tv_row("GARAN"))
-        self.assertIsNone(fig["fdf"])
-        self.assertIsNone(fig["nb"])
-        self.assertIsNone(fig["fg"])
-        self.assertNotIn("fgT", fig)
+        self.assertIsNone(fig["evEbitda"])
+        self.assertIsNone(fig["netDebtEbitda"])
+        self.assertIsNone(fig["ebitdaGrowth"])
+        self.assertNotIn("ebitdaGrowthNote", fig)
 
     def test_period(self):
         self.assertEqual(period_label(1782777600), "2026/6")
@@ -304,13 +304,14 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(res.doc["period"], {"BIST": "2026/6", "US": "2026/6"})
         self.assertEqual(res.doc["asOfBy"], {"BIST": NOW.isoformat(timespec="seconds"), "US": NOW.isoformat(timespec="seconds")})
         self.assertFalse(any("loss" in s for s in res.doc["stocks"]), "every synthetic row is profitable")
-        by = {(s["market"], s["k"]): s for s in res.doc["stocks"]}
+        self.assertEqual(res.doc["schema"], 2)
+        by = {(s["market"], s["symbol"]): s for s in res.doc["stocks"]}
         self.assertEqual(len(by), len(UNIVERSE.stocks))
         thy = by[("BIST", "THYAO")]
-        self.assertEqual(thy["cur"], "TRY")
-        self.assertEqual(thy["fk"], 12.35)
-        self.assertEqual(thy["not"], next(s for s in SEED["stocks"] if s["k"] == "THYAO")["not"])
-        self.assertEqual(by[("US", "AAPL")]["cur"], "USD")
+        self.assertEqual(thy["currency"], "TRY")
+        self.assertEqual(thy["pe"], 12.35)
+        self.assertEqual(thy["note"], next(s for s in SEED["stocks"] if s["symbol"] == "THYAO")["note"])
+        self.assertEqual(by[("US", "AAPL")]["currency"], "USD")
         # SMA comes from the closes (260 synthetic days), not from the screener row
         closes = [50.0 + i * 0.5 for i in range(260)]
         self.assertEqual(thy["sma20"], r2(sum(closes[-20:]) / 20))
@@ -318,12 +319,12 @@ class Pipeline(unittest.TestCase):
         # banks: manual figures merged, EBITDA figures blank
         gar = by[("BIST", "GARAN")]
         self.assertEqual((gar["npl"], gar["car"], gar["nim"]), (3.5, 15.9, 5.7))
-        self.assertIsNone(gar["fdf"])
+        self.assertIsNone(gar["evEbitda"])
         # price files
         self.assertEqual(len(res.prices), len(UNIVERSE.stocks))
         p = res.prices["BIST-THYAO"]
         self.assertEqual(validate_prices(p), [])
-        self.assertEqual((p["k"], p["market"], p["cur"], len(p["t"])), ("THYAO", "BIST", "TRY", 260))
+        self.assertEqual((p["symbol"], p["market"], p["currency"], len(p["dates"])), ("THYAO", "BIST", "TRY", 260))
 
     def test_missing_stock_is_carried_forward(self):
         rows = all_rows()
@@ -332,9 +333,9 @@ class Pipeline(unittest.TestCase):
         res = run_fetch(UNIVERSE, BANKS, SEED, lambda sid: None, tv, yh, NOW)
         self.assertEqual(res.statuses["BIST"].carried, ["THYAO"])
         self.assertEqual(res.statuses["BIST"].no_prices, ["THYAO"])
-        thy = next(s for s in res.doc["stocks"] if s["k"] == "THYAO")
-        old = next(s for s in SEED["stocks"] if s["k"] == "THYAO")
-        for key in ("f", "fk", "pd", "fdf", "peg", "nb", "mv", "fg", "ng", "h"):
+        thy = next(s for s in res.doc["stocks"] if s["symbol"] == "THYAO")
+        old = next(s for s in SEED["stocks"] if s["symbol"] == "THYAO")
+        for key in ("price", "pe", "pb", "evEbitda", "peg", "netDebtEbitda", "marketCap", "ebitdaGrowth", "netIncomeGrowth", "targetPrice"):
             self.assertEqual(thy[key], old[key], key)
         self.assertEqual(res.exit_code, 0)
 
@@ -345,16 +346,16 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(res.doc["asOf"], now)
         self.assertEqual(res.doc["asOfBy"], {"BIST": SEED["asOf"], "US": now})
         # BIST figures and loss flags untouched
-        pg = next(s for s in res.doc["stocks"] if s["k"] == "PGSUS")
+        pg = next(s for s in res.doc["stocks"] if s["symbol"] == "PGSUS")
         self.assertIs(pg["loss"], True)
         self.assertEqual(validate_market(res.doc), [])
 
     def test_loss_flag_goes_away_when_earnings_return(self):
         tv, yh = clients(all_rows())  # every synthetic row has positive earnings
         res = run_fetch(UNIVERSE, BANKS, SEED, lambda sid: None, tv, yh, NOW, markets=("BIST",))
-        pg = next(s for s in res.doc["stocks"] if s["k"] == "PGSUS")
+        pg = next(s for s in res.doc["stocks"] if s["symbol"] == "PGSUS")
         self.assertNotIn("loss", pg)
-        self.assertEqual(pg["fk"], 12.35)
+        self.assertEqual(pg["pe"], 12.35)
 
     def test_failed_market_keeps_previous_data(self):
         tv, yh = clients(all_rows(), fail_markets=("turkey",))
@@ -364,10 +365,10 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(res.doc["asOfBy"]["US"], NOW.isoformat(timespec="seconds"))
         self.assertFalse(res.statuses["US"].failed)
         self.assertEqual(res.exit_code, 1)
-        old = {s["k"]: s for s in SEED["stocks"] if s["market"] == "BIST"}
+        old = {s["symbol"]: s for s in SEED["stocks"] if s["market"] == "BIST"}
         for s in res.doc["stocks"]:
             if s["market"] == "BIST":
-                self.assertEqual(s["fk"], old[s["k"]]["fk"])
+                self.assertEqual(s["pe"], old[s["symbol"]]["pe"])
         self.assertFalse(any(sid.startswith("BIST-") for sid in res.prices))
         self.assertEqual(validate_market(res.doc), [])
 
@@ -378,7 +379,7 @@ class Pipeline(unittest.TestCase):
         tv, yh = clients(rows)
         res = run_fetch(UNIVERSE, BANKS, SEED, lambda sid: None, tv, yh, NOW, markets=("US",))
         self.assertTrue(res.statuses["US"].failed)
-        self.assertTrue(all(s["f"] is None for s in res.doc["stocks"] if s["market"] == "US"))
+        self.assertTrue(all(s["price"] is None for s in res.doc["stocks"] if s["market"] == "US"))
         self.assertEqual(res.doc["asOf"], SEED["asOf"])  # nothing new, date unchanged
 
     def test_yahoo_outage_is_flagged_but_fundamentals_written(self):
@@ -386,13 +387,13 @@ class Pipeline(unittest.TestCase):
         res = run_fetch(UNIVERSE, BANKS, SEED, lambda sid: None, tv, yh, NOW, markets=("US",))
         self.assertTrue(res.statuses["US"].degraded)
         self.assertEqual(res.exit_code, 1)
-        aapl = next(s for s in res.doc["stocks"] if s["k"] == "AAPL")
-        self.assertEqual(aapl["fk"], 12.35)
+        aapl = next(s for s in res.doc["stocks"] if s["symbol"] == "AAPL")
+        self.assertEqual(aapl["pe"], 12.35)
         self.assertEqual(aapl["sma200"], 90.0)  # screener's own average as fallback
         self.assertEqual(res.prices, {})
 
     def test_merge_series(self):
-        old = {"t": ["2026-01-01", "2026-01-02"], "c": [1.0, 2.0]}
+        old = {"dates": ["2026-01-01", "2026-01-02"], "closes": [1.0, 2.0]}
         new = [("2026-01-02", 2.5), ("2026-01-03", 3.0)]
         self.assertEqual(merge_series(old, new, 520), [("2026-01-01", 1.0), ("2026-01-02", 2.5), ("2026-01-03", 3.0)])
         self.assertEqual(merge_series(old, new, 2), [("2026-01-02", 2.5), ("2026-01-03", 3.0)])
@@ -413,23 +414,26 @@ class Pipeline(unittest.TestCase):
 class Validation(unittest.TestCase):
     def test_rejects_bad_documents(self):
         doc = json.loads(json.dumps(SEED))
-        doc["stocks"][0]["fk"] = "ten"
+        doc["stocks"][0]["pe"] = "ten"
         self.assertTrue(validate_market(doc))
         doc = json.loads(json.dumps(SEED))
-        doc["stocks"][0]["ind"] = "nope"
+        doc["schema"] = 1
+        self.assertTrue(validate_market(doc), "schema 1 is no longer accepted")
+        doc = json.loads(json.dumps(SEED))
+        doc["stocks"][0]["industry"] = "nope"
         self.assertTrue(any("industry" in p for p in validate_market(doc)))
         doc = json.loads(json.dumps(SEED))
         doc["stocks"].append(dict(doc["stocks"][0]))
         self.assertTrue(any("duplicate" in p for p in validate_market(doc)))
         doc = json.loads(json.dumps(SEED))
-        doc["stocks"][0]["f"] = math.nan
+        doc["stocks"][0]["price"] = math.nan
         self.assertTrue(validate_market(doc))
 
     def test_prices(self):
-        ok = {"k": "A", "market": "US", "cur": "USD", "t": ["2026-01-01", "2026-01-02"], "c": [1.0, 2.0]}
+        ok = {"symbol": "A", "market": "US", "currency": "USD", "dates": ["2026-01-01", "2026-01-02"], "closes": [1.0, 2.0]}
         self.assertEqual(validate_prices(ok), [])
-        self.assertTrue(validate_prices({**ok, "c": [1.0]}))
-        self.assertTrue(validate_prices({**ok, "t": ["2026-01-02", "2026-01-01"]}))
+        self.assertTrue(validate_prices({**ok, "closes": [1.0]}))
+        self.assertTrue(validate_prices({**ok, "dates": ["2026-01-02", "2026-01-01"]}))
 
     def test_config_errors_are_reported(self):
         raw = json.loads((REPO / "config" / "stocks.json").read_text(encoding="utf-8"))
@@ -440,7 +444,7 @@ class Validation(unittest.TestCase):
     def test_universe_rules(self):
         self.assertEqual(len(UNIVERSE.market("BIST")), 30)
         self.assertFalse(any(s.bank for s in UNIVERSE.market("US")), "no US banks for now")
-        self.assertEqual(len({(s.market, s.k) for s in UNIVERSE.stocks}), len(UNIVERSE.stocks))
+        self.assertEqual(len({(s.market, s.symbol) for s in UNIVERSE.stocks}), len(UNIVERSE.stocks))
         self.assertTrue(all(s.tv and s.yf for s in UNIVERSE.stocks))
         self.assertTrue(all(":" in s.tv for s in UNIVERSE.stocks))
 
@@ -456,14 +460,14 @@ class Compare(unittest.TestCase):
         ref = json.loads((SCRIPTS / "reference" / "fintables_2026-10-02.json").read_text(encoding="utf-8"))
         same = build_compare(SEED, ref)
         self.assertTrue(same.same_snapshot)
-        self.assertEqual(same.summary["fk"]["big"], 0)
+        self.assertEqual(same.summary["pe"]["big"], 0)
         doc = json.loads(json.dumps(SEED))
         doc["asOf"] = "2026-10-05T19:00:00+03:00"
-        thy = next(s for s in doc["stocks"] if s["k"] == "THYAO")
-        thy["fk"] = thy["fk"] * 2
+        thy = next(s for s in doc["stocks"] if s["symbol"] == "THYAO")
+        thy["pe"] = thy["pe"] * 2
         res = build_compare(doc, ref)
         self.assertFalse(res.same_snapshot)
-        self.assertEqual(res.summary["fk"]["big"], 1)
+        self.assertEqual(res.summary["pe"]["big"], 1)
         self.assertIn("| THYAO |", res.text)
         self.assertIn("+100.0%", res.text)
 
@@ -473,7 +477,7 @@ class Cli(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp())
         self.data = self.tmp / "data"
         self.data.mkdir()
-        shutil.copy(REPO / "public" / "data" / "market.json", self.data / "market.json")
+        shutil.copy(REPO / "tests" / "fixtures" / "market.json", self.data / "market.json")
 
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
@@ -493,7 +497,7 @@ class Cli(unittest.TestCase):
         tv, yh = clients(all_rows(), history=fake_history(n=265))
         self.assertEqual(self.run_cli(tv=tv, yahoo=yh), 0)
         p = json.loads((self.data / "prices" / "US-AAPL.json").read_text(encoding="utf-8"))
-        self.assertEqual(len(p["t"]), 265)
+        self.assertEqual(len(p["dates"]), 265)
 
     def test_dry_run_writes_nothing(self):
         before = (self.data / "market.json").read_text(encoding="utf-8")

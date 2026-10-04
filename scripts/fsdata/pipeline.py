@@ -70,13 +70,15 @@ class RunResult:
 
 
 def valid_doc(doc: Any) -> bool:
-    return isinstance(doc, dict) and doc.get("schema") == 1 and isinstance(doc.get("stocks"), list)
+    return isinstance(doc, dict) and doc.get("schema") == 2 and isinstance(doc.get("stocks"), list)
 
 
 def previous_records(doc: Any) -> dict[tuple[str, str], dict[str, Any]]:
     if not valid_doc(doc):
+        if isinstance(doc, dict) and doc.get("schema") not in (None, 2):
+            log.warning("previous market.json has schema %r, expected 2; its figures are not carried over", doc.get("schema"))
         return {}
-    return {(s.get("market"), s.get("k")): s for s in doc["stocks"] if isinstance(s, dict)}
+    return {(s.get("market"), s.get("symbol")): s for s in doc["stocks"] if isinstance(s, dict)}
 
 
 def carry(prev: Mapping[str, Any] | None) -> dict[str, Any]:
@@ -93,27 +95,33 @@ def carry(prev: Mapping[str, Any] | None) -> dict[str, Any]:
 
 def compose(spec: StockSpec, banks: Mapping[tuple[str, str], Mapping[str, Any]], fig: Mapping[str, Any]) -> dict[str, Any]:
     """One stock record in the field order of the committed file."""
-    rec: dict[str, Any] = {"k": spec.k, "ad": spec.ad, "market": spec.market, "cur": spec.cur, "ind": spec.industry}
+    rec: dict[str, Any] = {
+        "symbol": spec.symbol,
+        "name": spec.name,
+        "market": spec.market,
+        "currency": spec.currency,
+        "industry": spec.industry,
+    }
     if spec.bank:
         rec["bank"] = True
     if spec.cyc is not None:
         rec["cyc"] = spec.cyc
-    for key in ("f", "fk", "pd", "fdf", "peg", "nb", "mv", "fg", "ng"):
+    for key in ("price", "pe", "pb", "evEbitda", "peg", "netDebtEbitda", "marketCap", "ebitdaGrowth", "netIncomeGrowth"):
         rec[key] = fig.get(key)
-    for key in ("fgT", "ngT"):
+    for key in ("ebitdaGrowthNote", "netIncomeGrowthNote"):
         if fig.get(key):
             rec[key] = fig[key]
-    if fig.get("loss") is True and rec["fk"] is None:
+    if fig.get("loss") is True and rec["pe"] is None:
         rec["loss"] = True
-    for key in ("h", "sma20", "sma50", "sma200"):
+    for key in ("targetPrice", "sma20", "sma50", "sma200"):
         rec[key] = fig.get(key)
     if spec.usd:
         rec["usd"] = spec.usd
     if spec.note is not None:
-        rec["not"] = spec.note
-        rec["notAsOf"] = spec.note_as_of
+        rec["note"] = spec.note
+        rec["noteAsOf"] = spec.note_as_of
     if spec.bank:
-        manual = banks.get((spec.market, spec.k), {})
+        manual = banks.get((spec.market, spec.symbol), {})
         for key in ("npl", "car", "nim"):
             rec[key] = clean_number(manual.get(key))
     return rec
@@ -130,13 +138,13 @@ def assemble(
     period: Mapping[str, str],
 ) -> dict[str, Any]:
     return {
-        "schema": 1,
+        "schema": 2,
         "asOf": as_of,
         "asOfBy": {m: as_of_by[m] for m in MARKETS if m in as_of_by},
         "source": source,
         "period": dict(period),
         "industries": {k: dict(v) for k, v in universe.industries.items()},
-        "stocks": [compose(s, banks, figures.get((s.market, s.k)) or carry(None)) for s in universe.stocks],
+        "stocks": [compose(s, banks, figures.get((s.market, s.symbol)) or carry(None)) for s in universe.stocks],
     }
 
 
@@ -154,7 +162,7 @@ def keep_as_of_by(prev_doc: Any, markets: tuple[str, ...] = MARKETS) -> dict[str
     as_of = prev_doc.get("asOf")
     if not isinstance(as_of, str) or not as_of:
         return {}
-    have = {s.get("market") for s in prev_doc["stocks"] if isinstance(s, dict) and clean_number(s.get("f")) is not None}
+    have = {s.get("market") for s in prev_doc["stocks"] if isinstance(s, dict) and clean_number(s.get("price")) is not None}
     return {m: as_of for m in markets if m in have}
 
 
@@ -169,8 +177,8 @@ def keep_period(prev_doc: Any, markets: tuple[str, ...] = MARKETS) -> dict[str, 
 def merge_series(old: Mapping[str, Any] | None, new: list[tuple[str, float]], days: int) -> list[tuple[str, float]]:
     """Old closes plus new ones (new wins on the same day), the last `days` of them."""
     merged: dict[str, float] = {}
-    if old and isinstance(old.get("t"), list) and isinstance(old.get("c"), list) and len(old["t"]) == len(old["c"]):
-        for t, c in zip(old["t"], old["c"]):
+    if old and isinstance(old.get("dates"), list) and isinstance(old.get("closes"), list) and len(old["dates"]) == len(old["closes"]):
+        for t, c in zip(old["dates"], old["closes"]):
             n = clean_number(c)
             if isinstance(t, str) and n is not None and n > 0:
                 merged[t] = float(n)
@@ -181,11 +189,11 @@ def merge_series(old: Mapping[str, Any] | None, new: list[tuple[str, float]], da
 
 def price_doc(spec: StockSpec, series: list[tuple[str, float]]) -> dict[str, Any]:
     return {
-        "k": spec.k,
+        "symbol": spec.symbol,
         "market": spec.market,
-        "cur": spec.cur,
-        "t": [t for t, _ in series],
-        "c": [r2(c) for _, c in series],
+        "currency": spec.currency,
+        "dates": [t for t, _ in series],
+        "closes": [r2(c) for _, c in series],
     }
 
 
@@ -269,16 +277,16 @@ def _fetch_market(
     for spec in specs:
         row, note = scan.find(spec.tv)
         if note:
-            log.warning("%s %s: %s", market, spec.k, note)
+            log.warning("%s %s: %s", market, spec.symbol, note)
         if row is None:
             continue
         try:
             fig = map_tv_row(spec, row)
         except RowError as e:
-            log.warning("%s %s: screener row unusable (%s)", market, spec.k, e)
+            log.warning("%s %s: screener row unusable (%s)", market, spec.symbol, e)
             continue
         period_ends.append(fig.pop("_period_end", None))
-        tv_figures[spec.k] = fig
+        tv_figures[spec.symbol] = fig
     status.tv_ok = len(tv_figures)
     if (status.total - status.tv_ok) / status.total > fail_share:
         status.failed = True
@@ -290,11 +298,11 @@ def _fetch_market(
     figures: dict[tuple[str, str], dict[str, Any]] = {}
     price_docs: dict[str, dict[str, Any]] = {}
     for spec in specs:
-        old_rec = prev.get((market, spec.k))
-        fig = dict(tv_figures[spec.k]) if spec.k in tv_figures else carry(old_rec)
-        if spec.k not in tv_figures:
-            status.carried.append(spec.k)
-            log.warning("%s %s: no screener data, fundamentals carried forward", market, spec.k)
+        old_rec = prev.get((market, spec.symbol))
+        fig = dict(tv_figures[spec.symbol]) if spec.symbol in tv_figures else carry(old_rec)
+        if spec.symbol not in tv_figures:
+            status.carried.append(spec.symbol)
+            log.warning("%s %s: no screener data, fundamentals carried forward", market, spec.symbol)
 
         new_closes = yahoo.closes(spec.yf, start)
         if new_closes:
@@ -302,20 +310,20 @@ def _fetch_market(
             merged = merge_series(load_prices(spec.sid), new_closes, days)
             price_docs[spec.sid] = price_doc(spec, merged)
             closes = [c for _, c in merged]
-            seen = tv_figures.get(spec.k, {}).get("f")
+            seen = tv_figures.get(spec.symbol, {}).get("price")
             if seen and abs(closes[-1] / seen - 1) > PRICE_MISMATCH:
                 log.warning(
                     "%s %s: last Yahoo close %.2f (%s) and screener price %.2f differ a lot; is %s the right symbol?",
-                    market, spec.k, closes[-1], merged[-1][0], seen, spec.yf,
+                    market, spec.symbol, closes[-1], merged[-1][0], seen, spec.yf,
                 )
-            if spec.k not in tv_figures:
-                fig["f"] = r2(closes[-1])  # same quantity as the screener's close
+            if spec.symbol not in tv_figures:
+                fig["price"] = r2(closes[-1])  # same quantity as the screener's close
             for key, value in sma_set(closes).items():
                 if value is not None:  # otherwise keep the screener's (or carried) value
                     fig[key] = value
         else:
-            status.no_prices.append(spec.k)
-        figures[(market, spec.k)] = fig
+            status.no_prices.append(spec.symbol)
+        figures[(market, spec.symbol)] = fig
 
     status.degraded = (status.total - status.yahoo_ok) / status.total > fail_share
     if status.degraded:
@@ -345,11 +353,11 @@ def build_seed(
     ref_market = (reference or {}).get("market")
     figures: dict[tuple[str, str], dict[str, Any]] = {}
     for spec in universe.stocks:
-        key = (spec.market, spec.k)
+        key = (spec.market, spec.symbol)
         if key in prev:
             figures[key] = carry(prev[key])
-        elif spec.market == ref_market and spec.k in ref_stocks:
-            figures[key] = carry(ref_stocks[spec.k])
+        elif spec.market == ref_market and spec.symbol in ref_stocks:
+            figures[key] = carry(ref_stocks[spec.symbol])
         else:
             figures[key] = carry(None)
 

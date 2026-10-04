@@ -17,12 +17,12 @@ const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean'
 export function sanitizeThresholds(raw: unknown): Thresholds {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   return {
-    fk: num(r.fk, DEF.fk),
-    peg: num(r.peg, DEF.peg),
-    nb: num(r.nb, DEF.nb),
-    fg: num(r.fg, DEF.fg),
-    cyc: bool(r.cyc, DEF.cyc),
-    bank: bool(r.bank, DEF.bank),
+    maxPe: num(r.maxPe, DEF.maxPe),
+    maxPeg: num(r.maxPeg, DEF.maxPeg),
+    maxNetDebtEbitda: num(r.maxNetDebtEbitda, DEF.maxNetDebtEbitda),
+    minEbitdaGrowth: num(r.minEbitdaGrowth, DEF.minEbitdaGrowth),
+    warnCyclical: bool(r.warnCyclical, DEF.warnCyclical),
+    showBanks: bool(r.showBanks, DEF.showBanks),
   };
 }
 

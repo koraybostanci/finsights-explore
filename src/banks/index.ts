@@ -14,7 +14,7 @@ let root: HTMLElement | null = null;
 const banks = (): StockView[] => stocks('BIST', { banks: 'only' });
 
 /** Her 1 birim PD/DD'ye karşılık kaç puan özkaynak kârlılığı */
-const yieldPerPb = (b: StockView): number | null => (b.roe != null && b.pd != null && b.pd !== 0 ? b.roe / b.pd : null);
+const yieldPerPb = (b: StockView): number | null => (b.roe != null && b.pb != null && b.pb !== 0 ? b.roe / b.pb : null);
 
 const BT: Array<[string, string, string]> = [
   [
@@ -58,7 +58,7 @@ function renderChart(): void {
   const box = root?.querySelector<HTMLElement>('#bankchart');
   if (!box) return;
   const B = banks();
-  const withData = B.filter((b): b is StockView & { pd: number; roe: number } => b.pd != null && b.roe != null);
+  const withData = B.filter((b): b is StockView & { pb: number; roe: number } => b.pb != null && b.roe != null);
   if (!withData.length) {
     box.innerHTML = `${CHART_LBL}<p class="muted small">${
       B.length
@@ -71,7 +71,7 @@ function renderChart(): void {
   if (W <= 0) return;
   const H = Math.round(Math.min(400, Math.max(280, W * 0.55)));
   const m = { l: 52, r: 16, t: 22, b: 46 };
-  const pds = withData.map((b) => b.pd);
+  const pds = withData.map((b) => b.pb);
   const roes = withData.map((b) => b.roe);
   const x0 = Math.min(0.5, Math.floor(Math.min(...pds) * 10) / 10);
   const x1 = Math.max(1.2, Math.ceil(Math.max(...pds) * 10) / 10);
@@ -103,7 +103,7 @@ function renderChart(): void {
     x2: number;
     y2: number;
   }
-  const pts = withData.map((b) => ({ b, x: X(b.pd), y: Y(b.roe) }));
+  const pts = withData.map((b) => ({ b, x: X(b.pb), y: Y(b.roe) }));
   const placed: Rect[] = [];
   const lh = 14;
   const lw = (t: string): number => tw(t, 12, true) + 4;
@@ -114,9 +114,9 @@ function renderChart(): void {
     r.x2 > W - m.r ||
     r.y1 < m.t ||
     r.y2 > H - m.b;
-  const labels: Array<{ k: string; r: Rect }> = [];
+  const labels: Array<{ symbol: string; r: Rect }> = [];
   for (const p of [...pts].sort((a, b) => a.y - b.y)) {
-    const w = lw(p.b.k);
+    const w = lw(p.b.symbol);
     const cands: Array<[number, number]> = [
       [10, -lh / 2],
       [-10 - w, -lh / 2],
@@ -137,11 +137,11 @@ function renderChart(): void {
     }
     if (!best) best = { x1: p.x + 10, y1: p.y - lh / 2, x2: p.x + 10 + w, y2: p.y + lh / 2 };
     placed.push(best);
-    labels.push({ k: p.b.k, r: best });
+    labels.push({ symbol: p.b.symbol, r: best });
   }
   for (const p of pts)
-    g += `<g class="pt" data-k="${esc(p.b.k)}"><circle cx="${p.x}" cy="${p.y}" r="14" fill="transparent"/><circle cx="${p.x}" cy="${p.y}" r="6" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/></g>`;
-  for (const l of labels) g += svgText(l.r.x1 + 2, l.r.y2 - 3, l.k, { fs: 12, fw: 700, ff: 'var(--mono)' });
+    g += `<g class="pt" data-symbol="${esc(p.b.symbol)}"><circle cx="${p.x}" cy="${p.y}" r="14" fill="transparent"/><circle cx="${p.x}" cy="${p.y}" r="6" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/></g>`;
+  for (const l of labels) g += svgText(l.r.x1 + 2, l.r.y2 - 3, l.symbol, { fs: 12, fw: 700, ff: 'var(--mono)' });
 
   const waiting = B.length - withData.length;
   box.innerHTML = `${CHART_LBL}${svgWrap(
@@ -157,10 +157,10 @@ function renderChart(): void {
   if (!tip) return;
   box.querySelectorAll<SVGGElement>('.pt').forEach((p) => {
     p.addEventListener('mousemove', (e) => {
-      const b = withData.find((z) => z.k === p.dataset.k);
+      const b = withData.find((z) => z.symbol === p.dataset.symbol);
       if (!b) return;
       const r = box.getBoundingClientRect();
-      tip.textContent = `${b.ad}: PD/DD ${nf(b.pd)} · ÖK kârl. %${nf(b.roe, 1)} · F/K ${nf(b.fk)}`;
+      tip.textContent = `${b.name}: PD/DD ${nf(b.pb)} · ÖK kârl. %${nf(b.roe, 1)} · F/K ${nf(b.pe)}`;
       tip.hidden = false;
       let lx = e.clientX - r.left + 12;
       if (lx + tip.offsetWidth > r.width - 8) lx = e.clientX - r.left - tip.offsetWidth - 12;
@@ -183,7 +183,7 @@ function renderTable(): void {
   const st = [...B].sort((a, b) => {
     const x = yieldPerPb(a);
     const y = yieldPerPb(b);
-    if (x == null && y == null) return a.k.localeCompare(b.k, 'tr');
+    if (x == null && y == null) return a.symbol.localeCompare(b.symbol, 'tr');
     if (x == null) return 1;
     if (y == null) return -1;
     return y - x;
@@ -193,12 +193,12 @@ function renderTable(): void {
     st
       .map(
         (b) =>
-          `<tr><td class="name"><b>${esc(b.k)}</b><span>${esc(b.ad)}</span></td><td>${nf(b.fk)}</td><td class="${
-            b.pd != null && b.pd < 1 ? 'v-good' : ''
-          }">${nf(b.pd)}</td><td>${b.roe == null ? '–' : '%' + nf(b.roe, 1)}</td><td>${nf(yieldPerPb(b), 1)}</td><td>${nf(
+          `<tr><td class="name"><b>${esc(b.symbol)}</b><span>${esc(b.name)}</span></td><td>${nf(b.pe)}</td><td class="${
+            b.pb != null && b.pb < 1 ? 'v-good' : ''
+          }">${nf(b.pb)}</td><td>${b.roe == null ? '–' : '%' + nf(b.roe, 1)}</td><td>${nf(yieldPerPb(b), 1)}</td><td>${nf(
             b.npl,
             2,
-          )}</td><td>${nf(b.car, 1)}</td><td>${nf(b.nim, 2)}</td><td>${esc(b.ng == null ? b.ngT || '–' : pct(b.ng))}</td></tr>`,
+          )}</td><td>${nf(b.car, 1)}</td><td>${nf(b.nim, 2)}</td><td>${esc(b.netIncomeGrowth == null ? b.netIncomeGrowthNote || '–' : pct(b.netIncomeGrowth))}</td></tr>`,
       )
       .join('') +
     `</tbody>`;

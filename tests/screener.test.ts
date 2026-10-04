@@ -23,7 +23,7 @@ import {
   sortRows,
   verdictLabel,
 } from '../src/screener/logic.ts';
-import { parseThreshold, sanitizeThresholds } from '../src/screener/thresholds.ts';
+import { getThresholds, parseThreshold, sanitizeThresholds } from '../src/screener/thresholds.ts';
 import {
   buildStripDefs,
   dotOffsets,
@@ -54,7 +54,7 @@ import { BIM_EXAMPLE, calcEvaluate, calcMultiples } from '../src/calc/logic.ts';
 const DATA = JSON.parse(readFileSync(new URL('./fixtures/market.json', import.meta.url), 'utf8')) as MarketData;
 const views: StockView[] = DATA.stocks.map((s) => toView(s, DATA.industries));
 const view = (k: string): StockView => {
-  const v = views.find((s) => s.k === k);
+  const v = views.find((s) => s.symbol === k);
   assert.ok(v, `${k} veride yok`);
   return v;
 };
@@ -80,64 +80,64 @@ test('sortRows: sonuç sırası temiz → uyarılı → elendi, uyarı sayısı 
 
 test('sortRows: boş değerler iki yönde de sonda kalır, girdi dizisi değişmez', () => {
   const rows = buildRows(bist, DEF);
-  const before = rows.map((r) => r.s.k);
+  const before = rows.map((r) => r.s.symbol);
   for (const dir of [1, -1] as const) {
-    const out = sortRows(rows, 'fk', dir);
-    const firstNull = out.findIndex((r) => r.s.fk == null);
+    const out = sortRows(rows, 'pe', dir);
+    const firstNull = out.findIndex((r) => r.s.pe == null);
     assert.ok(firstNull > 0);
-    assert.ok(out.slice(firstNull).every((r) => r.s.fk == null), 'zarar edenler sonda');
-    const vals = out.slice(0, firstNull).map((r) => r.s.fk as number);
+    assert.ok(out.slice(firstNull).every((r) => r.s.pe == null), 'zarar edenler sonda');
+    const vals = out.slice(0, firstNull).map((r) => r.s.pe as number);
     assert.deepEqual(vals, [...vals].sort((a, b) => (a - b) * dir));
   }
-  assert.deepEqual(rows.map((r) => r.s.k), before);
+  assert.deepEqual(rows.map((r) => r.s.symbol), before);
 });
 
 test('sortRows: hisse koduna göre Türkçe sıralama ve ortalama uzaklığına göre sıralama', () => {
   const rows = buildRows(bist, DEF);
-  const byK = sortRows(rows, 'k', 1).map((r) => r.s.k);
+  const byK = sortRows(rows, 'symbol', 1).map((r) => r.s.symbol);
   assert.deepEqual(byK, [...byK].sort((a, b) => a.localeCompare(b, 'tr')));
-  const a = withFields('THYAO', { f: 110, sma200: 100 });
-  const b = withFields('PGSUS', { f: 90, sma200: 100 });
+  const a = withFields('THYAO', { price: 110, sma200: 100 });
+  const b = withFields('PGSUS', { price: 90, sma200: 100 });
   const c = withFields('TCELL', { sma200: null });
-  const out = sortRows(buildRows([c, b, a], DEF), 'd200', -1).map((r) => r.s.k);
+  const out = sortRows(buildRows([c, b, a], DEF), 'd200', -1).map((r) => r.s.symbol);
   assert.deepEqual(out, ['THYAO', 'PGSUS', 'TCELL']);
 });
 
 test('nextSort: aynı sütunda yön döner; yeni sütunda çarpanlar artan, büyüme azalan başlar', () => {
   assert.deepEqual(nextSort({ key: 'verdict', dir: 1 }, 'verdict'), { key: 'verdict', dir: -1 });
-  assert.deepEqual(nextSort({ key: 'verdict', dir: -1 }, 'fk'), { key: 'fk', dir: 1 });
-  assert.deepEqual(nextSort({ key: 'fk', dir: 1 }, 'fg'), { key: 'fg', dir: -1 });
-  for (const k of ['k', 'verdict', 'fk', 'pd', 'fdf', 'peg', 'nb'] as const) assert.equal(defaultDir(k), 1);
-  for (const k of ['fg', 'ng', 'roe', 'mv', 'd50', 'd200'] as const) assert.equal(defaultDir(k), -1);
+  assert.deepEqual(nextSort({ key: 'verdict', dir: -1 }, 'pe'), { key: 'pe', dir: 1 });
+  assert.deepEqual(nextSort({ key: 'pe', dir: 1 }, 'ebitdaGrowth'), { key: 'ebitdaGrowth', dir: -1 });
+  for (const k of ['symbol', 'verdict', 'pe', 'pb', 'evEbitda', 'peg', 'netDebtEbitda'] as const) assert.equal(defaultDir(k), 1);
+  for (const k of ['ebitdaGrowth', 'netIncomeGrowth', 'roe', 'marketCap', 'd50', 'd200'] as const) assert.equal(defaultDir(k), -1);
 });
 
 /* ---------- Sütunlar ---------- */
 
 test('listCols: ilk sürümün sütun sırası + Net borç/FAVÖK ten sonra 200g ort.; piyasa değeri para birimiyle', () => {
   const keys = listCols('BIST').map((c) => c.key);
-  assert.deepEqual(keys, ['k', 'verdict', 'why', 'fk', 'pd', 'fdf', 'peg', 'nb', 'd200', 'fg', 'ng', 'roe', 'mv']);
+  assert.deepEqual(keys, ['symbol', 'verdict', 'why', 'pe', 'pb', 'evEbitda', 'peg', 'netDebtEbitda', 'd200', 'ebitdaGrowth', 'netIncomeGrowth', 'roe', 'marketCap']);
   assert.equal(listCols('BIST').at(-1)?.en, 'Market cap, bn TL');
   assert.equal(listCols('US').at(-1)?.en, 'Market cap, bn USD');
   assert.deepEqual(
     PEER_COLS.map((c) => c.key),
-    ['k', 'verdict', 'fk', 'pd', 'fdf', 'peg', 'nb', 'fg', 'roe', 'd50', 'd200'],
+    ['symbol', 'verdict', 'pe', 'pb', 'evEbitda', 'peg', 'netDebtEbitda', 'ebitdaGrowth', 'roe', 'd50', 'd200'],
   );
 });
 
 /* ---------- Süzgeç ---------- */
 
 test('200 günlük ortalamanın üstünde süzgeci: ortalaması olmayan ve altında kalan gizlenir', () => {
-  const above = withFields('THYAO', { f: 110, sma200: 100 });
-  const below = withFields('PGSUS', { f: 90, sma200: 100 });
-  const equal = withFields('TTKOM', { f: 100, sma200: 100 });
+  const above = withFields('THYAO', { price: 110, sma200: 100 });
+  const below = withFields('PGSUS', { price: 90, sma200: 100 });
+  const equal = withFields('TTKOM', { price: 100, sma200: 100 });
   const none = withFields('TCELL', { sma200: null });
   const rows = buildRows([above, below, equal, none], DEF);
   assert.equal(filterRows(rows, { aboveSma: false }).length, 4);
   assert.deepEqual(
-    filterRows(rows, { aboveSma: true }).map((r) => r.s.k),
+    filterRows(rows, { aboveSma: true }).map((r) => r.s.symbol),
     ['THYAO'],
   );
-  assert.equal(aboveSma200({ f: null, sma200: 100 }), false);
+  assert.equal(aboveSma200({ price: null, sma200: 100 }), false);
   near(rows[0].d200, 10, 1e-9);
   near(rows[1].d200, -10, 1e-9);
   assert.equal(rows[3].d200, null);
@@ -167,26 +167,50 @@ test('orderGroups ve pickIndustry: kıyaslanabilir sektörler önde; hatırlanan
   assert.ok(multi >= 5);
   assert.ok(groups.slice(0, multi).every((g) => g.stocks.length >= 2));
   assert.ok(groups.slice(multi).every((g) => g.stocks.length < 2));
-  const names = groups.slice(0, multi).map((g) => g.sek);
+  const names = groups.slice(0, multi).map((g) => g.industryTr);
   assert.deepEqual(names, [...names].sort((a, b) => a.localeCompare(b, 'tr')));
 
   assert.equal(pickIndustry(groups, 'airlines'), 'airlines');
-  assert.equal(pickIndustry(groups, 'yok-boyle-sektor'), groups[0].ind);
-  assert.equal(pickIndustry(groups, null), groups[0].ind);
+  assert.equal(pickIndustry(groups, 'yok-boyle-sektor'), groups[0].industry);
+  assert.equal(pickIndustry(groups, null), groups[0].industry);
   assert.equal(pickIndustry([], 'airlines'), null);
   // Hisselerim'de yalnız tek hisseli sektörler kaldıysa yine ilk sektör seçilir
   const singles = orderGroups(groupByIndustry([view('TUPRS'), view('ASELS')]));
-  assert.equal(pickIndustry(singles, 'airlines'), singles[0].ind);
+  assert.equal(pickIndustry(singles, 'airlines'), singles[0].industry);
 });
 
 /* ---------- Eşikler ---------- */
 
+test('sanitizeThresholds: eski anahtarlı (şema 1) kayıt ve yanlış türler alan alan varsayılana döner', () => {
+  // Eski sürümün sakladığı biçim: yeni kod bu anahtarları okumaz, varsayılana düşer
+  assert.deepEqual(sanitizeThresholds({ fk: 50, peg: 2, nb: 4, fg: 10, cyc: false, bank: true }), DEF);
+  // Yeni anahtarlar geçerliyse korunur, eski anahtarlar yok sayılır
+  assert.deepEqual(sanitizeThresholds({ fk: 50, maxPeg: 2, bank: true, showBanks: false }), { ...DEF, maxPeg: 2 });
+  // Nesne olmayan değerler
+  for (const raw of [undefined, 'abc', 42, true, [], [1, 2]]) assert.deepEqual(sanitizeThresholds(raw), DEF);
+  // Yanlış türler tek tek düşer, geçerli alanlar kalır
+  assert.deepEqual(
+    sanitizeThresholds({ maxPe: '20', maxPeg: null, maxNetDebtEbitda: Infinity, minEbitdaGrowth: -5, warnCyclical: 'yes', showBanks: true }),
+    { ...DEF, minEbitdaGrowth: -5, showBanks: true },
+  );
+});
+
+test('getThresholds: localStorage\'daki eski biçim uygulamayı bozmaz, varsayılan eşikler gelir', () => {
+  const stored: Record<string, string> = { 'finsights.thresholds': JSON.stringify({ fk: 50, peg: 2, nb: 4, fg: 10, cyc: false, bank: true }) };
+  (globalThis as { localStorage?: unknown }).localStorage = {
+    getItem: (k: string) => stored[k] ?? null,
+    setItem: (k: string, v: string) => void (stored[k] = v),
+    removeItem: (k: string) => void delete stored[k],
+  };
+  assert.deepEqual(getThresholds(), DEF);
+});
+
 test('sanitizeThresholds ve parseThreshold: bozuk ya da boş değer varsayılana döner', () => {
   assert.deepEqual(sanitizeThresholds(null), DEF);
-  assert.deepEqual(sanitizeThresholds({ fk: 20, peg: 'x', nb: NaN, cyc: false, bank: 1 }), {
+  assert.deepEqual(sanitizeThresholds({ maxPe: 20, maxPeg: 'x', maxNetDebtEbitda: NaN, warnCyclical: false, showBanks: 1 }), {
     ...DEF,
-    fk: 20,
-    cyc: false,
+    maxPe: 20,
+    warnCyclical: false,
   });
   assert.equal(parseThreshold('', 30), 30);
   assert.equal(parseThreshold('abc', 2.5), 2.5);
@@ -268,12 +292,12 @@ test('dotOffsets: üst üste gelen işaretler dikeyde ayrılır', () => {
 });
 
 test('layoutStrips: ortanca çentiği üstüne yığılan işaretlerden taşar; değer etiketleri yığının üstünde kalır', () => {
-  const same = ['A', 'B', 'C', 'D', 'E'].map((k) => ({ k, fk: null, pd: 2.5, fdf: null, nb: null }));
-  const far = { k: 'Z', fk: null, pd: 9, fdf: null, nb: null };
-  const defs = buildStripDefs([...same, far], { fk: null, pd: 2.5, fdf: null, nb: null }, DEF.nb);
+  const same = ['A', 'B', 'C', 'D', 'E'].map((k) => ({ symbol: k, pe: null, pb: 2.5, evEbitda: null, netDebtEbitda: null }));
+  const far = { symbol: 'Z', pe: null, pb: 9, evEbitda: null, netDebtEbitda: null };
+  const defs = buildStripDefs([...same, far], { pe: null, pb: 2.5, evEbitda: null, netDebtEbitda: null }, DEF.maxNetDebtEbitda);
   const lay = layoutStrips(defs, 560, new Map());
   const pd = lay.strips[0];
-  const offs = pd.dots.filter((d) => d.k !== 'Z').map((d) => d.y - pd.y);
+  const offs = pd.dots.filter((d) => d.symbol !== 'Z').map((d) => d.y - pd.y);
   assert.equal(new Set(offs).size, 5);
   assert.ok(pd.medianTick.up > Math.max(...offs.map((o) => -o)) + 6, 'çentik yukarıda işaretlerden taşar');
   assert.ok(pd.medianTick.down > Math.max(...offs) + 6, 'çentik aşağıda işaretlerden taşar');
@@ -281,7 +305,7 @@ test('layoutStrips: ortanca çentiği üstüne yığılan işaretlerden taşar; 
   for (const b of pd.below.filter((x) => x.shown)) assert.ok(b.y - 11.5 >= pd.y + pd.medianTick.down, 'ortanca etiketi çentiğin altında');
 
   // Yığın yokken çentik eski boyunda kalır.
-  const two = buildStripDefs([{ k: 'A', fk: null, pd: 1, fdf: null, nb: null }, far], { fk: null, pd: 5, fdf: null, nb: null }, DEF.nb);
+  const two = buildStripDefs([{ symbol: 'A', pe: null, pb: 1, evEbitda: null, netDebtEbitda: null }, far], { pe: null, pb: 5, evEbitda: null, netDebtEbitda: null }, DEF.maxNetDebtEbitda);
   assert.deepEqual(layoutStrips(two, 560, new Map()).strips[0].medianTick, { up: 12, down: 12 });
 });
 
@@ -298,24 +322,24 @@ test('markerFor: dört renk; dörtten fazla hissede renkler başka biçimlerle y
 
 test('buildStripDefs: F/K şeridi en az iki hissede F/K varsa; eşik yalnız borç şeridinde', () => {
   const air = [view('THYAO'), view('PGSUS')]; // PGSUS zararda: F/K yok
-  const defsAir = buildStripDefs(air, industryMedian(air), DEF.nb);
-  assert.deepEqual(defsAir.map((d) => d.key), ['pd', 'fdf', 'nb']);
+  const defsAir = buildStripDefs(air, industryMedian(air), DEF.maxNetDebtEbitda);
+  assert.deepEqual(defsAir.map((d) => d.key), ['pb', 'evEbitda', 'netDebtEbitda']);
   assert.equal(defsAir[2].threshold, 2.5);
   assert.equal(defsAir[0].threshold, undefined);
   near(defsAir[0].median, 0.515);
 
   const tel = [view('TTKOM'), view('TCELL')];
-  assert.deepEqual(buildStripDefs(tel, industryMedian(tel), DEF.nb).map((d) => d.key), ['fk', 'pd', 'fdf', 'nb']);
+  assert.deepEqual(buildStripDefs(tel, industryMedian(tel), DEF.maxNetDebtEbitda).map((d) => d.key), ['pe', 'pb', 'evEbitda', 'netDebtEbitda']);
 
   const usTel = [view('VZ'), view('T')];
-  assert.deepEqual(buildStripDefs(usTel, industryMedian(usTel), DEF.nb), [], 'verisi olmayan sektörde şerit yok');
+  assert.deepEqual(buildStripDefs(usTel, industryMedian(usTel), DEF.maxNetDebtEbitda), [], 'verisi olmayan sektörde şerit yok');
 });
 
 test('layoutStrips: noktalar şeridin içinde, etiketler çakışmaz, eşik ve ortanca işaretli', () => {
   for (const W of [300, 420, 587, 900]) {
     for (const g of groupByIndustry(bist)) {
-      const defs = buildStripDefs(g.stocks, industryMedian(g.stocks), DEF.nb);
-      const markers = new Map(g.stocks.map((s, i) => [s.k, markerFor(i)]));
+      const defs = buildStripDefs(g.stocks, industryMedian(g.stocks), DEF.maxNetDebtEbitda);
+      const markers = new Map(g.stocks.map((s, i) => [s.symbol, markerFor(i)]));
       const lay = layoutStrips(defs, W, markers);
       assert.ok(lay.H > 0);
       let prevBottom = -Infinity;
@@ -323,7 +347,7 @@ test('layoutStrips: noktalar şeridin içinde, etiketler çakışmaz, eşik ve o
         assert.ok(s.y > prevBottom, 'şeritler alt alta');
         prevBottom = s.bottom;
         assert.ok(s.bottom <= lay.H + 8);
-        for (const d of s.dots) assert.ok(d.x >= s.x0 - 1e-6 && d.x <= s.x1 + 1e-6, `${g.sek} ${s.def.key} ${d.k}`);
+        for (const d of s.dots) assert.ok(d.x >= s.x0 - 1e-6 && d.x <= s.x1 + 1e-6, `${g.industryTr} ${s.def.key} ${d.symbol}`);
         if (s.medianX != null) assert.ok(s.medianX >= s.x0 - 1e-6 && s.medianX <= s.x1 + 1e-6);
         if (s.thresholdX != null) assert.ok(s.thresholdX >= s.x0 - 1e-6 && s.thresholdX <= s.x1 + 1e-6);
         for (const set of [s.values, s.below]) {
@@ -333,11 +357,11 @@ test('layoutStrips: noktalar şeridin içinde, etiketler çakışmaz, eşik ve o
               if (vis[i].y !== vis[j].y) continue;
               const wi = vis[i].text.length * 11.5 * 0.56;
               const wj = vis[j].text.length * 11.5 * 0.56;
-              assert.ok(Math.abs(vis[i].x - vis[j].x) >= (wi + wj) / 2, `${g.sek} ${s.def.key}: ${vis[i].text} / ${vis[j].text}`);
+              assert.ok(Math.abs(vis[i].x - vis[j].x) >= (wi + wj) / 2, `${g.industryTr} ${s.def.key}: ${vis[i].text} / ${vis[j].text}`);
             }
         }
       }
-      const nb = lay.strips.find((s) => s.def.key === 'nb');
+      const nb = lay.strips.find((s) => s.def.key === 'netDebtEbitda');
       if (nb) assert.ok(nb.below.some((b) => b.kind === 'threshold'), 'borç şeridinde eşik etiketi');
     }
   }
@@ -345,10 +369,10 @@ test('layoutStrips: noktalar şeridin içinde, etiketler çakışmaz, eşik ve o
 
 test('layoutStrips: yakın değerlerde değer etiketleri kaydırılır ya da düşer; yedi hissede biçimler ayrışır', () => {
   const list = ['THYAO', 'PGSUS', 'TTKOM', 'TCELL', 'KCHOL', 'SAHOL', 'EKGYO'].map((k) => view(k)); // PD/DD 0,40–0,70
-  const defs = buildStripDefs(list, industryMedian(list), DEF.nb);
-  const markers = new Map(list.map((s, i) => [s.k, markerFor(i)]));
+  const defs = buildStripDefs(list, industryMedian(list), DEF.maxNetDebtEbitda);
+  const markers = new Map(list.map((s, i) => [s.symbol, markerFor(i)]));
   const lay = layoutStrips(defs, 560, markers);
-  const pd = lay.strips.find((s) => s.def.key === 'pd');
+  const pd = lay.strips.find((s) => s.def.key === 'pb');
   assert.ok(pd);
   assert.equal(pd.dots.length, 7);
   assert.ok(pd.values.some((v) => !v.shown), 'yedi yakın değerin hepsi yazılmaz');
@@ -366,10 +390,10 @@ test('layoutStrips: yakın değerlerde değer etiketleri kaydırılır ya da dü
 test('tablo: başlık, satır ve ortanca satırı sütun sayısıyla uyumlu; dış metin kaçırılır', () => {
   const cells = (html: string): number => (html.match(/<t[dh][\s>]/g) ?? []).length;
   assert.equal(cells(headHtml(PEER_COLS, { key: 'verdict', dir: 1 })), 11);
-  assert.equal(cells(headHtml(listCols('US'), { key: 'fk', dir: -1 })), 13);
-  assert.ok(headHtml(PEER_COLS, { key: 'fk', dir: -1 }).includes('F/K ↓'));
+  assert.equal(cells(headHtml(listCols('US'), { key: 'pe', dir: -1 })), 13);
+  assert.ok(headHtml(PEER_COLS, { key: 'pe', dir: -1 }).includes('F/K ↓'));
 
-  const evil = withFields('THYAO', { ad: '<img src=x onerror=1>', f: 110, sma50: 100, sma200: 125 });
+  const evil = withFields('THYAO', { name: '<img src=x onerror=1>', price: 110, sma50: 100, sma200: 125 });
   const [r] = buildRows([evil], DEF);
   const peer = peerRowHtml(r, DEF, false);
   assert.equal(cells(peer), 11);
@@ -407,7 +431,7 @@ test('summaryHtml: "Veri bekliyor" yalnızca böyle hisse varsa; "Banka" yalnız
 const flat = (n: number, v: number): number[] => new Array<number>(n).fill(v);
 const dayList = (n: number): string[] =>
   Array.from({ length: n }, (_, i) => new Date(Date.UTC(2025, 0, 1 + i)).toISOString().slice(0, 10));
-const mkSeries = (c: number[]): PriceSeries => ({ k: 'THYAO', market: 'BIST', cur: 'TRY', t: dayList(c.length), c });
+const mkSeries = (c: number[]): PriceSeries => ({ symbol: 'THYAO', market: 'BIST', currency: 'TRY', dates: dayList(c.length), closes: c });
 
 test('trendSentence: fiyatın ve ortalamaların sırasına göre tek cümle', () => {
   assert.equal(trendSentence(120, 110, 100), 'Fiyat 50 ve 200 günlük ortalamaların üstünde: eğilim yukarı.');
@@ -433,12 +457,12 @@ test('smaView: ortalamalar önce veriden, yoksa fiyat serisinden; hiçbiri yoksa
   assert.deepEqual(none.avgs.map((a) => a.v), [null, null, null]);
   assert.deepEqual(none.sentences, []);
 
-  const fromFields = smaView(withFields('THYAO', { f: 110, sma20: 105, sma50: 100, sma200: 90 }), null);
+  const fromFields = smaView(withFields('THYAO', { price: 110, sma20: 105, sma50: 100, sma200: 90 }), null);
   assert.deepEqual(fromFields.avgs.map((a) => a.v), [105, 100, 90]);
   near(fromFields.avgs[1].dist, 10, 1e-9);
   assert.deepEqual(fromFields.sentences, ['Fiyat 50 ve 200 günlük ortalamaların üstünde: eğilim yukarı.']);
 
-  const fromSeries = smaView(withFields('THYAO', { f: 120 }), mkSeries([...flat(200, 100), ...flat(60, 120)]));
+  const fromSeries = smaView(withFields('THYAO', { price: 120 }), mkSeries([...flat(200, 100), ...flat(60, 120)]));
   near(fromSeries.avgs[0].v, 120, 1e-9);
   near(fromSeries.avgs[2].v, (140 * 100 + 60 * 120) / 200, 1e-9);
   assert.ok(fromSeries.sentences.length >= 1);
@@ -454,7 +478,7 @@ test('extraInfo ve noteHtml: hedef fiyat hissenin para birimiyle; yorum tarihiyl
   assert.ok(thy.includes('PD/DD 0,40: piyasa şirketi özkaynağının altında fiyatlıyor.'));
   assert.ok(thy.includes('Fonksiyonel para birimi USD'));
   assert.ok(thy.includes('hedefi 454,33 TL, fiyat 291,00 TL (nominal potansiyel +%56)'));
-  const usd = extraInfo(withFields('VZ', { f: 40, h: 50, cur: 'USD' })).join(' ');
+  const usd = extraInfo(withFields('VZ', { price: 40, targetPrice: 50, currency: 'USD' })).join(' ');
   assert.ok(usd.includes('hedefi 50,00 USD, fiyat 40,00 USD (nominal potansiyel +%25)'));
   assert.deepEqual(extraInfo(view('VZ')), []);
 
@@ -463,7 +487,7 @@ test('extraInfo ve noteHtml: hedef fiyat hissenin para birimiyle; yorum tarihiyl
   // Veri yorumdan yeniyse yorum gösterilmez; aynı günün verisiyle gösterilir
   assert.equal(noteHtml(view('THYAO'), '2026-10-05T18:45:00+03:00'), '');
   assert.ok(noteHtml(view('THYAO'), '2026-10-02T15:00:00+03:00').includes('Yorum (2 Ekim 2026'));
-  assert.ok(!noteHtml(withFields('THYAO', { not: '<b>x</b>' })).includes('<b>x</b>'));
+  assert.ok(!noteHtml(withFields('THYAO', { note: '<b>x</b>' })).includes('<b>x</b>'));
 });
 
 test('detailHtml: verisi olmayan hissede yalnızca verinin beklendiği yazar', () => {
@@ -478,10 +502,10 @@ test('detailHtml: verisi olmayan hissede yalnızca verinin beklendiği yazar', (
     assert.ok(full.includes(part), part);
 
   // Etiket büyük harfe çevrilir; İngilizce ad ve sektör adı Türkçe kuralla ("İ") yazılmasın diye dili belirtilir.
-  const [u] = buildRows([withFields('VZ', { f: 40, fk: 9, pd: 1.5, fdf: 7 })], DEF);
+  const [u] = buildRows([withFields('VZ', { price: 40, pe: 9, pb: 1.5, evEbitda: 7 })], DEF);
   const us = detailHtml(u.s, u.ev, { id: 'US-VZ', ai: '', sma: '' });
-  assert.ok(us.includes(`<span lang="en">${u.s.ad}</span> · `), 'ABD hissesinin adı İngilizce işaretli');
-  assert.ok(us.includes(`<span lang="en">(${u.s.sekEn})</span>`));
+  assert.ok(us.includes(`<span lang="en">${u.s.name}</span> · `), 'ABD hissesinin adı İngilizce işaretli');
+  assert.ok(us.includes(`<span lang="en">(${u.s.industryEn})</span>`));
 });
 
 test('smaBlockHtml: fiyat dosyası yoksa grafik yerine not; uydurma değer yok', () => {
@@ -495,14 +519,14 @@ test('smaBlockHtml: fiyat dosyası yoksa grafik yerine not; uydurma değer yok',
   const loading = smaBlockHtml(view('THYAO'), undefined, '2 Ekim 2026', 'sc-sma-x');
   assert.ok(loading.includes('yükleniyor'));
 
-  const withFile = smaBlockHtml(withFields('THYAO', { f: 120 }), mkSeries([...flat(200, 100), ...flat(60, 120)]), '', 'sc-sma-x');
+  const withFile = smaBlockHtml(withFields('THYAO', { price: 120 }), mkSeries([...flat(200, 100), ...flat(60, 120)]), '', 'sc-sma-x');
   assert.ok(withFile.includes('<div class="chartbox" id="sc-sma-x"></div>'));
   assert.ok(withFile.includes('200 günlük ortalama (kesikli)'));
   assert.ok(withFile.includes('Son 250 işlem günü'));
   assert.ok(withFile.includes('<span lang="en">Simple moving averages (SMA)</span>'));
 
   // Kısa seride çizilmeyen ortalama açıklama satırında da yazmaz.
-  const short = smaBlockHtml(withFields('THYAO', { f: 100 }), mkSeries(flat(120, 100)), '', 'sc-sma-x');
+  const short = smaBlockHtml(withFields('THYAO', { price: 100 }), mkSeries(flat(120, 100)), '', 'sc-sma-x');
   assert.ok(short.includes('20 günlük ortalama</span>') && short.includes('50 günlük ortalama</span>'));
   assert.ok(!short.includes('(kesikli)'), '120 günlük seride 200 günlük ortalama yok');
   assert.ok(short.includes('Son 120 işlem günü'));
@@ -516,7 +540,7 @@ test('smaChartModel: son 250 gün, dört çizgi, eksen aralığı veriyi kapsar'
   const s = mkSeries(c);
   assert.equal(seriesUsable(s), true);
   assert.equal(seriesUsable(mkSeries([1])), false);
-  assert.equal(seriesUsable({ ...s, t: s.t.slice(1) }), false);
+  assert.equal(seriesUsable({ ...s, dates: s.dates.slice(1) }), false);
   const m = smaChartModel(s, 900);
   assert.ok(m);
   assert.equal(m.end - m.start + 1, SMA_WINDOW);
@@ -554,31 +578,31 @@ const TEXT: AiText = {
 };
 
 test('yapay zekâ kutuları: kapalıyken Ayarlar a yönlendirir, açıkken yalnızca düğme sunar', () => {
-  const off = compareBlockHtml('BIST:airlines', undefined, OFF, { sek: 'Havayolu', withData: 2 });
+  const off = compareBlockHtml('BIST:airlines', undefined, OFF, { industryTr: 'Havayolu', withData: 2 });
   assert.ok(off.includes("Ayarlar'da yapay zekâyı aç") && off.includes('data-act="goto-settings"'));
   assert.ok(!off.includes('ai-compare'));
 
-  const on = compareBlockHtml('BIST:airlines', undefined, ON, { sek: 'Havayolu', withData: 2 });
+  const on = compareBlockHtml('BIST:airlines', undefined, ON, { industryTr: 'Havayolu', withData: 2 });
   assert.ok(on.includes('>Karşılaştır</button>') && on.includes('data-force="0"'));
-  const one = compareBlockHtml('BIST:airlines', undefined, ON, { sek: 'Havayolu', withData: 1 });
+  const one = compareBlockHtml('BIST:airlines', undefined, ON, { industryTr: 'Havayolu', withData: 1 });
   assert.ok(!one.includes('<button') && one.includes('en az iki hisse'));
 
-  const busy = compareBlockHtml('BIST:airlines', { status: 'loading', token: 1 }, ON, { sek: 'Havayolu', withData: 2 });
+  const busy = compareBlockHtml('BIST:airlines', { status: 'loading', token: 1 }, ON, { industryTr: 'Havayolu', withData: 2 });
   assert.ok(busy.includes('class="spin"') && busy.includes(' disabled'));
 
-  const done = compareBlockHtml('BIST:airlines', { status: 'done', result: TEXT, token: 1 }, ON, { sek: 'Havayolu', withData: 2 });
+  const done = compareBlockHtml('BIST:airlines', { status: 'done', result: TEXT, token: 1 }, ON, { industryTr: 'Havayolu', withData: 2 });
   assert.ok(done.includes('class="learn ai-text"'));
   assert.ok(done.includes('<p>Birinci paragraf &lt;script&gt;x&lt;/script&gt;</p><p>İkinci paragraf</p>'));
   assert.ok(done.includes('Claude (claude-x) ile yazıldı. Yatırım tavsiyesi değildir.'));
   assert.ok(done.includes('>Yeniden karşılaştır</button>') && done.includes('data-force="1"'));
 
-  const err = compareBlockHtml('BIST:airlines', { status: 'error', error: 'Hata <b>', token: 2 }, ON, { sek: 'Havayolu', withData: 2 });
+  const err = compareBlockHtml('BIST:airlines', { status: 'error', error: 'Hata <b>', token: 2 }, ON, { industryTr: 'Havayolu', withData: 2 });
   assert.ok(err.includes('<p class="note" role="alert">Hata &lt;b&gt;</p>'));
 });
 
 test('hisse yorumu kutusu: kapalıyken tek satır ve Ayarlar bağlantısı; açıkken Yorumla / Yeniden yorumla', () => {
   const off = commentBlockHtml('BIST-THYAO', undefined, OFF);
-  assert.ok(off.includes('<a href="#ayarlar">') && !off.includes('<button'));
+  assert.ok(off.includes('<a href="#settings">') && !off.includes('<button'));
   const on = commentBlockHtml('BIST-THYAO', undefined, ON);
   assert.ok(on.includes('>Yorumla</button>') && on.includes('data-key="BIST-THYAO"'));
   const done = commentBlockHtml('BIST-THYAO', { status: 'done', result: TEXT, token: 1 }, ON);
@@ -598,35 +622,35 @@ test('hesaplayıcı: BİM örneği ilk sürümdeki sonuçları verir', () => {
   near(m.nbf, 0.58);
   // Tablodaki BIMAS çarpanlarıyla aynı (kaynak aynı rakamlardan hesaplıyor)
   const bim = view('BIMAS');
-  near(m.fk, bim.fk as number);
-  near(m.pddd, bim.pd as number);
-  near(m.fdf, bim.fdf as number);
+  near(m.fk, bim.pe as number);
+  near(m.pddd, bim.pb as number);
+  near(m.fdf, bim.evEbitda as number);
   near(m.peg, bim.peg as number);
-  near(m.nbf, bim.nb as number);
+  near(m.nbf, bim.netDebtEbitda as number);
 
   const { ev } = calcEvaluate(BIM_EXAMPLE, DEF);
   assert.equal(ev.verdict, 'good');
-  assert.deepEqual(ev.checks.map((c) => [c.n, c.st]), [
-    ['Kâr', 'good'],
-    ['F/K', 'good'],
-    ['PEG', 'good'],
-    ['Büyüme kalitesi', 'good'],
-    ['Borç', 'good'],
+  assert.deepEqual(ev.checks.map((c) => [c.id, c.status]), [
+    ['profit', 'good'],
+    ['pe', 'good'],
+    ['peg', 'good'],
+    ['growthQuality', 'good'],
+    ['debt', 'good'],
   ]);
-  assert.equal(ev.checks[1].t, 'F/K 16,78, eşiğin (30) altında. Kâr sabit kalsa fiyatı yaklaşık 17 yılda geri öder.');
+  assert.equal(ev.checks[1].long, 'F/K 16,78, eşiğin (30) altında. Kâr sabit kalsa fiyatı yaklaşık 17 yılda geri öder.');
 });
 
 test('hesaplayıcı: eşikler, zarar, döngüsellik ve hesaplanamayan borç', () => {
-  assert.equal(calcEvaluate(BIM_EXAMPLE, { ...DEF, fk: 15 }).ev.verdict, 'bad');
+  assert.equal(calcEvaluate(BIM_EXAMPLE, { ...DEF, maxPe: 15 }).ev.verdict, 'bad');
   const cyc = calcEvaluate({ ...BIM_EXAMPLE, cyc: true }, DEF).ev;
   assert.equal(cyc.verdict, 'warn');
-  assert.equal(cyc.checks.at(-1)?.t, 'Bu sektör döngüsel bir sektör; bugünkü kâr ortalamanın üstünde veya altında olabilir.');
-  assert.equal(calcEvaluate({ ...BIM_EXAMPLE, cyc: true }, { ...DEF, cyc: false }).ev.verdict, 'good');
+  assert.equal(cyc.checks.at(-1)?.long, 'Bu sektör döngüsel bir sektör; bugünkü kâr ortalamanın üstünde veya altında olabilir.');
+  assert.equal(calcEvaluate({ ...BIM_EXAMPLE, cyc: true }, { ...DEF, warnCyclical: false }).ev.verdict, 'good');
 
   const loss = calcEvaluate({ ...BIM_EXAMPLE, nk: -5 }, DEF);
   assert.equal(loss.m.fk, null);
   assert.equal(loss.m.peg, null);
-  assert.equal(loss.ev.checks[0].st, 'bad');
+  assert.equal(loss.ev.checks[0].status, 'bad');
 
   const cash = calcMultiples({ ...BIM_EXAMPLE, nb: -40 });
   near(cash.nbf, -0.717);
@@ -636,9 +660,9 @@ test('hesaplayıcı: eşikler, zarar, döngüsellik ve hesaplanamayan borç', ()
   const noDebt = calcEvaluate({ ...BIM_EXAMPLE, nb: NaN }, DEF);
   assert.equal(noDebt.m.nbf, null);
   near(noDebt.m.fdf, 495.6 / 55.75);
-  const debt = noDebt.ev.checks.find((c) => c.n === 'Borç');
-  assert.equal(debt?.st, 'bad');
-  assert.ok(debt && !/\d/.test(debt.t), 'metinde rakam yok');
+  const debt = noDebt.ev.checks.find((c) => c.id === 'debt');
+  assert.equal(debt?.status, 'bad');
+  assert.ok(debt && !/\d/.test(debt.long), 'metinde rakam yok');
   assert.equal(noDebt.ev.verdict, 'bad');
 
   // Boş kutular: her şey "–", sonuç yine hesaplanır

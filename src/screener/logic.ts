@@ -18,17 +18,17 @@ export interface Row {
 }
 
 export type SortKey =
-  | 'k'
+  | 'symbol'
   | 'verdict'
-  | 'fk'
-  | 'pd'
-  | 'fdf'
+  | 'pe'
+  | 'pb'
+  | 'evEbitda'
   | 'peg'
-  | 'nb'
-  | 'fg'
-  | 'ng'
+  | 'netDebtEbitda'
+  | 'ebitdaGrowth'
+  | 'netIncomeGrowth'
   | 'roe'
-  | 'mv'
+  | 'marketCap'
   | 'd50'
   | 'd200';
 
@@ -51,32 +51,32 @@ const CUR_OF: Record<MarketId, string> = { BIST: 'TL', US: 'USD' };
 /** "Tüm liste" sütunları: ilk sürümün sütunları + Net borç/FAVÖK'ten sonra 200 günlük ortalama. */
 export function listCols(market: MarketId): Col[] {
   return [
-    { key: 'k', lbl: 'Hisse' },
+    { key: 'symbol', lbl: 'Hisse' },
     { key: 'verdict', lbl: 'Sonuç' },
     { key: 'why', lbl: 'Gerekçe', en: 'Why', nosort: true, left: true },
-    { key: 'fk', lbl: 'F/K', en: 'P/E' },
-    { key: 'pd', lbl: 'PD/DD', en: 'P/B' },
-    { key: 'fdf', lbl: 'FD/FAVÖK', en: 'EV/EBITDA' },
+    { key: 'pe', lbl: 'F/K', en: 'P/E' },
+    { key: 'pb', lbl: 'PD/DD', en: 'P/B' },
+    { key: 'evEbitda', lbl: 'FD/FAVÖK', en: 'EV/EBITDA' },
     { key: 'peg', lbl: 'PEG', en: 'PEG' },
-    { key: 'nb', lbl: 'Net borç/FAVÖK', en: 'Net debt/EBITDA' },
+    { key: 'netDebtEbitda', lbl: 'Net borç/FAVÖK', en: 'Net debt/EBITDA' },
     { key: 'd200', lbl: '200g ort.', en: 'SMA 200' },
-    { key: 'fg', lbl: 'FAVÖK büy.', en: 'EBITDA growth' },
-    { key: 'ng', lbl: 'Net kâr büy.', en: 'Net income growth' },
+    { key: 'ebitdaGrowth', lbl: 'FAVÖK büy.', en: 'EBITDA growth' },
+    { key: 'netIncomeGrowth', lbl: 'Net kâr büy.', en: 'Net income growth' },
     { key: 'roe', lbl: 'ÖK kârl.≈', en: 'ROE' },
-    { key: 'mv', lbl: 'Piy. değ.', en: `Market cap, bn ${CUR_OF[market]}` },
+    { key: 'marketCap', lbl: 'Piy. değ.', en: `Market cap, bn ${CUR_OF[market]}` },
   ];
 }
 
 /** "Sektör kıyası" sütunları: yana kaydırmadan sığan dar tablo. */
 export const PEER_COLS: Col[] = [
-  { key: 'k', lbl: 'Hisse' },
+  { key: 'symbol', lbl: 'Hisse' },
   { key: 'verdict', lbl: 'Sonuç', left: true },
-  { key: 'fk', lbl: 'F/K', en: 'P/E' },
-  { key: 'pd', lbl: 'PD/DD', en: 'P/B' },
-  { key: 'fdf', lbl: 'FD/FAVÖK', en: 'EV/EBITDA' },
+  { key: 'pe', lbl: 'F/K', en: 'P/E' },
+  { key: 'pb', lbl: 'PD/DD', en: 'P/B' },
+  { key: 'evEbitda', lbl: 'FD/FAVÖK', en: 'EV/EBITDA' },
   { key: 'peg', lbl: 'PEG', en: 'PEG' },
-  { key: 'nb', lbl: 'Net borç/FAVÖK', en: 'Net debt/EBITDA' },
-  { key: 'fg', lbl: 'FAVÖK büy.', en: 'EBITDA growth' },
+  { key: 'netDebtEbitda', lbl: 'Net borç/FAVÖK', en: 'Net debt/EBITDA' },
+  { key: 'ebitdaGrowth', lbl: 'FAVÖK büy.', en: 'EBITDA growth' },
   { key: 'roe', lbl: 'ÖK kârl.≈', en: 'ROE' },
   { key: 'd50', lbl: '50g ort.', en: 'SMA 50' },
   { key: 'd200', lbl: '200g ort.', en: 'SMA 200' },
@@ -86,14 +86,14 @@ export function buildRows(list: StockView[], th: Thresholds): Row[] {
   return list.map((s) => ({
     s,
     ev: evaluate(s, th),
-    d50: distancePct(s.f, s.sma50),
-    d200: distancePct(s.f, s.sma200),
+    d50: distancePct(s.price, s.sma50),
+    d200: distancePct(s.price, s.sma200),
   }));
 }
 
 /** Fiyat 200 günlük ortalamanın üstünde mi? Ortalama ya da fiyat yoksa false. */
-export function aboveSma200(s: Pick<StockView, 'f' | 'sma200'>): boolean {
-  return s.f != null && s.sma200 != null && s.f > s.sma200;
+export function aboveSma200(s: Pick<StockView, 'price' | 'sma200'>): boolean {
+  return s.price != null && s.sma200 != null && s.price > s.sma200;
 }
 
 export interface RowFilter {
@@ -109,8 +109,8 @@ export function sortValue(r: Row, key: SortKey): number | string | null {
   switch (key) {
     case 'verdict':
       return VORD[r.ev.verdict] * 10 + (r.ev.warns || 0);
-    case 'k':
-      return r.s.k;
+    case 'symbol':
+      return r.s.symbol;
     case 'd50':
       return r.d50;
     case 'd200':
@@ -133,7 +133,7 @@ export function sortRows(rows: Row[], key: SortKey, dir: 1 | -1): Row[] {
   });
 }
 
-const ASC_FIRST: SortKey[] = ['k', 'verdict', 'fk', 'pd', 'fdf', 'peg', 'nb'];
+const ASC_FIRST: SortKey[] = ['symbol', 'verdict', 'pe', 'pb', 'evEbitda', 'peg', 'netDebtEbitda'];
 
 /** Bir sütuna ilk tıklamada yön: çarpanlar küçükten büyüğe, büyüme ve getiri büyükten küçüğe. */
 export const defaultDir = (key: SortKey): 1 | -1 => (ASC_FIRST.includes(key) ? 1 : -1);
@@ -171,7 +171,7 @@ export function verdictLabel(r: Row): string {
 
 /* ---------- Hücre metinleri ---------- */
 
-export const fkText = (s: StockView): string => (!s.hasData ? '–' : s.fk == null ? (s.loss ? 'zarar' : '–') : nf(s.fk));
+export const peText = (s: StockView): string => (!s.hasData ? '–' : s.pe == null ? (s.loss ? 'zarar' : '–') : nf(s.pe));
 
 export const growthText = (v: number | null, why?: string): string => (v == null ? why || '–' : pct(v));
 
@@ -183,9 +183,9 @@ export const distText = (d: number | null): string => pct(d, 1);
 /* ---------- Sektör seçimi ---------- */
 
 export interface IndustryGroup {
-  ind: string;
-  sek: string;
-  sekEn: string;
+  industry: string;
+  industryTr: string;
+  industryEn: string;
   stocks: StockView[];
 }
 
@@ -207,8 +207,8 @@ export function orderGroups<T extends { stocks: unknown[] }>(groups: T[]): T[] {
  */
 export function pickIndustry(groups: IndustryGroup[], remembered: string | null | undefined): string | null {
   if (!groups.length) return null;
-  if (remembered && groups.some((g) => g.ind === remembered)) return remembered;
+  if (remembered && groups.some((g) => g.industry === remembered)) return remembered;
   const withPeers =
     groups.find((g) => g.stocks.filter((s) => s.hasData).length >= 2) ?? groups.find((g) => g.stocks.length >= 2);
-  return (withPeers ?? groups[0]).ind;
+  return (withPeers ?? groups[0]).industry;
 }

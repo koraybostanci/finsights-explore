@@ -16,27 +16,27 @@ export function industryMedian(stocks: StockView[]): IndustryMedian {
   const col = (f: (s: StockView) => number | null) => median(withData.map(f));
   return {
     n: withData.length,
-    fk: col((s) => s.fk),
-    pd: col((s) => s.pd),
-    fdf: col((s) => s.fdf),
+    pe: col((s) => s.pe),
+    pb: col((s) => s.pb),
+    evEbitda: col((s) => s.evEbitda),
     peg: col((s) => s.peg),
-    nb: col((s) => s.nb),
-    fg: col((s) => s.fg),
-    ng: col((s) => s.ng),
+    netDebtEbitda: col((s) => s.netDebtEbitda),
+    ebitdaGrowth: col((s) => s.ebitdaGrowth),
+    netIncomeGrowth: col((s) => s.netIncomeGrowth),
     roe: col((s) => s.roe),
   };
 }
 
 /** Hisseleri sektör kimliğine göre gruplar; grup sırası sektör adına göredir. */
-export function groupByIndustry(stocks: StockView[]): Array<{ ind: string; sek: string; sekEn: string; stocks: StockView[] }> {
-  const map = new Map<string, { ind: string; sek: string; sekEn: string; stocks: StockView[] }>();
+export function groupByIndustry(stocks: StockView[]): Array<{ industry: string; industryTr: string; industryEn: string; stocks: StockView[] }> {
+  const map = new Map<string, { industry: string; industryTr: string; industryEn: string; stocks: StockView[] }>();
   for (const s of stocks) {
-    let g = map.get(s.ind);
+    let g = map.get(s.industry);
     if (!g) {
-      g = { ind: s.ind, sek: s.sek, sekEn: s.sekEn, stocks: [] };
-      map.set(s.ind, g);
+      g = { industry: s.industry, industryTr: s.industryTr, industryEn: s.industryEn, stocks: [] };
+      map.set(s.industry, g);
     }
     g.stocks.push(s);
   }
-  return [...map.values()].sort((a, b) => a.sek.localeCompare(b.sek, 'tr'));
+  return [...map.values()].sort((a, b) => a.industryTr.localeCompare(b.industryTr, 'tr'));
 }

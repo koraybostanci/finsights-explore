@@ -46,9 +46,10 @@ EBITDA_FROM_NEGATIVE = "eksiden artıya"
 EBITDA_TO_NEGATIVE = "artıdan eksiye"
 
 FIGURE_KEYS: tuple[str, ...] = (
-    "f", "fk", "pd", "fdf", "peg", "nb", "mv", "fg", "ng", "h", "sma20", "sma50", "sma200",
+    "price", "pe", "pb", "evEbitda", "peg", "netDebtEbitda", "marketCap", "ebitdaGrowth", "netIncomeGrowth",
+    "targetPrice", "sma20", "sma50", "sma200",
 )
-TEXT_KEYS: tuple[str, ...] = ("fgT", "ngT")
+TEXT_KEYS: tuple[str, ...] = ("ebitdaGrowthNote", "netIncomeGrowthNote")
 FLAG_KEYS: tuple[str, ...] = ("loss",)  # written only when true
 
 
@@ -114,7 +115,7 @@ def sma_set(closes: Sequence[float]) -> dict[str, float | None]:
 def map_tv_row(spec: StockSpec, row: Mapping[str, Any]) -> dict[str, Any]:
     """Figures for one stock from a screener row {column: value}.
 
-    Returns FIGURE_KEYS (None where missing) plus fgT / ngT and `loss` when set, and `_period_end`
+    Returns FIGURE_KEYS (None where missing) plus ebitdaGrowthNote / netIncomeGrowthNote and `loss` when set, and `_period_end`
     (the raw fiscal_period_end_fq value) for the caller to pick up. Raises RowError when the
     row is unusable.
     """
@@ -122,8 +123,8 @@ def map_tv_row(spec: StockSpec, row: Mapping[str, Any]) -> dict[str, Any]:
     if price is None:
         raise RowError("no price in the row")
     cur = row.get("currency")
-    if isinstance(cur, str) and cur and cur.upper() != spec.cur:
-        raise RowError(f"quoted in {cur}, expected {spec.cur}")
+    if isinstance(cur, str) and cur and cur.upper() != spec.currency:
+        raise RowError(f"quoted in {cur}, expected {spec.currency}")
 
     eps = clean_number(row.get("earnings_per_share_diluted_ttm"))
     pe = positive(row.get("price_earnings_ttm"))
@@ -133,23 +134,23 @@ def map_tv_row(spec: StockSpec, row: Mapping[str, Any]) -> dict[str, Any]:
 
     ebitda = row.get("ebitda")
     out: dict[str, Any] = {
-        "f": price,
-        "fk": pe,
-        "pd": positive(row.get("price_book_fq")),
-        "fdf": positive(row.get("enterprise_value_ebitda_ttm")),
+        "price": price,
+        "pe": pe,
+        "pb": positive(row.get("price_book_fq")),
+        "evEbitda": positive(row.get("enterprise_value_ebitda_ttm")),
         "peg": r2(row.get("price_earnings_growth_ttm")),
-        "nb": net_debt_ratio(row.get("net_debt"), ebitda),
-        "mv": None,
-        "fg": None,
-        "ng": None,
-        "h": positive(row.get("price_target_average")),
+        "netDebtEbitda": net_debt_ratio(row.get("net_debt"), ebitda),
+        "marketCap": None,
+        "ebitdaGrowth": None,
+        "netIncomeGrowth": None,
+        "targetPrice": positive(row.get("price_target_average")),
         "sma20": positive(row.get("SMA20")),
         "sma50": positive(row.get("SMA50")),
         "sma200": positive(row.get("SMA200")),
     }
     mc = clean_number(row.get("market_cap_basic"))
     if mc is not None and mc > 0:
-        out["mv"] = r1(mc / 1e9)
+        out["marketCap"] = r1(mc / 1e9)
 
     fg, fg_text = growth_pair(
         row.get("ebitda_yoy_growth_ttm"), ebitda, from_negative=EBITDA_FROM_NEGATIVE, to_negative=EBITDA_TO_NEGATIVE
@@ -157,18 +158,18 @@ def map_tv_row(spec: StockSpec, row: Mapping[str, Any]) -> dict[str, Any]:
     ng, ng_text = growth_pair(
         row.get("net_income_yoy_growth_ttm"), eps, from_negative=NET_FROM_LOSS, to_negative=NET_TO_LOSS
     )
-    out["fg"], out["ng"] = fg, ng
+    out["ebitdaGrowth"], out["netIncomeGrowth"] = fg, ng
     if loss:
         out["loss"] = True  # tells the app that the empty F/K is a loss, not missing data
     if fg_text:
-        out["fgT"] = fg_text
+        out["ebitdaGrowthNote"] = fg_text
     if ng_text:
-        out["ngT"] = ng_text
+        out["netIncomeGrowthNote"] = ng_text
 
     if spec.bank:
         # EBITDA, EV and net debt do not describe a bank (its debt is its raw material)
-        out["fdf"] = out["nb"] = out["fg"] = None
-        out.pop("fgT", None)
+        out["evEbitda"] = out["netDebtEbitda"] = out["ebitdaGrowth"] = None
+        out.pop("ebitdaGrowthNote", None)
 
     out["_period_end"] = row.get("fiscal_period_end_fq")
     return out

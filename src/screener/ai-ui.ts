@@ -63,7 +63,7 @@ export function commentBlockHtml(key: string, slot: AiSlot | undefined, status: 
     status,
     { run: 'Yorumla', rerun: 'Yeniden yorumla', busy: 'Yorumlanıyor…', act: 'ai-comment' },
     key,
-    `<span class="muted small">Yapay zekâ yorumu kapalı. <a href="#ayarlar">Ayarlar'da açabilirsiniz.</a></span>`,
+    `<span class="muted small">Yapay zekâ yorumu kapalı. <a href="#settings">Ayarlar'da açabilirsiniz.</a></span>`,
   );
   return `<div class="lbl">Yapay zekâ yorumu · <span lang="en">AI commentary</span></div>${text}${hint}${errorHtml(slot)}${row}`;
 }
@@ -72,7 +72,7 @@ export function commentBlockHtml(key: string, slot: AiSlot | undefined, status: 
 
 export interface CompareContext {
   /** Sektörün Türkçe adı */
-  sek: string;
+  industryTr: string;
   /** Verisi olan (ve süzgeçten geçen) hisse sayısı */
   withData: number;
 }
@@ -86,7 +86,7 @@ export function compareBlockHtml(key: string, slot: AiSlot | undefined, status: 
 <div class="ai-meta"><button class="btn" type="button" data-act="goto-settings">Ayarlar'da yapay zekâyı aç</button></div>`;
 
   const text = slot?.result
-    ? `<div class="learn ai-text"><b>${esc(ctx.sek)}: ne görüyoruz?</b>${aiTextHtml(slot.result.text)}</div>`
+    ? `<div class="learn ai-text"><b>${esc(ctx.industryTr)}: ne görüyoruz?</b>${aiTextHtml(slot.result.text)}</div>`
     : '';
   if (ctx.withData < 2 && !slot?.result)
     return `${lbl}<p class="muted small">Karşılaştırma için bu sektörde verisi olan en az iki hisse gerekir.</p>`;

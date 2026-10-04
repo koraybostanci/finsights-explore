@@ -421,10 +421,10 @@ test('Karar adımları: beş özgün adım, altı genişletme maddesi, eğilim a
 /* ---------- Terimler ---------- */
 
 test('terms: yeni terimler yazılır ve eski kimlikler yerinde', () => {
-  for (const id of ['fk', 'pd', 'fdf', 'peg', 'nb', 'fg', 'ng', 'roe', 'mv', 'price', 'target', 'favok', 'netIncome', 'equity', 'netDebt', 'median', 'industry', 'market', 'cyclical', 'watchlist', 'sma', 'sma20', 'sma50', 'sma200', 'goldenCross', 'deathCross', 'trend', 'npl', 'car', 'nim', 'apiKey', 'aiProvider'])
+  for (const id of ['pe', 'pb', 'evEbitda', 'peg', 'netDebtEbitda', 'ebitdaGrowth', 'netIncomeGrowth', 'roe', 'marketCap', 'price', 'target', 'ebitda', 'netIncome', 'equity', 'netDebt', 'median', 'industry', 'market', 'cyclical', 'watchlist', 'sma', 'sma20', 'sma50', 'sma200', 'goldenCross', 'deathCross', 'trend', 'npl', 'car', 'nim', 'apiKey', 'aiProvider'])
     assert.ok(TERMS[id], `kimlik silinmiş: ${id}`);
-  assert.equal(term('fk'), 'F/K <span class="en">(P/E)</span>');
-  assert.equal(termText('fk'), 'F/K (P/E)');
+  assert.equal(term('pe'), 'F/K <span class="en">(P/E)</span>');
+  assert.equal(termText('pe'), 'F/K (P/E)');
   assert.equal(term('peg'), 'PEG');
   assert.equal(termText('earningsYield'), 'Kazanç verimi (Earnings yield)');
   assert.equal(termText('goldenCross'), 'Altın kesişim (Golden cross)');

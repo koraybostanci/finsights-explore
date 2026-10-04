@@ -15,7 +15,7 @@
  ],
  "properties": {
   "schema": {
-   "const": 1
+   "const": 2
   },
   "asOf": {
    "type": "string",
@@ -93,16 +93,16 @@
    "type": "object",
    "additionalProperties": false,
    "required": [
-    "tr",
-    "en",
+    "nameTr",
+    "nameEn",
     "cyclical"
    ],
    "properties": {
-    "tr": {
+    "nameTr": {
      "type": "string",
      "minLength": 1
     },
-    "en": {
+    "nameEn": {
      "type": "string",
      "minLength": 1
     },
@@ -115,31 +115,31 @@
    "type": "object",
    "additionalProperties": false,
    "required": [
-    "k",
-    "ad",
+    "symbol",
+    "name",
     "market",
-    "cur",
-    "ind",
-    "f",
-    "fk",
-    "pd",
-    "fdf",
+    "currency",
+    "industry",
+    "price",
+    "pe",
+    "pb",
+    "evEbitda",
     "peg",
-    "nb",
-    "mv",
-    "fg",
-    "ng",
-    "h",
+    "netDebtEbitda",
+    "marketCap",
+    "ebitdaGrowth",
+    "netIncomeGrowth",
+    "targetPrice",
     "sma20",
     "sma50",
     "sma200"
    ],
    "properties": {
-    "k": {
+    "symbol": {
      "type": "string",
      "pattern": "^[A-Z0-9][A-Z0-9.\\-]{0,11}$"
     },
-    "ad": {
+    "name": {
      "type": "string",
      "minLength": 1
     },
@@ -149,13 +149,13 @@
       "US"
      ]
     },
-    "cur": {
+    "currency": {
      "enum": [
       "TRY",
       "USD"
      ]
     },
-    "ind": {
+    "industry": {
      "type": "string"
     },
     "bank": {
@@ -164,48 +164,48 @@
     "cyc": {
      "type": "boolean"
     },
-    "f": {
+    "price": {
      "$ref": "#/definitions/positive"
     },
-    "fk": {
+    "pe": {
      "$ref": "#/definitions/positive"
     },
     "loss": {
      "type": "boolean",
      "description": "Loss over the trailing twelve months (EPS zero or negative). Absent: no loss, or unknown."
     },
-    "pd": {
+    "pb": {
      "$ref": "#/definitions/positive"
     },
-    "fdf": {
+    "evEbitda": {
      "$ref": "#/definitions/positive"
     },
     "peg": {
      "$ref": "#/definitions/num"
     },
-    "nb": {
+    "netDebtEbitda": {
      "$ref": "#/definitions/num"
     },
-    "mv": {
+    "marketCap": {
      "type": [
       "number",
       "null"
      ],
      "minimum": 0
     },
-    "fg": {
+    "ebitdaGrowth": {
      "$ref": "#/definitions/num"
     },
-    "ng": {
+    "netIncomeGrowth": {
      "$ref": "#/definitions/num"
     },
-    "fgT": {
+    "ebitdaGrowthNote": {
      "type": "string"
     },
-    "ngT": {
+    "netIncomeGrowthNote": {
      "type": "string"
     },
-    "h": {
+    "targetPrice": {
      "$ref": "#/definitions/positive"
     },
     "sma20": {
@@ -220,10 +220,10 @@
     "usd": {
      "type": "string"
     },
-    "not": {
+    "note": {
      "type": "string"
     },
-    "notAsOf": {
+    "noteAsOf": {
      "type": "string",
      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
     },
@@ -248,7 +248,7 @@
      },
      "then": {
       "properties": {
-       "cur": {
+       "currency": {
         "const": "TRY"
        }
       }
@@ -264,7 +264,7 @@
      },
      "then": {
       "properties": {
-       "cur": {
+       "currency": {
         "const": "USD"
        }
       }

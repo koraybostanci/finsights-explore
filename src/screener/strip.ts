@@ -162,7 +162,7 @@ export interface StripDef {
   label: string;
   /** İngilizce karşılık, ör. "P/B" */
   en: string;
-  items: Array<{ k: string; v: number }>;
+  items: Array<{ symbol: string; v: number }>;
   median: number | null;
   /** Yalnız eşiği olan şeritte (Net borç/FAVÖK) */
   threshold?: number | null;
@@ -184,7 +184,7 @@ export interface StripGeom {
   labelY: number;
   x0: number;
   x1: number;
-  dots: Array<{ k: string; v: number; x: number; y: number; marker: Marker }>;
+  dots: Array<{ symbol: string; v: number; x: number; y: number; marker: Marker }>;
   values: StripText[];
   medianX: number | null;
   thresholdX: number | null;
@@ -297,11 +297,11 @@ export function layoutStrips(defs: StripDef[], W: number, markers: Map<string, M
       x0,
       x1,
       dots: def.items.map((it, i) => ({
-        k: it.k,
+        symbol: it.symbol,
         v: it.v,
         x: xs[i],
         y: y + dys[i],
-        marker: markers.get(it.k) ?? markerFor(i),
+        marker: markers.get(it.symbol) ?? markerFor(i),
       })),
       values: valPlaced.map((p, i) => ({ text: valTexts[i], x: p.x, y: base0 - p.level * LINE, shown: p.shown })),
       medianX,
@@ -325,18 +325,18 @@ export function layoutStrips(defs: StripDef[], W: number, markers: Map<string, M
 
 /** Şeritlerde kullanılan alanlar (StockView bunları taşır) */
 export interface StripSource {
-  k: string;
-  fk: number | null;
-  pd: number | null;
-  fdf: number | null;
-  nb: number | null;
+  symbol: string;
+  pe: number | null;
+  pb: number | null;
+  evEbitda: number | null;
+  netDebtEbitda: number | null;
 }
 
 export interface StripMedians {
-  fk: number | null;
-  pd: number | null;
-  fdf: number | null;
-  nb: number | null;
+  pe: number | null;
+  pb: number | null;
+  evEbitda: number | null;
+  netDebtEbitda: number | null;
 }
 
 /**
@@ -344,22 +344,22 @@ export interface StripMedians {
  * varsa başa F/K eklenir. Hiç değeri olmayan şerit çizilmez.
  */
 export function buildStripDefs(list: StripSource[], med: StripMedians, nbThreshold: number): StripDef[] {
-  const col = (key: 'fk' | 'pd' | 'fdf' | 'nb'): Array<{ k: string; v: number }> =>
+  const col = (key: 'pe' | 'pb' | 'evEbitda' | 'netDebtEbitda'): Array<{ symbol: string; v: number }> =>
     list.flatMap((s) => {
       const v = s[key];
-      return v != null && Number.isFinite(v) ? [{ k: s.k, v }] : [];
+      return v != null && Number.isFinite(v) ? [{ symbol: s.symbol, v }] : [];
     });
   const defs: StripDef[] = [];
-  const fk = col('fk');
-  if (fk.length >= 2) defs.push({ key: 'fk', label: 'F/K', en: 'P/E', items: fk, median: med.fk });
-  defs.push({ key: 'pd', label: 'PD/DD', en: 'P/B', items: col('pd'), median: med.pd });
-  defs.push({ key: 'fdf', label: 'FD/FAVÖK', en: 'EV/EBITDA', items: col('fdf'), median: med.fdf });
+  const pe = col('pe');
+  if (pe.length >= 2) defs.push({ key: 'pe', label: 'F/K', en: 'P/E', items: pe, median: med.pe });
+  defs.push({ key: 'pb', label: 'PD/DD', en: 'P/B', items: col('pb'), median: med.pb });
+  defs.push({ key: 'evEbitda', label: 'FD/FAVÖK', en: 'EV/EBITDA', items: col('evEbitda'), median: med.evEbitda });
   defs.push({
-    key: 'nb',
+    key: 'netDebtEbitda',
     label: 'Net borç/FAVÖK',
     en: 'Net debt/EBITDA',
-    items: col('nb'),
-    median: med.nb,
+    items: col('netDebtEbitda'),
+    median: med.netDebtEbitda,
     threshold: nbThreshold,
   });
   return defs.filter((d) => d.items.length > 0);
@@ -393,7 +393,7 @@ export function stripSvg(layout: StripLayout, aria: string): string {
           fill: b.kind === 'threshold' ? 'var(--warn)' : 'var(--muted)',
         });
     for (const d of s.dots)
-      g += `<g><title>${esc(d.k)}: ${esc(def.label)} ${nf(d.v)}</title>${markerSvg(d.marker, d.x, d.y)}</g>`;
+      g += `<g><title>${esc(d.symbol)}: ${esc(def.label)} ${nf(d.v)}</title>${markerSvg(d.marker, d.x, d.y)}</g>`;
     for (const v of s.values)
       if (v.shown) g += svgText(r1(v.x), v.y, v.text, { a: 'middle', fs: VAL_FS, ff: 'var(--mono)' });
   }
