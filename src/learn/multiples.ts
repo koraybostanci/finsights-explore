@@ -4,8 +4,8 @@
  * Kartlar ve liste ilk sürümden aynen taşındı; örnekler 2 Ekim 2026 verisiyle yazılmıştır.
  */
 
-import { esc, nf, pct, tl } from '../lib/format.ts';
-import { TERMS } from '../terms.ts';
+import { esc, nf, pct, tl } from '@fintools/shared/format';
+import { TERMS } from '@fintools/shared/terms';
 import { ROADWORK_END, SMA_LONG, SMA_SHORT, smaStory } from './model.ts';
 
 export interface MultipleCard {

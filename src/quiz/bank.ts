@@ -10,7 +10,7 @@
  * "hepsi" ya da "hiçbiri" gibi sıraya bağlı seçenek yazılmaz.
  */
 
-import { termText as T } from '../terms.ts';
+import { termText as T } from '@fintools/shared/terms';
 import type { QuizQuestion, QuizRef } from './types.ts';
 
 export type TopicId =

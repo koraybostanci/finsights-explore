@@ -1,0 +1,17 @@
+{
+  "name": "@fintools/shared",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Shared layer of the fintools apps: formatting, DOM helpers, terms, storage, app shell, styles.",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts",
+    "./styles/*": "./src/styles/*"
+  },
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.ts\""
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}

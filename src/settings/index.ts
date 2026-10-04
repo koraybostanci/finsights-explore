@@ -8,9 +8,9 @@
 import './settings.css';
 
 import { MARKETS, MARKET_LABEL, lsGet, lsSet, on, resetWatchlist, setWatchlist, universe, watchlist } from '../data/store.ts';
-import { esc } from '../lib/format.ts';
+import { esc } from '@fintools/shared/format';
 import { groupByIndustry } from '../lib/stats.ts';
-import { term } from '../terms.ts';
+import { term } from '@fintools/shared/terms';
 import type { MarketId } from '../types.ts';
 
 import { aiErrorMessage } from '../ai/index.ts';

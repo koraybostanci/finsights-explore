@@ -4,10 +4,10 @@
  */
 
 import type { PriceSeries } from '../types.ts';
-import { svgText, svgWrap } from '../lib/dom.ts';
-import { nf } from '../lib/format.ts';
-import { lastCross, smaSeries } from '../lib/sma.ts';
-import type { CrossKind } from '../lib/sma.ts';
+import { svgText, svgWrap } from '@fintools/shared/dom';
+import { nf } from '@fintools/shared/format';
+import { lastCross, smaSeries } from '@fintools/shared/sma';
+import type { CrossKind } from '@fintools/shared/sma';
 import { niceStep } from './strip.ts';
 
 const MONTHS = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];

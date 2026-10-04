@@ -8,8 +8,8 @@ import './styles/app.css';
 import './styles/shared.css';
 
 import { MARKETS, MARKET_LABEL, data, dataError, loadData, lsGet, lsSet, marketAsOf, marketHasData, on } from './data/store.ts';
-import { esc, fmtDate } from './lib/format.ts';
-import { must } from './lib/dom.ts';
+import { esc, fmtDate } from '@fintools/shared/format';
+import { must } from '@fintools/shared/dom';
 
 import * as stories from './learn/stories.ts';
 import * as multiples from './learn/multiples.ts';

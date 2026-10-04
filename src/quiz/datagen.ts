@@ -12,10 +12,10 @@
 
 import { MARKET_LABEL } from '../data/store.ts';
 import { DEF, evaluate, VLABEL } from '../lib/evaluate.ts';
-import { nf, pct } from '../lib/format.ts';
-import { trend } from '../lib/sma.ts';
+import { nf, pct } from '@fintools/shared/format';
+import { trend } from '@fintools/shared/sma';
 import { groupByIndustry, median } from '../lib/stats.ts';
-import { TERMS, termText } from '../terms.ts';
+import { TERMS, termText } from '@fintools/shared/terms';
 import type { Check, CheckId, MarketId, StockView, Thresholds, Verdict } from '../types.ts';
 import { TOPICS } from './bank.ts';
 import type { QuizFact, QuizQuestion, QuizRef } from './types.ts';

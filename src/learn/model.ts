@@ -3,7 +3,7 @@
  * ilk sürümün rakamlarıyla doğrular. Tutarlar TL'dir, aksi yazılmadıkça.
  */
 
-import { distancePct, smaSeries } from '../lib/sma.ts';
+import { distancePct, smaSeries } from '@fintools/shared/sma';
 
 /* ---------- Hikâye 3: Ayşe'nin Kahvesi, fiyat ve çarpanlar ---------- */
 

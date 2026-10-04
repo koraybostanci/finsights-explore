@@ -6,7 +6,7 @@
  */
 
 import type { Check, CheckId, Evaluation, StockView, Thresholds, Verdict } from '../types.ts';
-import { nf, pct } from './format.ts';
+import { nf, pct } from '@fintools/shared/format';
 
 export const DEF: Thresholds = {
   maxPe: 30,

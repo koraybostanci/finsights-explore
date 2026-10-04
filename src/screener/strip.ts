@@ -6,8 +6,8 @@
  * Ölçek ve etiket yerleşimi saf işlevlerdir (DOM'a dokunmaz), testleri vardır.
  */
 
-import { svgText, svgWrap, tw } from '../lib/dom.ts';
-import { esc, nf } from '../lib/format.ts';
+import { svgText, svgWrap, tw } from '@fintools/shared/dom';
+import { esc, nf } from '@fintools/shared/format';
 
 /* ---------- Ölçek ---------- */
 

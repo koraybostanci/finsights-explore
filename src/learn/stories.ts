@@ -7,8 +7,8 @@
  * değişince (grafikler yeniden çizilir).
  */
 
-import { cw, svgText, svgWrap, tw } from '../lib/dom.ts';
-import { esc, nf, pct, tl } from '../lib/format.ts';
+import { cw, svgText, svgWrap, tw } from '@fintools/shared/dom';
+import { esc, nf, pct, tl } from '@fintools/shared/format';
 import { byId, flowChart, fmtBin, fmtBin1, tileK } from './charts.ts';
 import {
   DON_V,

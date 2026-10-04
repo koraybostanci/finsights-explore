@@ -6,7 +6,7 @@
 import './calc.css';
 
 import { ICON, VLABEL } from '../lib/evaluate.ts';
-import { esc, nf } from '../lib/format.ts';
+import { esc, nf } from '@fintools/shared/format';
 import { getThresholds, subscribeThresholds } from '../screener/thresholds.ts';
 import { BIM_EXAMPLE, calcEvaluate, isLoss } from './logic.ts';
 import type { CalcInput } from './logic.ts';

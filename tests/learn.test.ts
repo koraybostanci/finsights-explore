@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 
-import { nf, pct } from '../src/lib/format.ts';
-import { lastSma, smaSeries } from '../src/lib/sma.ts';
+import { nf, pct } from '@fintools/shared/format';
+import { lastSma, smaSeries } from '@fintools/shared/sma';
 import {
   BAYRAM_DAYS,
   PEG_C,
@@ -33,7 +33,7 @@ import * as steps from '../src/learn/steps.ts';
 import * as stories from '../src/learn/stories.ts';
 import * as smaHtml from '../src/learn/story-sma.ts';
 import * as marketsHtml from '../src/learn/story-markets.ts';
-import { TERMS, term, termText } from '../src/terms.ts';
+import { TERMS, term, termText } from '@fintools/shared/terms';
 
 /** mount() yalnızca innerHTML yazar; DOM olmadan sınamak için sahte kök. */
 const fakeRoot = (): HTMLElement & { innerHTML: string } =>

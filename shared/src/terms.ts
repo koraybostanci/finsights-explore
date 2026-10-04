@@ -4,7 +4,7 @@
  * "F/K (P/E)" biçimi her yerde aynı olur.
  */
 
-import { esc } from './lib/format.ts';
+import { esc } from './format.ts';
 
 export interface Term {
   /** Türkçe terim */

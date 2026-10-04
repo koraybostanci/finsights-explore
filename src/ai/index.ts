@@ -8,7 +8,7 @@
 
 import { marketAsOf } from '../data/store.ts';
 import type { MarketId } from '../types.ts';
-import { esc } from '../lib/format.ts';
+import { esc } from '@fintools/shared/format';
 import { cacheGet, cacheKey, cachePut } from './cache.ts';
 import { complete } from './client.ts';
 import { resolveConfig, status } from './config.ts';

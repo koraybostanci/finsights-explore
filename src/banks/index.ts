@@ -5,8 +5,8 @@
  */
 
 import { on, stocks } from '../data/store.ts';
-import { cw, svgText, svgWrap, tw } from '../lib/dom.ts';
-import { esc, nf, pct } from '../lib/format.ts';
+import { cw, svgText, svgWrap, tw } from '@fintools/shared/dom';
+import { esc, nf, pct } from '@fintools/shared/format';
 import type { StockView } from '../types.ts';
 
 let root: HTMLElement | null = null;

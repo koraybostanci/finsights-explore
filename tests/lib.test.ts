@@ -2,9 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { nf, pct, esc, money } from '../src/lib/format.ts';
+import { nf, pct, esc, money } from '@fintools/shared/format';
 import { median, industryMedian, groupByIndustry } from '../src/lib/stats.ts';
-import { smaSeries, lastSma, distancePct, lastCross, trend } from '../src/lib/sma.ts';
+import { smaSeries, lastSma, distancePct, lastCross, trend } from '@fintools/shared/sma';
 import { DEF, evaluate, cellColor } from '../src/lib/evaluate.ts';
 import { marketAsOf, marketHasData, setData, toView } from '../src/data/store.ts';
 import { noteIsCurrent } from '../src/lib/note.ts';

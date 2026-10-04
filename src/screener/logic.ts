@@ -5,8 +5,8 @@
 
 import type { Evaluation, MarketId, StockView, Thresholds } from '../types.ts';
 import { VLABEL, VORD, evaluate } from '../lib/evaluate.ts';
-import { distancePct } from '../lib/sma.ts';
-import { nf, pct } from '../lib/format.ts';
+import { distancePct } from '@fintools/shared/sma';
+import { nf, pct } from '@fintools/shared/format';
 
 export interface Row {
   s: StockView;
