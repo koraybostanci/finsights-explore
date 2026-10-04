@@ -1,6 +1,6 @@
 # Plan: from "BIST 30 Çarpan Rehberi" artifact to a GitHub Pages app
 
-Status: draft for approval · 3 Oct 2026
+Status: built (4 Oct 2026). This is the original plan, kept for the reasoning behind the decisions; README.md, docs/ARCHITECTURE.md and docs/DATA.md describe what exists now.
 
 ## 1. Where we start
 
