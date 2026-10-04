@@ -75,6 +75,8 @@ def valid_doc(doc: Any) -> bool:
 
 def previous_records(doc: Any) -> dict[tuple[str, str], dict[str, Any]]:
     if not valid_doc(doc):
+        if isinstance(doc, dict) and doc.get("schema") not in (None, 2):
+            log.warning("previous market.json has schema %r, expected 2; its figures are not carried over", doc.get("schema"))
         return {}
     return {(s.get("market"), s.get("symbol")): s for s in doc["stocks"] if isinstance(s, dict)}
 
