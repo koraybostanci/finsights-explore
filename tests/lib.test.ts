@@ -10,7 +10,7 @@ import { marketAsOf, marketHasData, setData, toView } from '../src/data/store.ts
 import { noteIsCurrent } from '../src/lib/note.ts';
 import type { MarketData, StockView } from '../src/types.ts';
 
-const DATA = JSON.parse(readFileSync(new URL('../public/data/market.json', import.meta.url), 'utf8')) as MarketData;
+const DATA = JSON.parse(readFileSync(new URL('./fixtures/market.json', import.meta.url), 'utf8')) as MarketData;
 const views: StockView[] = DATA.stocks.map((s) => toView(s, DATA.industries));
 const view = (k: string): StockView => {
   const v = views.find((s) => s.k === k);

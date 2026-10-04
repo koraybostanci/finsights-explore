@@ -37,7 +37,7 @@ const store = new Map<string, string>();
   removeItem: (k: string) => void store.delete(k),
 };
 
-const DATA = JSON.parse(readFileSync(new URL('../public/data/market.json', import.meta.url), 'utf8')) as MarketData;
+const DATA = JSON.parse(readFileSync(new URL('./fixtures/market.json', import.meta.url), 'utf8')) as MarketData;
 const views: StockView[] = DATA.stocks.map((s) => toView(s, DATA.industries));
 const view = (k: string): StockView => {
   const v = views.find((s) => s.k === k);

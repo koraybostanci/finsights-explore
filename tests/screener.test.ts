@@ -51,7 +51,7 @@ import { SMA_WINDOW, seriesUsable, smaChartModel, smaChartSvg } from '../src/scr
 import { commentBlockHtml, compareBlockHtml } from '../src/screener/ai-ui.ts';
 import { BIM_EXAMPLE, calcEvaluate, calcMultiples } from '../src/calc/logic.ts';
 
-const DATA = JSON.parse(readFileSync(new URL('../public/data/market.json', import.meta.url), 'utf8')) as MarketData;
+const DATA = JSON.parse(readFileSync(new URL('./fixtures/market.json', import.meta.url), 'utf8')) as MarketData;
 const views: StockView[] = DATA.stocks.map((s) => toView(s, DATA.industries));
 const view = (k: string): StockView => {
   const v = views.find((s) => s.k === k);
