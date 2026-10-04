@@ -153,12 +153,12 @@ export function smaTilesHtml(s: StockView, v: SmaView, priceDate: string): strin
     .join('')}</div>`;
 }
 
-export const SMA_LEGEND = `<div class="legend">
-<span><i style="background:var(--ink)"></i>Fiyat</span>
-<span><i style="background:var(--c1)"></i>20 günlük ortalama</span>
-<span><i style="background:var(--c2)"></i>50 günlük ortalama</span>
-<span><i style="background:var(--c3)"></i>200 günlük ortalama (kesikli)</span>
-</div>`;
+/** Açıklama satırı; yalnızca grafikte çizilen ortalamalar yazılır (kısa seride 200 günlük ortalama yoktur). */
+export function smaLegendHtml(days: number): string {
+  const item = (color: string, text: string): string => `<span><i style="background:var(${color})"></i>${text}</span>`;
+  const avg = (n: SmaN, color: string, extra = ''): string => (days > n ? item(color, `${n} günlük ortalama${extra}`) : '');
+  return `<div class="legend">${item('--ink', 'Fiyat')}${avg(20, '--c1')}${avg(50, '--c2')}${avg(200, '--c3', ' (kesikli)')}</div>`;
+}
 
 /** Grafiğin altındaki dönem satırı: "Son 250 işlem günü · 3 Ekim 2025 – 2 Ekim 2026" */
 export function smaRangeText(series: PriceSeries): string {
@@ -184,11 +184,11 @@ export function smaBlockHtml(
   else if (!seriesUsable(series))
     chart = `<p class="muted small">Fiyat serisi henüz yok; ilk veri güncellemesinde gelir.</p>`;
   else
-    chart = `<div class="chartbox" id="${esc(chartId)}"></div>${SMA_LEGEND}<p class="muted small">${esc(
+    chart = `<div class="chartbox" id="${esc(chartId)}"></div>${smaLegendHtml(series.c.length)}<p class="muted small">${esc(
       smaRangeText(series),
     )}</p>`;
   const says = v.sentences.length ? `<p>${v.sentences.map(esc).join(' ')}</p>` : '';
-  return `<div class="lbl">Hareketli ortalamalar · Simple moving averages (SMA)</div>
+  return `<div class="lbl">Hareketli ortalamalar · <span lang="en">Simple moving averages (SMA)</span></div>
 ${smaTilesHtml(s, v, priceDate)}
 ${chart}
 ${says}
@@ -207,7 +207,9 @@ export interface DetailParts {
 }
 
 export function detailHtml(s: StockView, ev: Evaluation, p: DetailParts): string {
-  const title = `<div class="lbl">${esc(s.ad)} · ${esc(s.sek)} (${esc(s.sekEn)})</div>`;
+  // Büyük harfe çevrilen etikette İngilizce metin Türkçe kuralla ("İ") yazılmasın diye dili belirtilir.
+  const name = s.market === 'US' ? `<span lang="en">${esc(s.ad)}</span>` : esc(s.ad);
+  const title = `<div class="lbl">${name} · ${esc(s.sek)} <span lang="en">(${esc(s.sekEn)})</span></div>`;
   if (!s.hasData)
     return `<div class="det"><div>${title}<p>Bu hissenin verisi henüz gelmedi; bir sonraki veri güncellemesinde dolar.</p></div></div>`;
   const extra = extraInfo(s);

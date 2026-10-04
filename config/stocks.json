@@ -24,7 +24,7 @@
   "semiconductors": {"tr": "Yarı iletken", "en": "Semiconductors", "cyclical": true},
   "software": {"tr": "Yazılım", "en": "Software", "cyclical": false},
   "internet": {"tr": "İnternet ve e-ticaret", "en": "Internet & e-commerce", "cyclical": false},
-  "consumer_electronics": {"tr": "Tüketici elektroniği", "en": "Consumer electronics", "cyclical": false},
+  "consumer_electronics": {"tr": "Tüketici elektroniği ve donanım", "en": "Consumer electronics & hardware", "cyclical": false},
   "pharmaceuticals": {"tr": "İlaç", "en": "Pharmaceuticals", "cyclical": false},
   "banks": {"tr": "Banka", "en": "Banks", "cyclical": false}
  },
@@ -78,6 +78,8 @@
   {"k": "TSLA", "ad": "Tesla", "market": "US", "industry": "automotive", "tv": "NASDAQ:TSLA"},
   {"k": "CF", "ad": "CF Industries", "market": "US", "industry": "fertilizers", "tv": "NYSE:CF"},
   {"k": "MOS", "ad": "Mosaic", "market": "US", "industry": "fertilizers", "tv": "NYSE:MOS"},
+  {"k": "BRK.B", "ad": "Berkshire Hathaway (B)", "market": "US", "industry": "holding", "tv": "NYSE:BRK.B", "yf": "BRK-B"},
+  {"k": "L", "ad": "Loews", "market": "US", "industry": "holding", "tv": "NYSE:L"},
   {"k": "DOW", "ad": "Dow", "market": "US", "industry": "petrochemicals", "tv": "NYSE:DOW"},
   {"k": "LYB", "ad": "LyondellBasell", "market": "US", "industry": "petrochemicals", "tv": "NYSE:LYB"},
   {"k": "DAL", "ad": "Delta Air Lines", "market": "US", "industry": "airlines", "tv": "NYSE:DAL"},
@@ -102,6 +104,8 @@
   {"k": "META", "ad": "Meta Platforms", "market": "US", "industry": "internet", "tv": "NASDAQ:META"},
   {"k": "AMZN", "ad": "Amazon", "market": "US", "industry": "internet", "tv": "NASDAQ:AMZN"},
   {"k": "AAPL", "ad": "Apple", "market": "US", "industry": "consumer_electronics", "tv": "NASDAQ:AAPL"},
+  {"k": "HPQ", "ad": "HP Inc.", "market": "US", "industry": "consumer_electronics", "tv": "NYSE:HPQ"},
+  {"k": "DELL", "ad": "Dell Technologies", "market": "US", "industry": "consumer_electronics", "tv": "NYSE:DELL"},
   {"k": "JNJ", "ad": "Johnson & Johnson", "market": "US", "industry": "pharmaceuticals", "tv": "NYSE:JNJ"},
   {"k": "PFE", "ad": "Pfizer", "market": "US", "industry": "pharmaceuticals", "tv": "NYSE:PFE"},
   {"k": "MRK", "ad": "Merck", "market": "US", "industry": "pharmaceuticals", "tv": "NYSE:MRK"}

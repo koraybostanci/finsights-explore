@@ -142,7 +142,7 @@ ${seg('data-view', [['peers', 'Sektör kıyası'], ['list', 'Tüm liste']], 'Gö
 <div class="ctl"><label for="sc-fk">En yüksek F/K <span class="en">(P/E)</span></label><input type="number" id="sc-fk" step="1" min="1" value="${th.fk}"><small>Kârın kaç yılda fiyatı geri ödediği.</small></div>
 <div class="ctl"><label for="sc-peg">En yüksek PEG</label><input type="number" id="sc-peg" step="0.1" min="0.1" value="${th.peg}"><small>1'in altı: büyümesine göre ucuz.</small></div>
 <div class="ctl"><label for="sc-nb">En yüksek Net borç/FAVÖK <span class="en">(Net debt/EBITDA)</span></label><input type="number" id="sc-nb" step="0.5" min="0" value="${th.nb}"><small>Borcu kaç yıllık faaliyet kârıyla öder.</small></div>
-<div class="ctl"><label for="sc-fg">En düşük FAVÖK büy. % <span class="en">(EBITDA growth)</span></label><input type="number" id="sc-fg" step="5" value="${th.fg}"><small>Faaliyetten gelen büyüme.</small></div>
+<div class="ctl"><label for="sc-fg">En düşük FAVÖK büy.&nbsp;% <span class="en">(EBITDA growth)</span></label><input type="number" id="sc-fg" step="5" value="${th.fg}"><small>Faaliyetten gelen büyüme.</small></div>
 <div class="ctl check"><input type="checkbox" id="sc-cyc"${th.cyc ? ' checked' : ''}><label for="sc-cyc">Döngüsel sektörleri uyar<br><small>Emtia, rafineri, metal, havayolu.</small></label></div>
 <div class="ctl check" id="sc-bank-ctl"><input type="checkbox" id="sc-bank"${th.bank ? ' checked' : ''}><label for="sc-bank">Bankaları listede göster<br><small>Ayrı yöntemle değerlendirilir.</small></label></div>
 <div class="ctl check"><input type="checkbox" id="sc-sma"${state.aboveSma ? ' checked' : ''}><label for="sc-sma">200 günlük ortalamanın üstünde <span class="en">(Above SMA 200)</span><small>Fiyat uzun vadeli ortalamasının üzerinde.</small></label></div>
@@ -169,12 +169,16 @@ function syncChrome(): void {
   if (bank) bank.hidden = !(state.market === 'BIST' && state.view === 'list');
 }
 
-/** Eşikler başka yerden değiştiyse (ör. "Varsayılan eşikler") kutuları eşitler; yazılmakta olan metne dokunmaz. */
-function syncControls(): void {
+/**
+ * Eşikler başka yerden değiştiyse kutuları eşitler; yazılmakta olan metne dokunmaz
+ * (boş kutu varsayılan eşik sayılır ve boş kalır). force: "Varsayılan eşikler"de
+ * kutular, boş bırakılmış olanlar dahil, değerleriyle yeniden yazılır.
+ */
+function syncControls(force = false): void {
   const th = getThresholds();
   const num = (id: string, v: number, def: number): void => {
     const el = q<HTMLInputElement>('#' + id);
-    if (el && parseThreshold(el.value, def) !== v) el.value = String(v);
+    if (el && (force || parseThreshold(el.value, def) !== v)) el.value = String(v);
   };
   const chk = (id: string, v: boolean): void => {
     const el = q<HTMLInputElement>('#' + id);
@@ -461,6 +465,8 @@ async function runSlot(
   const prev = map.get(key);
   if (prev?.status === 'loading') return;
   const token = ++tokenSeq;
+  // Beklerken düğme devre dışı kalır ve odağı bırakır; iş bitince odak düğmeye geri verilir.
+  const hadFocus = focusSelector();
   map.set(key, { status: 'loading', result: prev?.result, token });
   repaint(key);
   try {
@@ -472,6 +478,8 @@ async function runSlot(
     map.set(key, { status: 'error', result: prev?.result, error: aiErrorMessage(e), token });
   }
   repaint(key);
+  const active = document.activeElement;
+  if (hadFocus && (!active || active === document.body)) restoreFocus(hadFocus);
 }
 
 function runComment(id: string, force: boolean): Promise<void> {
@@ -607,6 +615,7 @@ function onReset(): void {
   state.aboveSma = false;
   lsSet('screener.aboveSma', false);
   resetThresholds(); // aboneler (bu sekme ve hesaplayıcı) yeniden çizer
+  syncControls(true);
 }
 
 /* ---------- Dışa açık ---------- */

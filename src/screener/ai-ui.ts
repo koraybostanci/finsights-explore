@@ -65,7 +65,7 @@ export function commentBlockHtml(key: string, slot: AiSlot | undefined, status: 
     key,
     `<span class="muted small">Yapay zekâ yorumu kapalı. <a href="#ayarlar">Ayarlar'da açabilirsiniz.</a></span>`,
   );
-  return `<div class="lbl">Yapay zekâ yorumu · AI commentary</div>${text}${hint}${errorHtml(slot)}${row}`;
+  return `<div class="lbl">Yapay zekâ yorumu · <span lang="en">AI commentary</span></div>${text}${hint}${errorHtml(slot)}${row}`;
 }
 
 /* ---------- Sektör karşılaştırması ---------- */
@@ -78,7 +78,7 @@ export interface CompareContext {
 }
 
 export function compareBlockHtml(key: string, slot: AiSlot | undefined, status: AiStatus, ctx: CompareContext): string {
-  const lbl = `<div class="lbl">Sektör karşılaştırması · AI comparison</div>`;
+  const lbl = `<div class="lbl">Sektör karşılaştırması · <span lang="en">AI comparison</span></div>`;
   if (!status.configured && !slot?.result)
     return `${lbl}
 <p>Yapay zekâ bu sektördeki hisseleri yan yana okur ve farkların ne anlama gelebileceğini hikâyelerin diliyle anlatır. Sayılar yine tablodan gelir; yapay zekâ yalnızca açıklar.</p>

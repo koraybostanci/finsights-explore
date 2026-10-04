@@ -623,7 +623,7 @@ test('industryPrompt: tek piyasa, verisi olmayanlar ayrı listede', () => {
   );
   const pUs = JSON.parse(pu.user.slice(pu.user.indexOf('Veri (JSON):') + 'Veri (JSON):'.length));
   assert.deepEqual(pUs.hisseler, []);
-  assert.deepEqual(pUs.verisiOlmayanHisseler.sort(), ['DAL', 'UAL']);
+  assert.deepEqual(pUs.verisiOlmayanHisseler.sort(), ['DAL', 'LUV', 'UAL']);
   assert.equal(pUs.sektorOrtancasi, null);
   assert.equal(pUs.paraBirimi, 'USD');
 });

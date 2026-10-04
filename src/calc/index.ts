@@ -30,7 +30,7 @@ function shellHtml(): string {
 <div class="ctl"><label for="h-nb">Net borç <span class="en">(Net debt)</span></label><input type="number" id="h-nb" step="any" value="${E.nb}"><small>Finansal borç − nakit (eksi olabilir)</small></div>
 <div class="ctl"><label for="h-ng">Net kâr büyümesi % <span class="en">(Net income growth)</span></label><input type="number" id="h-ng" step="any" value="${E.ng}"><small>PEG için kullanılır</small></div>
 <div class="ctl"><label for="h-fg">FAVÖK büyümesi % <span class="en">(EBITDA growth)</span></label><input type="number" id="h-fg" step="any" value="${E.fg}"><small>Büyümenin kalitesi için</small></div>
-<div class="ctl check"><input type="checkbox" id="h-cyc"${E.cyc ? ' checked' : ''}><label for="h-cyc">Döngüsel sektör <span class="en">(Cyclical)</span><br><small>Emtia, metal, rafineri vb.</small></label></div>
+<div class="ctl check"><input type="checkbox" id="h-cyc"${E.cyc ? ' checked' : ''}><label for="h-cyc">Döngüsel sektör <span class="en">(Cyclical)</span><small>Emtia, metal, rafineri vb.</small></label></div>
 </div>
 <div class="out" id="calcout" aria-live="polite"></div>
 </div>`;

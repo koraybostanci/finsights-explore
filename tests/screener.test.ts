@@ -43,6 +43,7 @@ import {
   extraInfo,
   noteHtml,
   smaBlockHtml,
+  smaLegendHtml,
   smaView,
   trendSentence,
 } from '../src/screener/detail.ts';
@@ -261,6 +262,27 @@ test('dotOffsets: üst üste gelen işaretler dikeyde ayrılır', () => {
   assert.notEqual(two[1], 0);
   const three = dotOffsets([100, 101, 102]);
   assert.equal(new Set(three).size, 3);
+  const five = dotOffsets([100, 100, 100, 100, 100]);
+  assert.equal(new Set(five).size, 5, 'aynı değerde beş işaret ayrı ayrı görünür');
+  assert.deepEqual([...five].sort((a, b) => a - b), [-22, -11, 0, 11, 22]);
+});
+
+test('layoutStrips: ortanca çentiği üstüne yığılan işaretlerden taşar; değer etiketleri yığının üstünde kalır', () => {
+  const same = ['A', 'B', 'C', 'D', 'E'].map((k) => ({ k, fk: null, pd: 2.5, fdf: null, nb: null }));
+  const far = { k: 'Z', fk: null, pd: 9, fdf: null, nb: null };
+  const defs = buildStripDefs([...same, far], { fk: null, pd: 2.5, fdf: null, nb: null }, DEF.nb);
+  const lay = layoutStrips(defs, 560, new Map());
+  const pd = lay.strips[0];
+  const offs = pd.dots.filter((d) => d.k !== 'Z').map((d) => d.y - pd.y);
+  assert.equal(new Set(offs).size, 5);
+  assert.ok(pd.medianTick.up > Math.max(...offs.map((o) => -o)) + 6, 'çentik yukarıda işaretlerden taşar');
+  assert.ok(pd.medianTick.down > Math.max(...offs) + 6, 'çentik aşağıda işaretlerden taşar');
+  for (const v of pd.values.filter((x) => x.shown)) assert.ok(v.y <= pd.y - pd.medianTick.up, 'değer etiketi çentiğin üstünde');
+  for (const b of pd.below.filter((x) => x.shown)) assert.ok(b.y - 11.5 >= pd.y + pd.medianTick.down, 'ortanca etiketi çentiğin altında');
+
+  // Yığın yokken çentik eski boyunda kalır.
+  const two = buildStripDefs([{ k: 'A', fk: null, pd: 1, fdf: null, nb: null }, far], { fk: null, pd: 5, fdf: null, nb: null }, DEF.nb);
+  assert.deepEqual(layoutStrips(two, 560, new Map()).strips[0].medianTick, { up: 12, down: 12 });
 });
 
 test('markerFor: dört renk; dörtten fazla hissede renkler başka biçimlerle yeniden kullanılır', () => {
@@ -449,8 +471,14 @@ test('detailHtml: verisi olmayan hissede yalnızca verinin beklendiği yazar', (
 
   const [r] = buildRows([view('THYAO')], DEF);
   const full = detailHtml(r.s, r.ev, { id: 'BIST-THYAO', ai: '<i>AI</i>', sma: '<i>SMA</i>' });
-  for (const part of ['Ölçüt ölçüt', 'Türk Hava Yolları · Havayolu (Airlines)', '<i>AI</i>', 'Ek bilgiler', '<i>SMA</i>'])
+  for (const part of ['Ölçüt ölçüt', 'Türk Hava Yolları · Havayolu <span lang="en">(Airlines)</span>', '<i>AI</i>', 'Ek bilgiler', '<i>SMA</i>'])
     assert.ok(full.includes(part), part);
+
+  // Etiket büyük harfe çevrilir; İngilizce ad ve sektör adı Türkçe kuralla ("İ") yazılmasın diye dili belirtilir.
+  const [u] = buildRows([withFields('VZ', { f: 40, fk: 9, pd: 1.5, fdf: 7 })], DEF);
+  const us = detailHtml(u.s, u.ev, { id: 'US-VZ', ai: '', sma: '' });
+  assert.ok(us.includes(`<span lang="en">${u.s.ad}</span> · `), 'ABD hissesinin adı İngilizce işaretli');
+  assert.ok(us.includes(`<span lang="en">(${u.s.sekEn})</span>`));
 });
 
 test('smaBlockHtml: fiyat dosyası yoksa grafik yerine not; uydurma değer yok', () => {
@@ -468,6 +496,16 @@ test('smaBlockHtml: fiyat dosyası yoksa grafik yerine not; uydurma değer yok',
   assert.ok(withFile.includes('<div class="chartbox" id="sc-sma-x"></div>'));
   assert.ok(withFile.includes('200 günlük ortalama (kesikli)'));
   assert.ok(withFile.includes('Son 250 işlem günü'));
+  assert.ok(withFile.includes('<span lang="en">Simple moving averages (SMA)</span>'));
+
+  // Kısa seride çizilmeyen ortalama açıklama satırında da yazmaz.
+  const short = smaBlockHtml(withFields('THYAO', { f: 100 }), mkSeries(flat(120, 100)), '', 'sc-sma-x');
+  assert.ok(short.includes('20 günlük ortalama</span>') && short.includes('50 günlük ortalama</span>'));
+  assert.ok(!short.includes('(kesikli)'), '120 günlük seride 200 günlük ortalama yok');
+  assert.ok(short.includes('Son 120 işlem günü'));
+  assert.equal(smaLegendHtml(20).includes('20 günlük ortalama'), false, '20 günde tek nokta olur, çizgi olmaz');
+  assert.equal(smaLegendHtml(21).includes('20 günlük ortalama'), true);
+  assert.equal(smaLegendHtml(201).includes('200 günlük ortalama (kesikli)'), true);
 });
 
 test('smaChartModel: son 250 gün, dört çizgi, eksen aralığı veriyi kapsar', () => {

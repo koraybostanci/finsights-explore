@@ -1,0 +1,20 @@
+/* Kendini sına. Renk ve yazı tipleri app.css belirteçlerinden gelir. */
+.qz-card{max-width:860px}
+.qz-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;font-family:var(--ui);font-size:.82rem;color:var(--muted)}
+.qz-lead{font-family:var(--ui);font-size:.85rem;color:var(--muted)}
+.qz-q{font-family:var(--display);font-size:1.2rem;font-weight:700;line-height:1.3;margin:0}
+.qz-opts{display:flex;flex-direction:column;gap:8px}
+.qz-opt{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;text-align:left;font-family:var(--ui);font-size:.95rem;font-weight:500;line-height:1.4;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.qz-opt:hover:not([disabled]){border-color:var(--accent)}
+.qz-opt b{font-family:var(--mono);font-weight:600;color:var(--muted)}
+.qz-opt[disabled]{cursor:default}
+.qz-opt.right{background:var(--good-soft);border-color:var(--good)}
+.qz-opt.right b{color:var(--good)}
+.qz-opt.wrong{background:var(--bad-soft);border-color:var(--bad)}
+.qz-opt.wrong b{color:var(--bad)}
+.qz-bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.qz-bar i{display:block;height:100%;background:var(--accent)}
+.qz-review{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.qz-review li{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:.93rem}
+.qz-score{font-family:var(--mono);font-size:1.6rem;font-weight:600;line-height:1.2}
+.qz-link{font:inherit;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;text-align:left}

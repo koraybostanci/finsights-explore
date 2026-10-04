@@ -22,6 +22,7 @@
 /* Hisselerim */
 .st-wl .st-add{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
 .st-wl .st-add .ctl label{min-height:0}
+.st-wl .st-add .ctl label .en{display:inline}
 .st-wl .st-hits{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.85rem;min-height:1.4em}
 .st-wl .st-hit{display:inline-flex;align-items:baseline;gap:8px;text-align:left;font-weight:500}
 .st-wl .st-hit b{font-family:var(--mono);font-weight:600}

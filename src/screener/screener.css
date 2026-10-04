@@ -17,3 +17,14 @@ th[data-k]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 
 /* Açılan satırın zemini --bg olduğu için kutucuklar beyaz yüzeyde durur */
 .det .tiles > div{background:var(--surface)}
+
+/* Açılan satır: ilk sürümdeki gibi iki eşit sütun. Tam genişlikteki hareketli ortalamalar
+   bölümü bütün sütunları kapladığı için 300 px'lik sütunlarda üçüncü, boş bir sütun kalıyordu. */
+#tarayici .det{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+
+/* .det p kuralı .small'u ezdiği için açılan satırdaki küçük notlar gövde boyutunda çıkıyordu */
+.det p.small{font-size:.82rem}
+.det p.note{font-size:.85rem}
+
+/* "Tüm liste"de sekiz denetim var; 1280 px'te düğme tek başına ikinci satıra düşmesin */
+#sc-ctl{grid-template-columns:repeat(auto-fit,minmax(136px,1fr))}

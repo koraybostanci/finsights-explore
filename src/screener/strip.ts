@@ -89,9 +89,10 @@ export function placeLabels(items: LabelBox[], lo: number, hi: number, gap = 6, 
 }
 
 /**
- * Üst üste binen işaretleri dikeyde ayırır: sırayla 0, yukarı, aşağı dener.
- * Üçüncü çakışan işaret yerinde kalır (beyaz kenar çizgisi ayrımı korur).
- * Sonuç girdi sırasında dikey kaymadır (px).
+ * Üst üste binen işaretleri dikeyde ayırır: sırayla 0, bir adım yukarı, bir adım
+ * aşağı, iki adım yukarı, iki adım aşağı dener; böylece aynı değerde beş işaret
+ * ayrı ayrı görünür. Altıncı çakışan işaret yerinde kalır (değeri tabloda ve
+ * işaretin ipucunda durur). Sonuç girdi sırasında dikey kaymadır (px).
  */
 export function dotOffsets(xs: number[], minDist = 11, step = 11): number[] {
   const out: number[] = new Array(xs.length).fill(0);
@@ -99,7 +100,7 @@ export function dotOffsets(xs: number[], minDist = 11, step = 11): number[] {
   const placed: Array<{ x: number; dy: number }> = [];
   for (const i of order) {
     let dy = 0;
-    for (const cand of [0, -step, step]) {
+    for (const cand of [0, -step, step, -2 * step, 2 * step]) {
       if (!placed.some((p) => Math.hypot(p.x - xs[i], p.dy - cand) < minDist)) {
         dy = cand;
         break;
@@ -187,6 +188,9 @@ export interface StripGeom {
   values: StripText[];
   medianX: number | null;
   thresholdX: number | null;
+  /** Ortanca ve eşik çentiklerinin şeritten yukarı ve aşağı uzunluğu; üst üste dizilmiş işaretlerin arkasında kaybolmasın diye uzar */
+  medianTick: TickReach;
+  thresholdTick: TickReach;
   below: Array<StripText & { kind: 'median' | 'threshold' }>;
   bottom: number;
 }
@@ -198,10 +202,19 @@ export interface StripLayout {
   strips: StripGeom[];
 }
 
+export interface TickReach {
+  up: number;
+  down: number;
+}
+
 const VAL_FS = 11.5;
 const LBL_FS = 11.5;
 const LINE = 14;
 const TICK = 12;
+/** İşaretin yarıçapı */
+const DOT_R = 6;
+/** Çentiğin, üstüne gelen işaretten taşan kısmı */
+const TICK_OVER = 5;
 
 /** Eşik, veriye göre çok uzakta değilse ölçeğe katılır (yoksa noktalar tek uca yığılır). */
 export function thresholdInScale(values: number[], th: number): boolean {
@@ -229,8 +242,23 @@ export function layoutStrips(defs: StripDef[], W: number, markers: Map<string, M
 
     const xs = def.items.map((it) => X(it.v));
     const dys = dotOffsets(xs);
-    const up = dys.some((d) => d < 0) ? 17 : TICK;
-    const down = dys.some((d) => d > 0) ? 17 : TICK;
+    const medianX = def.median != null ? X(def.median) : null;
+    const thresholdX = thIn && th != null ? X(th) : null;
+    // Çentik, üstüne gelen işaret yığınından en az TICK_OVER kadar taşar.
+    const reach = (x: number | null): TickReach => {
+      const r: TickReach = { up: TICK, down: TICK };
+      if (x == null) return r;
+      xs.forEach((dx, i) => {
+        if (Math.abs(dx - x) > DOT_R + 1) return;
+        r.up = Math.max(r.up, -dys[i] + DOT_R + TICK_OVER);
+        r.down = Math.max(r.down, dys[i] + DOT_R + TICK_OVER);
+      });
+      return r;
+    };
+    const medianTick = reach(medianX);
+    const thresholdTick = reach(thresholdX);
+    const up = Math.max(TICK, Math.max(0, ...dys.map((d) => -d)) + DOT_R, medianTick.up, thresholdTick.up);
+    const down = Math.max(TICK, Math.max(0, ...dys) + DOT_R, medianTick.down, thresholdTick.down);
 
     const valTexts = def.items.map((it) => nf(it.v));
     const valPlaced = placeLabels(
@@ -276,8 +304,10 @@ export function layoutStrips(defs: StripDef[], W: number, markers: Map<string, M
         marker: markers.get(it.k) ?? markerFor(i),
       })),
       values: valPlaced.map((p, i) => ({ text: valTexts[i], x: p.x, y: base0 - p.level * LINE, shown: p.shown })),
-      medianX: def.median != null ? X(def.median) : null,
-      thresholdX: thIn && th != null ? X(th) : null,
+      medianX,
+      thresholdX,
+      medianTick,
+      thresholdTick,
       below: belowPlaced.map((p, i) => ({
         kind: belowRaw[i].kind,
         text: belowRaw[i].text,
@@ -352,9 +382,9 @@ export function stripSvg(layout: StripLayout, aria: string): string {
     }
     g += `<line x1="${r1(s.x0)}" x2="${r1(s.x1)}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="2" stroke-linecap="round"/>`;
     if (s.thresholdX != null)
-      g += `<line x1="${r1(s.thresholdX)}" x2="${r1(s.thresholdX)}" y1="${y - TICK}" y2="${y + TICK}" stroke="var(--warn)" stroke-width="2" stroke-dasharray="3 3"/>`;
+      g += `<line x1="${r1(s.thresholdX)}" x2="${r1(s.thresholdX)}" y1="${y - s.thresholdTick.up}" y2="${y + s.thresholdTick.down}" stroke="var(--warn)" stroke-width="2" stroke-dasharray="3 3"/>`;
     if (s.medianX != null)
-      g += `<line x1="${r1(s.medianX)}" x2="${r1(s.medianX)}" y1="${y - TICK}" y2="${y + TICK}" stroke="var(--ink)" stroke-width="2"/>`;
+      g += `<line x1="${r1(s.medianX)}" x2="${r1(s.medianX)}" y1="${y - s.medianTick.up}" y2="${y + s.medianTick.down}" stroke="var(--ink)" stroke-width="2"/>`;
     for (const b of s.below)
       if (b.shown)
         g += svgText(r1(b.x), b.y, b.text, {
