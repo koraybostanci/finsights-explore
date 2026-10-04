@@ -5,10 +5,30 @@
  * yoksa veri eksikliğinden mi boş olduğunun ayrılması (Stock.loss).
  */
 
-import type { Check, Evaluation, StockView, Thresholds, Verdict } from '../types.ts';
+import type { Check, CheckId, Evaluation, StockView, Thresholds, Verdict } from '../types.ts';
 import { nf, pct } from './format.ts';
 
-export const DEF: Thresholds = { fk: 30, peg: 1, nb: 2.5, fg: 0, cyc: true, bank: false };
+export const DEF: Thresholds = {
+  maxPe: 30,
+  maxPeg: 1,
+  maxNetDebtEbitda: 2.5,
+  minEbitdaGrowth: 0,
+  warnCyclical: true,
+  showBanks: false,
+};
+
+/** Ölçüt kimliğinin ekranda görünen adı */
+export const CHECK_LABEL: Record<CheckId, string> = {
+  data: 'Veri',
+  bank: 'Banka',
+  roe: 'ÖK kârlılığı',
+  profit: 'Kâr',
+  pe: 'F/K',
+  peg: 'PEG',
+  growthQuality: 'Büyüme kalitesi',
+  debt: 'Borç',
+  cyclical: 'Döngüsellik',
+};
 
 export const VLABEL: Record<Verdict, string> = {
   good: 'Temiz aday',
@@ -27,179 +47,215 @@ export function evaluate(s: StockView, th: Thresholds): Evaluation {
 
   if (!s.hasData) {
     C.push({
-      n: 'Veri',
-      st: 'na',
-      s: 'Veri bekliyor',
-      t: 'Bu hissenin verisi henüz gelmedi; bir sonraki veri güncellemesinde dolar.',
+      id: 'data',
+      label: CHECK_LABEL.data,
+      status: 'na',
+      short: 'Veri bekliyor',
+      long: 'Bu hissenin verisi henüz gelmedi; bir sonraki veri güncellemesinde dolar.',
     });
     return { checks: C, verdict: 'na', warns: 0 };
   }
 
   if (s.bank) {
     C.push({
-      n: 'Banka',
-      st: 'na',
-      s: 'Banka: ayrı yöntemle değerlendirilir',
-      t: "Bankalar FAVÖK, borç ve PEG ile değerlendirilmez. 'Bankalar' sekmesinde PD/DD ile özkaynak kârlılığına bakın.",
+      id: 'bank',
+      label: CHECK_LABEL.bank,
+      status: 'na',
+      short: 'Banka: ayrı yöntemle değerlendirilir',
+      long: "Bankalar FAVÖK, borç ve PEG ile değerlendirilmez. 'Bankalar' sekmesinde PD/DD ile özkaynak kârlılığına bakın.",
     });
     if (s.roe != null)
       C.push({
-        n: 'ÖK kârlılığı',
-        st: s.roe >= 20 ? 'good' : s.roe >= 12 ? 'warn' : 'bad',
-        s: `ÖK kârlılığı ≈ %${nf(s.roe, 1)}`,
-        t: `Yaklaşık özkaynak kârlılığı %${nf(s.roe, 1)} (PD/DD ${nf(s.pd)} ÷ F/K ${nf(s.fk)}).`,
+        id: 'roe',
+        label: CHECK_LABEL.roe,
+        status: s.roe >= 20 ? 'good' : s.roe >= 12 ? 'warn' : 'bad',
+        short: `ÖK kârlılığı ≈ %${nf(s.roe, 1)}`,
+        long: `Yaklaşık özkaynak kârlılığı %${nf(s.roe, 1)} (PD/DD ${nf(s.pb)} ÷ F/K ${nf(s.pe)}).`,
       });
     return { checks: C, verdict: 'na', warns: 0 };
   }
 
-  if (s.fk != null)
-    C.push({ n: 'Kâr', st: 'good', s: 'Kârlı', t: `Son 12 ayda kârlı. Kazanç verimi %${nf(100 / s.fk, 1)}.` });
+  if (s.pe != null)
+    C.push({
+      id: 'profit',
+      label: CHECK_LABEL.profit,
+      status: 'good',
+      short: 'Kârlı',
+      long: `Son 12 ayda kârlı. Kazanç verimi %${nf(100 / s.pe, 1)}.`,
+    });
   else if (s.loss)
-    C.push({ n: 'Kâr', st: 'bad', s: 'Zarar ediyor (son 12 ay)', t: 'Son 12 ayda zarar ediyor; F/K ve PEG hesaplanamaz.' });
+    C.push({
+      id: 'profit',
+      label: CHECK_LABEL.profit,
+      status: 'bad',
+      short: 'Zarar ediyor (son 12 ay)',
+      long: 'Son 12 ayda zarar ediyor; F/K ve PEG hesaplanamaz.',
+    });
   else
     C.push({
-      n: 'Kâr',
-      st: 'warn',
-      s: 'F/K verisi yok',
-      t: 'Kaynakta F/K yok; son 12 ayın kârı buradan okunamıyor. Zarar da olabilir, veri eksik de.',
+      id: 'profit',
+      label: CHECK_LABEL.profit,
+      status: 'warn',
+      short: 'F/K verisi yok',
+      long: 'Kaynakta F/K yok; son 12 ayın kârı buradan okunamıyor. Zarar da olabilir, veri eksik de.',
     });
 
-  if (s.fk != null)
+  if (s.pe != null)
     C.push(
-      s.fk <= th.fk
+      s.pe <= th.maxPe
         ? {
-            n: 'F/K',
-            st: 'good',
-            s: `F/K ${nf(s.fk, 1)} ≤ ${nf(th.fk, 0)}`,
-            t: `F/K ${nf(s.fk)}, eşiğin (${nf(th.fk, 0)}) altında. Kâr sabit kalsa fiyatı yaklaşık ${nf(s.fk, 0)} yılda geri öder.`,
+            id: 'pe',
+            label: CHECK_LABEL.pe,
+            status: 'good',
+            short: `F/K ${nf(s.pe, 1)} ≤ ${nf(th.maxPe, 0)}`,
+            long: `F/K ${nf(s.pe)}, eşiğin (${nf(th.maxPe, 0)}) altında. Kâr sabit kalsa fiyatı yaklaşık ${nf(s.pe, 0)} yılda geri öder.`,
           }
         : {
-            n: 'F/K',
-            st: 'bad',
-            s: `F/K ${nf(s.fk, 1)} > ${nf(th.fk, 0)}: pahalı`,
-            t: `F/K ${nf(s.fk)}, eşiğin (${nf(th.fk, 0)}) üzerinde. Piyasa yüksek büyüme fiyatlıyor.`,
+            id: 'pe',
+            label: CHECK_LABEL.pe,
+            status: 'bad',
+            short: `F/K ${nf(s.pe, 1)} > ${nf(th.maxPe, 0)}: pahalı`,
+            long: `F/K ${nf(s.pe)}, eşiğin (${nf(th.maxPe, 0)}) üzerinde. Piyasa yüksek büyüme fiyatlıyor.`,
           },
     );
 
-  if (s.fk != null) {
+  if (s.pe != null) {
     if (s.peg == null)
       C.push({
-        n: 'PEG',
-        st: 'warn',
-        s: 'PEG hesaplanamıyor',
-        t: 'PEG hesaplanamıyor; büyüme oranı anlamlı değil (zarardan kâra geçiş veya veri yok).',
+        id: 'peg',
+        label: CHECK_LABEL.peg,
+        status: 'warn',
+        short: 'PEG hesaplanamıyor',
+        long: 'PEG hesaplanamıyor; büyüme oranı anlamlı değil (zarardan kâra geçiş veya veri yok).',
       });
     else if (s.peg < 0)
       C.push({
-        n: 'PEG',
-        st: 'bad',
-        s: `PEG ${nf(s.peg)}: kâr düşüyor`,
-        t: `PEG ${nf(s.peg)}: eksi değer kârın düştüğünü gösterir.`,
+        id: 'peg',
+        label: CHECK_LABEL.peg,
+        status: 'bad',
+        short: `PEG ${nf(s.peg)}: kâr düşüyor`,
+        long: `PEG ${nf(s.peg)}: eksi değer kârın düştüğünü gösterir.`,
       });
     else if (s.peg <= 0.15)
       C.push({
-        n: 'PEG',
-        st: 'warn',
-        s: `PEG ${nf(s.peg)}: şüpheli derecede düşük`,
-        t: `PEG ${nf(s.peg)} olağandışı düşük; büyüme büyük olasılıkla baz etkisi veya tek seferlik kalemlerden.`,
+        id: 'peg',
+        label: CHECK_LABEL.peg,
+        status: 'warn',
+        short: `PEG ${nf(s.peg)}: şüpheli derecede düşük`,
+        long: `PEG ${nf(s.peg)} olağandışı düşük; büyüme büyük olasılıkla baz etkisi veya tek seferlik kalemlerden.`,
       });
-    else if (s.peg <= th.peg)
+    else if (s.peg <= th.maxPeg)
       C.push({
-        n: 'PEG',
-        st: 'good',
-        s: `PEG ${nf(s.peg)} ≤ ${nf(th.peg, 1)}`,
-        t: `PEG ${nf(s.peg)}, eşiğin (${nf(th.peg, 1)}) altında: F/K büyümesine göre makul.`,
+        id: 'peg',
+        label: CHECK_LABEL.peg,
+        status: 'good',
+        short: `PEG ${nf(s.peg)} ≤ ${nf(th.maxPeg, 1)}`,
+        long: `PEG ${nf(s.peg)}, eşiğin (${nf(th.maxPeg, 1)}) altında: F/K büyümesine göre makul.`,
       });
     else
       C.push({
-        n: 'PEG',
-        st: 'bad',
-        s: `PEG ${nf(s.peg)} > ${nf(th.peg, 1)}: büyümeye göre pahalı`,
-        t: `PEG ${nf(s.peg)}, eşiğin (${nf(th.peg, 1)}) üzerinde: büyümeye göre pahalı.`,
+        id: 'peg',
+        label: CHECK_LABEL.peg,
+        status: 'bad',
+        short: `PEG ${nf(s.peg)} > ${nf(th.maxPeg, 1)}: büyümeye göre pahalı`,
+        long: `PEG ${nf(s.peg)}, eşiğin (${nf(th.maxPeg, 1)}) üzerinde: büyümeye göre pahalı.`,
       });
   }
 
-  if (s.fg == null)
+  if (s.ebitdaGrowth == null)
     C.push({
-      n: 'Büyüme kalitesi',
-      st: 'warn',
-      s: `FAVÖK ${s.fgT || 'karşılaştırılamıyor'}`,
-      t: `FAVÖK ${s.fgT || 'karşılaştırılamıyor'}; faaliyet büyümesi ölçülemiyor.`,
+      id: 'growthQuality',
+      label: CHECK_LABEL.growthQuality,
+      status: 'warn',
+      short: `FAVÖK ${s.ebitdaGrowthNote || 'karşılaştırılamıyor'}`,
+      long: `FAVÖK ${s.ebitdaGrowthNote || 'karşılaştırılamıyor'}; faaliyet büyümesi ölçülemiyor.`,
     });
-  else if (s.fg < th.fg)
+  else if (s.ebitdaGrowth < th.minEbitdaGrowth)
     C.push({
-      n: 'Büyüme kalitesi',
-      st: 'bad',
-      s: `FAVÖK ${pct(s.fg)}: faaliyet büyümüyor`,
-      t: `FAVÖK büyümesi ${pct(s.fg)}, eşiğin (${pct(th.fg)}) altında: faaliyetler büyümüyor.`,
+      id: 'growthQuality',
+      label: CHECK_LABEL.growthQuality,
+      status: 'bad',
+      short: `FAVÖK ${pct(s.ebitdaGrowth)}: faaliyet büyümüyor`,
+      long: `FAVÖK büyümesi ${pct(s.ebitdaGrowth)}, eşiğin (${pct(th.minEbitdaGrowth)}) altında: faaliyetler büyümüyor.`,
     });
-  else if (s.ng == null)
+  else if (s.netIncomeGrowth == null)
     C.push({
-      n: 'Büyüme kalitesi',
-      st: 'warn',
-      s: `Net kâr ${s.ngT || 'karşılaştırılamıyor'}: baz etkisi`,
-      t: `FAVÖK ${pct(s.fg)} büyümüş; net kâr ${s.ngT || 'karşılaştırılamıyor'}, bu yüzden baz etkisi var.`,
+      id: 'growthQuality',
+      label: CHECK_LABEL.growthQuality,
+      status: 'warn',
+      short: `Net kâr ${s.netIncomeGrowthNote || 'karşılaştırılamıyor'}: baz etkisi`,
+      long: `FAVÖK ${pct(s.ebitdaGrowth)} büyümüş; net kâr ${s.netIncomeGrowthNote || 'karşılaştırılamıyor'}, bu yüzden baz etkisi var.`,
     });
-  else if (s.ng > s.fg + 50)
+  else if (s.netIncomeGrowth > s.ebitdaGrowth + 50)
     C.push({
-      n: 'Büyüme kalitesi',
-      st: 'warn',
-      s: `Net kâr ${pct(s.ng)}, FAVÖK ${pct(s.fg)}: fark faaliyet dışı`,
-      t: `Net kâr ${pct(s.ng)}, FAVÖK ise ${pct(s.fg)} büyümüş. Aradaki fark faaliyet dışı kalemlerden; kalıcı olmayabilir.`,
-    });
-  else
-    C.push({
-      n: 'Büyüme kalitesi',
-      st: 'good',
-      s: `Büyüme faaliyetten (FAVÖK ${pct(s.fg)})`,
-      t: `FAVÖK ${pct(s.fg)}, net kâr ${pct(s.ng)}: büyüme faaliyetlerle uyumlu.`,
-    });
-
-  if (s.nb == null)
-    C.push({
-      n: 'Borç',
-      st: 'warn',
-      s: 'Borç verisi yok',
-      t: 'Net borç/FAVÖK verisi yok; borç yükü bu kaynaktan ölçülemiyor.',
-    });
-  else if (s.nb <= th.nb)
-    C.push({
-      n: 'Borç',
-      st: 'good',
-      s: s.nb < 0 ? 'Net nakit' : `Borç makul (${nf(s.nb, 1)}x)`,
-      t:
-        s.nb < 0
-          ? `Net nakit pozisyonunda (Net borç/FAVÖK ${nf(s.nb)}).`
-          : `Net borç/FAVÖK ${nf(s.nb)}, eşiğin (${nf(th.nb, 1)}) altında.`,
+      id: 'growthQuality',
+      label: CHECK_LABEL.growthQuality,
+      status: 'warn',
+      short: `Net kâr ${pct(s.netIncomeGrowth)}, FAVÖK ${pct(s.ebitdaGrowth)}: fark faaliyet dışı`,
+      long: `Net kâr ${pct(s.netIncomeGrowth)}, FAVÖK ise ${pct(s.ebitdaGrowth)} büyümüş. Aradaki fark faaliyet dışı kalemlerden; kalıcı olmayabilir.`,
     });
   else
     C.push({
-      n: 'Borç',
-      st: 'bad',
-      s: `Borç yüksek (${nf(s.nb, 1)}x > ${nf(th.nb, 1)})`,
-      t: `Net borç/FAVÖK ${nf(s.nb)}, eşiğin (${nf(th.nb, 1)}) üzerinde: borç yükü yüksek.`,
+      id: 'growthQuality',
+      label: CHECK_LABEL.growthQuality,
+      status: 'good',
+      short: `Büyüme faaliyetten (FAVÖK ${pct(s.ebitdaGrowth)})`,
+      long: `FAVÖK ${pct(s.ebitdaGrowth)}, net kâr ${pct(s.netIncomeGrowth)}: büyüme faaliyetlerle uyumlu.`,
     });
 
-  if (th.cyc && s.cyclical)
+  if (s.netDebtEbitda == null)
     C.push({
-      n: 'Döngüsellik',
-      st: 'warn',
-      s: 'Döngüsel sektör',
-      t: `${s.sek} döngüsel bir sektör; bugünkü kâr ortalamanın üstünde veya altında olabilir.`,
+      id: 'debt',
+      label: CHECK_LABEL.debt,
+      status: 'warn',
+      short: 'Borç verisi yok',
+      long: 'Net borç/FAVÖK verisi yok; borç yükü bu kaynaktan ölçülemiyor.',
+    });
+  else if (s.netDebtEbitda <= th.maxNetDebtEbitda)
+    C.push({
+      id: 'debt',
+      label: CHECK_LABEL.debt,
+      status: 'good',
+      short: s.netDebtEbitda < 0 ? 'Net nakit' : `Borç makul (${nf(s.netDebtEbitda, 1)}x)`,
+      long:
+        s.netDebtEbitda < 0
+          ? `Net nakit pozisyonunda (Net borç/FAVÖK ${nf(s.netDebtEbitda)}).`
+          : `Net borç/FAVÖK ${nf(s.netDebtEbitda)}, eşiğin (${nf(th.maxNetDebtEbitda, 1)}) altında.`,
+    });
+  else
+    C.push({
+      id: 'debt',
+      label: CHECK_LABEL.debt,
+      status: 'bad',
+      short: `Borç yüksek (${nf(s.netDebtEbitda, 1)}x > ${nf(th.maxNetDebtEbitda, 1)})`,
+      long: `Net borç/FAVÖK ${nf(s.netDebtEbitda)}, eşiğin (${nf(th.maxNetDebtEbitda, 1)}) üzerinde: borç yükü yüksek.`,
     });
 
-  const bad = C.some((c) => c.st === 'bad');
-  const warn = C.filter((c) => c.st === 'warn').length;
+  if (th.warnCyclical && s.cyclical)
+    C.push({
+      id: 'cyclical',
+      label: CHECK_LABEL.cyclical,
+      status: 'warn',
+      short: 'Döngüsel sektör',
+      long: `${s.industryTr} döngüsel bir sektör; bugünkü kâr ortalamanın üstünde veya altında olabilir.`,
+    });
+
+  const bad = C.some((c) => c.status === 'bad');
+  const warn = C.filter((c) => c.status === 'warn').length;
   return { checks: C, verdict: bad ? 'bad' : warn ? 'warn' : 'good', warns: warn };
 }
 
 /** Tablo hücresi rengi: "v-good" | "v-warn" | "v-bad" | "" */
-export function cellColor(key: 'fk' | 'peg' | 'nb' | 'fg' | 'pd', val: number | null, th: Thresholds): string {
+export function cellColor(
+  key: 'pe' | 'peg' | 'netDebtEbitda' | 'ebitdaGrowth' | 'pb',
+  val: number | null,
+  th: Thresholds,
+): string {
   if (val == null) return '';
-  if (key === 'fk') return val <= th.fk ? 'v-good' : 'v-bad';
-  if (key === 'peg') return val < 0 ? 'v-bad' : val <= 0.15 ? 'v-warn' : val <= th.peg ? 'v-good' : 'v-bad';
-  if (key === 'nb') return val <= th.nb ? 'v-good' : 'v-bad';
-  if (key === 'fg') return val >= th.fg ? 'v-good' : 'v-bad';
-  if (key === 'pd') return val < 1 ? 'v-good' : '';
+  if (key === 'pe') return val <= th.maxPe ? 'v-good' : 'v-bad';
+  if (key === 'peg') return val < 0 ? 'v-bad' : val <= 0.15 ? 'v-warn' : val <= th.maxPeg ? 'v-good' : 'v-bad';
+  if (key === 'netDebtEbitda') return val <= th.maxNetDebtEbitda ? 'v-good' : 'v-bad';
+  if (key === 'ebitdaGrowth') return val >= th.minEbitdaGrowth ? 'v-good' : 'v-bad';
+  if (key === 'pb') return val < 1 ? 'v-good' : '';
   return '';
 }

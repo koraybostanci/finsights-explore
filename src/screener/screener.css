@@ -1,6 +1,6 @@
 /* Tarayıcıya özgü küçük eklemeler. Yalnızca mevcut belirteçler kullanılır; yeni renk ya da yazı tipi yoktur. */
 
-#tarayici a{color:var(--accent)}
+#screener a{color:var(--accent)}
 
 /* Açılan satırda tam genişlik bölüm (hareketli ortalamalar) */
 .det .sc-wide{grid-column:1 / -1}
@@ -10,7 +10,7 @@
 td.sc-msg{text-align:left;font-family:var(--ui);white-space:normal;color:var(--muted)}
 
 /* Sıralanabilir başlıklar klavyeyle de seçilebilir */
-th[data-k]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+th[data-sort]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 
 /* Açıklama satırında biçimli işaretler (daire, kare, baklava, üçgen) */
 .legend svg{display:inline-block;vertical-align:-3px;margin-right:4px}
@@ -20,7 +20,7 @@ th[data-k]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 
 /* Açılan satır: ilk sürümdeki gibi iki eşit sütun. Tam genişlikteki hareketli ortalamalar
    bölümü bütün sütunları kapladığı için 300 px'lik sütunlarda üçüncü, boş bir sütun kalıyordu. */
-#tarayici .det{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+#screener .det{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
 
 /* .det p kuralı .small'u ezdiği için açılan satırdaki küçük notlar gövde boyutunda çıkıyordu */
 .det p.small{font-size:.82rem}

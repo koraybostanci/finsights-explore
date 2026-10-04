@@ -62,18 +62,18 @@ export function emit(ev: StoreEvent): void {
 
 /* ---------- Piyasa verisi ---------- */
 
-const EMPTY: MarketData = { schema: 1, asOf: '', source: '', period: {}, industries: {}, stocks: [] };
+const EMPTY: MarketData = { schema: 2, asOf: '', source: '', period: {}, industries: {}, stocks: [] };
 let DATA: MarketData = EMPTY;
 let VIEWS: StockView[] = [];
 let loadError: string | null = null;
 
-const UNKNOWN_INDUSTRY: Industry = { tr: 'Diğer', en: 'Other', cyclical: false };
+const UNKNOWN_INDUSTRY: Industry = { nameTr: 'Diğer', nameEn: 'Other', cyclical: false };
 
 export function toView(s: Stock, industries: Record<string, Industry>): StockView {
-  const ind = industries[s.ind] ?? UNKNOWN_INDUSTRY;
-  const roe = s.fk != null && s.fk !== 0 && s.pd != null ? (s.pd / s.fk) * 100 : null;
-  const hasData = s.f != null && (s.fk != null || s.pd != null || s.fdf != null);
-  return { ...s, roe, sek: ind.tr, sekEn: ind.en, cyclical: s.cyc ?? ind.cyclical, hasData };
+  const ind = industries[s.industry] ?? UNKNOWN_INDUSTRY;
+  const roe = s.pe != null && s.pe !== 0 && s.pb != null ? (s.pb / s.pe) * 100 : null;
+  const hasData = s.price != null && (s.pe != null || s.pb != null || s.evEbitda != null);
+  return { ...s, roe, industryTr: ind.nameTr, industryEn: ind.nameEn, cyclical: s.cyc ?? ind.cyclical, hasData };
 }
 
 /** Testler ve veri yükleme için: veriyi doğrudan yerleştirir. */
@@ -89,7 +89,7 @@ export async function loadData(url = './data/market.json'): Promise<void> {
     const res = await fetch(url, { cache: 'no-cache' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const d = (await res.json()) as MarketData;
-    if (!d || d.schema !== 1 || !Array.isArray(d.stocks)) throw new Error('Beklenmeyen veri biçimi');
+    if (!d || d.schema !== 2 || !Array.isArray(d.stocks)) throw new Error('Beklenmeyen veri biçimi');
     loadError = null;
     setData(d);
   } catch (e) {
@@ -109,7 +109,7 @@ export const dataError = (): string | null => loadError;
 export const industry = (id: string): Industry => DATA.industries[id] ?? UNKNOWN_INDUSTRY;
 
 /** Piyasa içinde tekil kimlik, ör. "BIST-THYAO" */
-export const sid = (s: { market: MarketId; k: string }): string => `${s.market}-${s.k}`;
+export const sid = (s: { market: MarketId; symbol: string }): string => `${s.market}-${s.symbol}`;
 
 export interface StockFilter {
   /** only: yalnız bankalar · exclude: bankasız (varsayılan) · include: hepsi */
@@ -127,12 +127,12 @@ export function stocks(market: MarketId, f: StockFilter = {}): StockView[] {
     (s) =>
       s.market === market &&
       (banks === 'include' || (banks === 'only' ? !!s.bank : !s.bank)) &&
-      (!wl || s.bank || wl.has(s.k)),
+      (!wl || s.bank || wl.has(s.symbol)),
   );
 }
 
-export function findStock(market: MarketId, k: string): StockView | undefined {
-  return VIEWS.find((s) => s.market === market && s.k === k);
+export function findStock(market: MarketId, symbol: string): StockView | undefined {
+  return VIEWS.find((s) => s.market === market && s.symbol === symbol);
 }
 
 /* ---------- Hisselerim (watchlist) ---------- */
@@ -141,7 +141,7 @@ const wlKey = (m: MarketId) => `watchlist.${m}`;
 
 /** Kayıt yoksa evrendeki tüm (banka dışı) hisseler seçili sayılır. */
 export function watchlist(market: MarketId): string[] {
-  const universe = VIEWS.filter((s) => s.market === market && !s.bank).map((s) => s.k);
+  const universe = VIEWS.filter((s) => s.market === market && !s.bank).map((s) => s.symbol);
   const saved = lsGet<string[] | null>(wlKey(market), null);
   if (!saved) return universe;
   const known = new Set(universe);
@@ -169,13 +169,13 @@ export function universe(market: MarketId): StockView[] {
 const priceCache = new Map<string, Promise<PriceSeries | null>>();
 
 /** Günlük kapanış serisi; dosya yoksa null (veri henüz çekilmemiş). */
-export function loadPrices(s: { market: MarketId; k: string }): Promise<PriceSeries | null> {
+export function loadPrices(s: { market: MarketId; symbol: string }): Promise<PriceSeries | null> {
   const id = sid(s);
   let p = priceCache.get(id);
   if (!p) {
     p = fetch(`./data/prices/${encodeURIComponent(id)}.json`, { cache: 'no-cache' })
       .then((r) => (r.ok ? (r.json() as Promise<PriceSeries>) : null))
-      .then((d) => (d && Array.isArray(d.c) && Array.isArray(d.t) && d.c.length === d.t.length ? d : null))
+      .then((d) => (d && Array.isArray(d.closes) && Array.isArray(d.dates) && d.closes.length === d.dates.length ? d : null))
       .catch(() => null);
     priceCache.set(id, p);
   }

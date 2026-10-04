@@ -3,7 +3,7 @@
 import type { IndustryMedian, StockView, Thresholds } from '../types.ts';
 import { ICON, VLABEL, cellColor } from '../lib/evaluate.ts';
 import { esc, money, nf, pct } from '../lib/format.ts';
-import { distText, fkText, growthText, roeText, verdictLabel } from './logic.ts';
+import { distText, peText, growthText, roeText, verdictLabel } from './logic.ts';
 import type { Col, Row, SortState, VerdictCounts } from './logic.ts';
 
 export function headHtml(cols: Col[], sort: SortState): string {
@@ -17,7 +17,7 @@ export function headHtml(cols: Col[], sort: SortState): string {
         const on = c.key === sort.key;
         const cls = [on ? 'sorted' : '', c.left ? 'left' : ''].filter(Boolean).join(' ');
         const aria = on ? ` aria-sort="${sort.dir > 0 ? 'ascending' : 'descending'}"` : '';
-        return `<th data-k="${c.key}" data-f="sort:${c.key}" class="${cls}" scope="col" tabindex="0"${aria}>${esc(c.lbl)}${
+        return `<th data-sort="${c.key}" data-f="sort:${c.key}" class="${cls}" scope="col" tabindex="0"${aria}>${esc(c.lbl)}${
           on ? (sort.dir > 0 ? ' ↑' : ' ↓') : ''
         }${small}</th>`;
       })
@@ -29,28 +29,35 @@ export function headHtml(cols: Col[], sort: SortState): string {
 /** Fiyatın ortalamaya uzaklığı; ortalamanın kendisi ipucunda (title) */
 function smaCell(s: StockView, d: number | null, avg: number | null, n: 50 | 200): string {
   if (d == null || avg == null) return '<td>–</td>';
-  return `<td title="${esc(`${n} günlük ortalama: ${money(avg, s.cur)}`)}">${esc(distText(d))}</td>`;
+  return `<td title="${esc(`${n} günlük ortalama: ${money(avg, s.currency)}`)}">${esc(distText(d))}</td>`;
 }
 
-const nameCell = (s: StockView): string => `<td class="name"><b>${esc(s.k)}</b><span>${esc(s.ad)}</span></td>`;
+const nameCell = (s: StockView): string => `<td class="name"><b>${esc(s.symbol)}</b><span>${esc(s.name)}</span></td>`;
 
 const resCell = (r: Row): string =>
   `<td class="res"><span class="pill ${r.ev.verdict}">${ICON[r.ev.verdict]} ${esc(verdictLabel(r))}</span></td>`;
 
 const rowOpen = (r: Row, open: boolean): string =>
-  `<tr class="row" data-k="${esc(r.s.k)}" data-f="row:${esc(r.s.k)}" tabindex="0" aria-expanded="${open}">`;
+  `<tr class="row" data-symbol="${esc(r.s.symbol)}" data-f="row:${esc(r.s.symbol)}" tabindex="0" aria-expanded="${open}">`;
 
 /** Çarpan hücreleri: bankalarda FAVÖK'e dayananlar "–" (ilk sürümdeki gibi) */
-function multipleCells(r: Row, th: Thresholds): { fk: string; pd: string; fdf: string; peg: string; nb: string; fg: string } {
+function multipleCells(r: Row, th: Thresholds): {
+  pe: string;
+  pb: string;
+  evEbitda: string;
+  peg: string;
+  netDebtEbitda: string;
+  ebitdaGrowth: string;
+} {
   const s = r.s;
   const bank = !!s.bank;
   return {
-    fk: `<td class="${cellColor('fk', s.fk, th)}">${esc(fkText(s))}</td>`,
-    pd: `<td class="${cellColor('pd', s.pd, th)}">${nf(s.pd)}</td>`,
-    fdf: `<td>${bank ? '–' : nf(s.fdf)}</td>`,
+    pe: `<td class="${cellColor('pe', s.pe, th)}">${esc(peText(s))}</td>`,
+    pb: `<td class="${cellColor('pb', s.pb, th)}">${nf(s.pb)}</td>`,
+    evEbitda: `<td>${bank ? '–' : nf(s.evEbitda)}</td>`,
     peg: `<td class="${bank ? '' : cellColor('peg', s.peg, th)}">${nf(s.peg)}</td>`,
-    nb: `<td class="${bank ? '' : cellColor('nb', s.nb, th)}">${bank ? '–' : nf(s.nb)}</td>`,
-    fg: `<td class="${bank ? '' : cellColor('fg', s.fg, th)}">${bank ? '–' : esc(growthText(s.fg, s.fgT))}</td>`,
+    netDebtEbitda: `<td class="${bank ? '' : cellColor('netDebtEbitda', s.netDebtEbitda, th)}">${bank ? '–' : nf(s.netDebtEbitda)}</td>`,
+    ebitdaGrowth: `<td class="${bank ? '' : cellColor('ebitdaGrowth', s.ebitdaGrowth, th)}">${bank ? '–' : esc(growthText(s.ebitdaGrowth, s.ebitdaGrowthNote))}</td>`,
   };
 }
 
@@ -59,23 +66,23 @@ export function listRowHtml(r: Row, th: Thresholds, open: boolean): string {
   const s = r.s;
   const c = multipleCells(r, th);
   const why = `<ul>${r.ev.checks
-    .map((k) => `<li><span class="ico ${k.st}" aria-hidden="true">${ICON[k.st]}</span><span>${esc(k.s)}</span></li>`)
+    .map((k) => `<li><span class="ico ${k.status}" aria-hidden="true">${ICON[k.status]}</span><span>${esc(k.short)}</span></li>`)
     .join('')}</ul>`;
   return (
     rowOpen(r, open) +
     nameCell(s) +
     resCell(r) +
     `<td class="why">${why}</td>` +
-    c.fk +
-    c.pd +
-    c.fdf +
+    c.pe +
+    c.pb +
+    c.evEbitda +
     c.peg +
-    c.nb +
+    c.netDebtEbitda +
     smaCell(s, r.d200, s.sma200, 200) +
-    c.fg +
-    `<td>${esc(growthText(s.ng, s.ngT))}</td>` +
+    c.ebitdaGrowth +
+    `<td>${esc(growthText(s.netIncomeGrowth, s.netIncomeGrowthNote))}</td>` +
     `<td>${esc(roeText(s.roe))}</td>` +
-    `<td>${nf(s.mv, 0)}</td></tr>`
+    `<td>${nf(s.marketCap, 0)}</td></tr>`
   );
 }
 
@@ -87,12 +94,12 @@ export function peerRowHtml(r: Row, th: Thresholds, open: boolean): string {
     rowOpen(r, open) +
     nameCell(s) +
     resCell(r) +
-    c.fk +
-    c.pd +
-    c.fdf +
+    c.pe +
+    c.pb +
+    c.evEbitda +
     c.peg +
-    c.nb +
-    c.fg +
+    c.netDebtEbitda +
+    c.ebitdaGrowth +
     `<td>${esc(roeText(s.roe))}</td>` +
     smaCell(s, r.d50, s.sma50, 50) +
     smaCell(s, r.d200, s.sma200, 200) +
@@ -102,9 +109,9 @@ export function peerRowHtml(r: Row, th: Thresholds, open: boolean): string {
 
 /** Sektör ortancası satırı ("Sektör kıyası" sütunlarıyla) */
 export function medianRowHtml(m: IndustryMedian): string {
-  return `<tr class="med"><td colspan="2">Sektör ortancası <span class="en">(Median)</span></td><td>${nf(m.fk)}</td><td>${nf(
-    m.pd,
-  )}</td><td>${nf(m.fdf)}</td><td>${nf(m.peg)}</td><td>${nf(m.nb)}</td><td>${pct(m.fg)}</td><td>${esc(
+  return `<tr class="med"><td colspan="2">Sektör ortancası <span class="en">(Median)</span></td><td>${nf(m.pe)}</td><td>${nf(
+    m.pb,
+  )}</td><td>${nf(m.evEbitda)}</td><td>${nf(m.peg)}</td><td>${nf(m.netDebtEbitda)}</td><td>${pct(m.ebitdaGrowth)}</td><td>${esc(
     roeText(m.roe),
   )}</td><td>–</td><td>–</td></tr>`;
 }

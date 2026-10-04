@@ -7,7 +7,7 @@ export type QuizKind = 'concept' | 'data' | 'ai';
 
 /** Yanlış yanıttan sonra okurun dönüp bakacağı yer */
 export interface QuizRef {
-  /** Sekme kimliği, ör. "senaryo" */
+  /** Sekme kimliği, ör. "stories" */
   tab: string;
   /** Sekme içindeki öğe kimliği, ör. "case4" (isteğe bağlı) */
   anchor?: string;
@@ -18,7 +18,7 @@ export interface QuizRef {
 /** Sorunun üstünde kutucuk olarak gösterilen rakam */
 export interface QuizFact {
   /** Türkçe ad, ör. "F/K" */
-  k: string;
+  label: string;
   /** İngilizce karşılık, ör. "P/E" */
   en?: string;
   /** Biçimlenmiş değer, ör. "40,66" */
@@ -28,7 +28,7 @@ export interface QuizFact {
 }
 
 export interface QuizQuestion {
-  /** Tekil kimlik, ör. "peg-film-seti", "data-verdict-BIST-THYAO" */
+  /** Tekil kimlik, ör. "peg-film-set", "data-verdict-BIST-THYAO" */
   id: string;
   kind: QuizKind;
   /** Konu başlığı, ör. "Büyüme ve PEG" */

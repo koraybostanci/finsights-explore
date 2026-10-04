@@ -280,7 +280,7 @@ function hitsHtml(): string {
   return hits
     .map(
       (s) =>
-        `<button type="button" class="btn st-hit" data-add="${esc(s.k)}"><b>${esc(s.k)}</b><span>${esc(s.ad)}</span><i>Ekle</i></button>`,
+        `<button type="button" class="btn st-hit" data-add="${esc(s.symbol)}"><b>${esc(s.symbol)}</b><span>${esc(s.name)}</span><i>Ekle</i></button>`,
     )
     .join('');
 }
@@ -288,18 +288,18 @@ function hitsHtml(): string {
 function marketHtml(m: MarketId): string {
   const all = universe(m);
   const mine = new Set(watchlist(m));
-  const list = all.filter((s) => mine.has(s.k));
+  const list = all.filter((s) => mine.has(s.symbol));
   const groups = groupByIndustry(list);
   const body = groups.length
     ? `<div class="tr-list">${groups
         .map(
           (g) =>
-            `<div><b>${esc(g.sek)} <span class="en">${esc(g.sekEn)}</span></b><span class="chips">${g.stocks
+            `<div><b>${esc(g.industryTr)} <span class="en">${esc(g.industryEn)}</span></b><span class="chips">${g.stocks
               .map(
                 (s) =>
-                  `<span class="chip${s.hasData ? '' : ' wait'}" title="${esc(s.ad)}${s.hasData ? '' : ' · veri bekliyor'}">${esc(
-                    s.k,
-                  )}<button type="button" data-rm="${esc(s.k)}" data-m="${m}" aria-label="${esc(s.k)} hissesini çıkar">✕</button></span>`,
+                  `<span class="chip${s.hasData ? '' : ' wait'}" title="${esc(s.name)}${s.hasData ? '' : ' · veri bekliyor'}">${esc(
+                    s.symbol,
+                  )}<button type="button" data-rm="${esc(s.symbol)}" data-m="${m}" aria-label="${esc(s.symbol)} hissesini çıkar">✕</button></span>`,
               )
               .join('')}</span></div>`,
         )

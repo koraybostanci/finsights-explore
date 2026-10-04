@@ -59,7 +59,7 @@ export function quizSample(market: MarketId, stocks: StockView[], rnd: () => num
     const j = Math.floor(rnd() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
-  return a.slice(0, QUIZ_SAMPLE_MAX).sort((x, y) => x.k.localeCompare(y.k));
+  return a.slice(0, QUIZ_SAMPLE_MAX).sort((x, y) => x.symbol.localeCompare(y.symbol));
 }
 
 export function quizPrompt(market: MarketId, sample: StockView[], ctx: { asOf: string; th?: Thresholds }): Prompt {
@@ -80,15 +80,15 @@ export function quizPrompt(market: MarketId, sample: StockView[], ctx: { asOf: s
   ].join('\n');
 
   const payload = {
-    veriTarihi: ctx.asOf,
-    piyasa: market,
-    paraBirimi: sample[0]?.cur ?? null,
-    esikler: { enYuksekFk: th.fk, enYuksekPeg: th.peg, enYuksekNetBorcFavok: th.nb, enDusukFavokBuyumeYuzde: th.fg },
-    hisseler: sample.map((s) => ({
+    dataDate: ctx.asOf,
+    market,
+    currency: sample[0]?.currency ?? null,
+    thresholds: { maxPe: th.maxPe, maxPeg: th.maxPeg, maxNetDebtEbitda: th.maxNetDebtEbitda, minEbitdaGrowthPct: th.minEbitdaGrowth },
+    stocks: sample.map((s) => ({
       ...stockFigures(s),
-      sektor: s.sek,
-      dongusel: s.cyclical,
-      kuralSonucu: evaluationSummary(evaluate(s, th)),
+      industry: s.industryTr,
+      cyclical: s.cyclical,
+      ruleResult: evaluationSummary(evaluate(s, th)),
     })),
   };
 
@@ -238,8 +238,8 @@ export async function generateQuiz(input: GenerateQuizInput, deps: ClientDeps = 
     throw new AiError('bad_response', 'Bu piyasada soru üretmeye yetecek kadar verisi olan hisse yok.');
   const prompt = quizPrompt(input.market, sample, { asOf: marketAsOf(input.market) });
   const text = await complete({ system: prompt.system, user: prompt.user, maxTokens: prompt.maxTokens, json: true }, deps);
-  const tickers = sample.map((s) => s.k);
-  const out = validateQuiz(extractJson(text), { sample: tickers, known: input.known ?? data().stocks.map((s) => s.k) });
+  const tickers = sample.map((s) => s.symbol);
+  const out = validateQuiz(extractJson(text), { sample: tickers, known: input.known ?? data().stocks.map((s) => s.symbol) });
   if (out.questions.length < QUIZ_MIN_VALID)
     throw new AiError(
       'bad_response',

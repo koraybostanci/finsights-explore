@@ -88,7 +88,7 @@ export function fromAi(list: AiQuizQuestion[], market: MarketId, stamp: number):
     options: q.options.slice(),
     correct: q.correct,
     why: q.explanation,
-    ref: { tab: 'tarayici', label: 'Tarayıcı: hissenin satırını açıp gerekçeleri okuyun' },
+    ref: { tab: 'screener', label: 'Tarayıcı: hissenin satırını açıp gerekçeleri okuyun' },
     ticker: q.ticker,
     market,
     keepOrder: true,

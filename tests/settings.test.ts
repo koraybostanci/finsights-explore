@@ -19,24 +19,24 @@ test('fold: Türkçe harfler ve büyük/küçük harf', () => {
 });
 
 test('searchUniverse: sembol ve ad, en iyi eşleşme başta', () => {
-  assert.equal(searchUniverse(bist, 'thy')[0].k, 'THYAO');
-  assert.equal(searchUniverse(bist, 'turk hava')[0].k, 'THYAO');
-  assert.equal(searchUniverse(bist, 'şişe')[0].k, 'SISE');
-  assert.equal(searchUniverse(bist, 'sise')[0].k, 'SISE');
+  assert.equal(searchUniverse(bist, 'thy')[0].symbol, 'THYAO');
+  assert.equal(searchUniverse(bist, 'turk hava')[0].symbol, 'THYAO');
+  assert.equal(searchUniverse(bist, 'şişe')[0].symbol, 'SISE');
+  assert.equal(searchUniverse(bist, 'sise')[0].symbol, 'SISE');
   assert.deepEqual(searchUniverse(bist, ''), []);
   assert.deepEqual(searchUniverse(bist, 'yokboylebirsey'), []);
-  assert.equal(searchUniverse(us, 'apple')[0].k, 'AAPL');
-  assert.equal(searchUniverse(us, 't')[0].k, 'T');
+  assert.equal(searchUniverse(us, 'apple')[0].symbol, 'AAPL');
+  assert.equal(searchUniverse(us, 't')[0].symbol, 'T');
   assert.ok(searchUniverse(us, 'a', 5).length <= 5);
   // piyasalar karışmaz: BIST evreninde ABD hissesi çıkmaz
   assert.deepEqual(searchUniverse(bist, 'apple'), []);
 });
 
 test('matchRank sıralaması', () => {
-  assert.equal(matchRank({ k: 'T', ad: 'AT&T' }, 't'), 0);
-  assert.equal(matchRank({ k: 'TSLA', ad: 'Tesla' }, 't'), 1);
-  assert.equal(matchRank({ k: 'KO', ad: 'Coca-Cola' }, 'coca'), 2);
-  assert.equal(matchRank({ k: 'KO', ad: 'Coca-Cola' }, 'pepsi'), -1);
+  assert.equal(matchRank({ symbol: 'T', name: 'AT&T' }, 't'), 0);
+  assert.equal(matchRank({ symbol: 'TSLA', name: 'Tesla' }, 't'), 1);
+  assert.equal(matchRank({ symbol: 'KO', name: 'Coca-Cola' }, 'coca'), 2);
+  assert.equal(matchRank({ symbol: 'KO', name: 'Coca-Cola' }, 'pepsi'), -1);
 });
 
 test('liste işlemleri', () => {
@@ -45,5 +45,5 @@ test('liste işlemleri', () => {
   assert.deepEqual(removeTicker(['A', 'B'], 'A'), ['B']);
   const out = notInList(bist, ['THYAO', 'PGSUS']);
   assert.equal(out.length, bist.length - 2);
-  assert.ok(!out.some((s) => s.k === 'THYAO'));
+  assert.ok(!out.some((s) => s.symbol === 'THYAO'));
 });

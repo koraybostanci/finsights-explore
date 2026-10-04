@@ -67,7 +67,7 @@ function render(): void {
   const row = (label: string, a: string, b: string): string =>
     `<tr><td class="name">${label}</td><td>${esc(a)}</td><td>${esc(b)}</td></tr>`;
   byId(root, 'ulke-t').innerHTML = `<div class="tablebox"><table><thead><tr><th class="nosort"></th><th class="nosort">Ayşe'nin Kahvesi<small>TL · Türkiye</small></th><th class="nosort">Deniz'in Kahvesi<small>USD · ABD</small></th></tr></thead><tbody>${
-    row(term('fk'), nf(st.fk, 1), nf(st.fk, 1)) +
+    row(term('pe'), nf(st.fk, 1), nf(st.fk, 1)) +
     row(term('earningsYield'), '%' + nf(st.ey, 1), '%' + nf(st.ey, 1)) +
     row('Yerel faiz (örnek)', '%' + st.tr.rate, '%' + st.us.rate) +
     row('Verim − faiz', puan(st.tr.gap), puan(st.us.gap)) +

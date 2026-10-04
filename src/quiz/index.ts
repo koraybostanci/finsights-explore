@@ -90,7 +90,7 @@ function aiButton(label: string): string {
   const st = aiStatus();
   const n = dataCount(market, mine());
   if (!st.configured)
-    return `<span class="muted small">Yapay zekâ ile yeni soru üretmek için <button type="button" class="qz-link" data-go="ayarlar">Ayarlar'da bir sağlayıcı seçin</button>.</span>`;
+    return `<span class="muted small">Yapay zekâ ile yeni soru üretmek için <button type="button" class="qz-link" data-go="settings">Ayarlar'da bir sağlayıcı seçin</button>.</span>`;
   if (n < 2)
     return `<span class="muted small">${esc(MARKET_LABEL[market])} listenizde verisi olan en az iki hisse olunca yapay zekâ soru üretebilir.</span>`;
   return `<button type="button" class="btn" data-act="ai"${busy ? ' disabled' : ''}>${
@@ -125,7 +125,7 @@ function factsHtml(q: QuizQuestion): string {
   return `<div class="tiles">${q.facts
     .map(
       (f) =>
-        `<div><div class="k">${esc(f.k)}${f.en ? `<span class="en">${esc(f.en)}</span>` : ''}</div><div class="v">${esc(
+        `<div><div class="k">${esc(f.label)}${f.en ? `<span class="en">${esc(f.en)}</span>` : ''}</div><div class="v">${esc(
           f.v,
         )}</div>${f.d ? `<div class="d">${esc(f.d)}</div>` : ''}</div>`,
     )

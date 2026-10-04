@@ -74,7 +74,7 @@ ${tile('Net borç/FAVÖK', 'Net debt/EBITDA', nf(m.nbf))}
 <ul class="hs-checks">${ev.checks
     .map(
       (c) =>
-        `<li><span class="ico ${c.st}" aria-hidden="true">${ICON[c.st]}</span><span><b>${esc(c.n)}:</b> ${esc(c.t)}</span></li>`,
+        `<li><span class="ico ${c.status}" aria-hidden="true">${ICON[c.status]}</span><span><b>${esc(c.label)}:</b> ${esc(c.long)}</span></li>`,
     )
     .join('')}</ul>
 <p class="muted small">Örnekteki rakamlar 2 Ekim 2026 verisindendir. Fintables o tarihte BİM için PEG'i 0,38 gösteriyordu; bu da yaklaşık %44 net kâr büyümesine denk gelir. 2026/6 dönem karşılaştırmasında artış %103'tür. Kaynaklar farklı dönemler kullanabilir; PEG'e bakarken hangi büyümenin kullanıldığını sorun.</p>`;

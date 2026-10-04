@@ -33,18 +33,18 @@ interface TabDef {
 }
 
 const TABS: TabDef[] = [
-  { id: 'senaryo', label: 'Senaryolar', mod: stories },
-  { id: 'kavramlar', label: 'Çarpanlar', mod: multiples },
-  { id: 'sozluk', label: 'Sözlük', mod: glossary },
-  { id: 'adimlar', label: 'Karar adımları', mod: steps },
-  { id: 'tarayici', label: 'Tarayıcı', mod: screener },
-  { id: 'bankalar', label: 'Bankalar', mod: banks },
-  { id: 'hesap', label: 'Kendi hesabın', mod: calc },
-  { id: 'sina', label: 'Kendini sına', mod: quiz },
-  { id: 'ayarlar', label: 'Ayarlar', mod: settings },
+  { id: 'stories', label: 'Senaryolar', mod: stories },
+  { id: 'multiples', label: 'Çarpanlar', mod: multiples },
+  { id: 'glossary', label: 'Sözlük', mod: glossary },
+  { id: 'steps', label: 'Karar adımları', mod: steps },
+  { id: 'screener', label: 'Tarayıcı', mod: screener },
+  { id: 'banks', label: 'Bankalar', mod: banks },
+  { id: 'calculator', label: 'Kendi hesabın', mod: calc },
+  { id: 'quiz', label: 'Kendini sına', mod: quiz },
+  { id: 'settings', label: 'Ayarlar', mod: settings },
 ];
 
-const DEFAULT_TAB = 'senaryo';
+const DEFAULT_TAB = 'stories';
 let current = DEFAULT_TAB;
 
 function buildShell(): void {
@@ -70,7 +70,7 @@ function buildShell(): void {
   });
 }
 
-/** Bir sekmeyi gösterir. Başka modüller de çağırabilir: location.hash = '#ayarlar' yeterlidir. */
+/** Bir sekmeyi gösterir. Başka modüller de çağırabilir: location.hash = '#settings' yeterlidir. */
 function show(id: string): void {
   const tab = TABS.find((t) => t.id === id) ?? TABS[0];
   current = tab.id;
