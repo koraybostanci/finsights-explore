@@ -1,6 +1,6 @@
 name: ci
 
-# Checks every pull request and every push to main: typecheck, unit tests, build.
+# Checks every pull request and every push to main: shared and app unit tests, typecheck, build.
 # Deploy logic lives in pages.yml and is not repeated here.
 on:
   pull_request:
@@ -26,9 +26,8 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run build
+      # Shared tests, typecheck, app tests, build (see "check" in package.json)
+      - run: npm run check
 
   python:
     runs-on: ubuntu-latest
