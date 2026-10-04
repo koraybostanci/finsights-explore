@@ -32,8 +32,10 @@ jobs:
         with:
           node-version: 22
 
+      # With a committed package-lock.json the install is reproducible (npm ci); without one it is not.
       - name: Install
-        run: npm install
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
       - name: Typecheck
         run: npm run typecheck

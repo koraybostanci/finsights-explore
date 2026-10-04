@@ -45,6 +45,9 @@ export interface CalcMultiples {
   nbf: number | null;
 }
 
+/** Net kâr girilmiş ve sıfır ya da eksi: zarar. Kutu boşsa bilinmiyor sayılır. */
+export const isLoss = (i: CalcInput): boolean => !Number.isNaN(i.nk) && i.nk <= 0;
+
 export function calcMultiples(i: CalcInput): CalcMultiples {
   const fk = i.nk > 0 ? i.pd / i.nk : null;
   const pddd = i.ok > 0 ? i.pd / i.ok : null;
@@ -65,6 +68,7 @@ export function calcStock(i: CalcInput, m: CalcMultiples): StockView {
     ind: '',
     f: null,
     fk: m.fk,
+    loss: isLoss(i),
     pd: m.pddd,
     fdf: m.fdf,
     peg: m.peg,

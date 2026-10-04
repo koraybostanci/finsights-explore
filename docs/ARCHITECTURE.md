@@ -65,11 +65,15 @@ See `src/types.ts`. Short field names (`k`, `ad`, `fk`, `pd`, `fdf`, `peg`, `nb`
 - `public/data/prices/<MARKET>-<TICKER>.json` → `PriceSeries` (daily closes, oldest first).
 - `StockView` adds derived fields (`roe`, `sek`, `sekEn`, `cyclical`, `hasData`).
 - A stock with no data yet has `f: null` and nulls throughout; `hasData` is false and it is shown as "Veri bekliyor".
+- `asOfBy` holds the data time per market, because the data job fetches one market per scheduled run. Read it with `marketAsOf(market)`; never show one market's figures with the other market's date.
+- An empty `fk` means a loss only when `loss` is true. Without the flag the app says the F/K is missing, not that the company lost money.
+- Hand-written notes (`not`) are shown only while the market's data is from the day they were written (`noteIsCurrent`).
 
 ## Rules for code
 
 - Everything written into HTML from data, user input or AI output goes through `esc()`.
 - API keys live only in `localStorage` (prefix `finsights.`), are never logged and never put in a URL.
+- The production build carries a Content-Security-Policy (`vite.config.ts`): scripts only from the site itself, so no inline `<script>` and no third-party script. Inline `style` attributes are allowed.
 - User-visible text is Turkish, sentence case, in the voice of the original copy.
 - Feature CSS lives next to the feature (`src/screener/screener.css`, imported from its module).
 - Persist small UI state with `lsGet` / `lsSet` from the store.
@@ -78,7 +82,7 @@ See `src/types.ts`. Short field names (`k`, `ad`, `fk`, `pd`, `fdf`, `peg`, `nb`
 
 ```
 npm install
-npm run typecheck
+npm run typecheck   # app code and tests
 npm test
 npm run build     # output in dist/
 ```

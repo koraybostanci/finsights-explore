@@ -6,7 +6,8 @@
  * kullanıcınındır, bu tarayıcıda saklanır ve istekler doğrudan sağlayıcıya gider.
  */
 
-import { data } from '../data/store.ts';
+import { marketAsOf } from '../data/store.ts';
+import type { MarketId } from '../types.ts';
 import { esc } from '../lib/format.ts';
 import { cacheGet, cacheKey, cachePut } from './cache.ts';
 import { complete } from './client.ts';
@@ -30,11 +31,11 @@ export function aiStatus(): AiStatus {
 /** Aynı anda aynı istek iki kez gönderilmesin (çift tıklama) */
 const inflight = new Map<string, Promise<AiText>>();
 
-async function explain(kind: string, id: string, market: string, build: (asOf: string) => Prompt, opts: AiCallOptions): Promise<AiText> {
+async function explain(kind: string, id: string, market: MarketId, build: (asOf: string) => Prompt, opts: AiCallOptions): Promise<AiText> {
   const cfg = resolveConfig();
   if (!isConfigured(cfg)) throw new AiError('not_configured', '');
   const def = providerDef(cfg.provider);
-  const asOf = data().asOf;
+  const asOf = marketAsOf(market);
   const prompt = build(asOf);
   // Özel adreste aynı model adı başka bir sunucuda başka bir model olabilir.
   const base = def.id === 'custom' ? checkBaseUrl(cfg.baseUrl) : null;

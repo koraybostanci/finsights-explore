@@ -8,7 +8,7 @@ import './calc.css';
 import { ICON, VLABEL } from '../lib/evaluate.ts';
 import { esc, nf } from '../lib/format.ts';
 import { getThresholds, subscribeThresholds } from '../screener/thresholds.ts';
-import { BIM_EXAMPLE, calcEvaluate } from './logic.ts';
+import { BIM_EXAMPLE, calcEvaluate, isLoss } from './logic.ts';
 import type { CalcInput } from './logic.ts';
 
 let root: HTMLElement | null = null;
@@ -56,11 +56,12 @@ function readInput(): CalcInput {
 function render(): void {
   const out = root?.querySelector<HTMLElement>('#calcout');
   if (!out) return;
-  const { m, ev } = calcEvaluate(readInput(), getThresholds());
+  const input = readInput();
+  const { m, ev } = calcEvaluate(input, getThresholds());
   const tile = (k: string, en: string, v: string): string =>
     `<div><div class="k">${esc(k)}<span class="en">${esc(en)}</span></div><div class="v">${esc(v)}</div></div>`;
   out.innerHTML = `<div class="tiles">
-${tile('F/K', 'P/E', m.fk == null ? 'zarar' : nf(m.fk))}
+${tile('F/K', 'P/E', m.fk == null ? (isLoss(input) ? 'zarar' : '–') : nf(m.fk))}
 ${tile('PD/DD', 'P/B', nf(m.pddd))}
 ${tile('FD/FAVÖK', 'EV/EBITDA', nf(m.fdf))}
 ${tile('PEG', 'PEG ratio', nf(m.peg))}

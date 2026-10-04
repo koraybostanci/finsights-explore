@@ -7,7 +7,7 @@
 import './styles/app.css';
 import './styles/shared.css';
 
-import { data, dataError, loadData, lsGet, lsSet, on } from './data/store.ts';
+import { MARKETS, MARKET_LABEL, data, dataError, loadData, lsGet, lsSet, marketAsOf, marketHasData, on } from './data/store.ts';
 import { esc, fmtDate } from './lib/format.ts';
 import { must } from './lib/dom.ts';
 
@@ -104,8 +104,21 @@ function renderDataBar(): void {
     must('footsrc').textContent = '';
     return;
   }
-  const period = d.period.BIST ? `<span>Bilanço dönemi: <b>${esc(d.period.BIST)}</b></span>` : '';
-  meta.innerHTML = `<span>Veri: <b>${esc(fmtDate(d.asOf))}</b></span><span>Kaynak: <b>${esc(d.source)}</b></span>${period}`;
+  // BIST ve ABD ayrı zamanlarda güncellenir; her piyasanın tarihi ve bilanço dönemi ayrı yazılır.
+  const live = MARKETS.filter(marketHasData);
+  const one = live.length <= 1;
+  const dates = live.length
+    ? live.map((m) => `${one ? '' : esc(MARKET_LABEL[m]) + ' '}<b>${esc(fmtDate(marketAsOf(m)))}</b>`).join(', ')
+    : `<b>${esc(fmtDate(d.asOf))}</b>`;
+  const periods = live
+    .filter((m) => d.period[m])
+    .map((m) => `${one ? '' : esc(MARKET_LABEL[m]) + ' '}<b>${esc(d.period[m] ?? '')}</b>`)
+    .join(', ');
+  const waiting = MARKETS.filter((m) => !marketHasData(m) && d.stocks.some((s) => s.market === m));
+  meta.innerHTML =
+    `<span>Veri: ${dates}</span><span>Kaynak: <b>${esc(d.source)}</b></span>` +
+    (periods ? `<span>Bilanço dönemi: ${periods}</span>` : '') +
+    (waiting.length ? `<span>${esc(waiting.map((m) => MARKET_LABEL[m]).join(', '))}: veri bekliyor</span>` : '');
   note.textContent = 'Veriler her iş günü kapanıştan sonra kendiliğinden güncellenir.';
   must('footsrc').textContent = `Veri kaynağı: ${d.source}.`;
 }
@@ -154,7 +167,11 @@ async function start(): Promise<void> {
 
   window.addEventListener('hashchange', () => {
     const id = (location.hash || '').slice(1);
-    if (TABS.some((t) => t.id === id) && id !== current) show(id);
+    if (TABS.some((t) => t.id === id) && id !== current) {
+      show(id);
+      // Sayfa içi bağlantıyla gelindi (ör. "Ayarlar'da açabilirsiniz"): yeni sekme baştan okunur.
+      window.scrollTo({ top: 0 });
+    }
   });
   watchResize();
 }

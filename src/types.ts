@@ -35,8 +35,10 @@ export interface Stock {
 
   /** Fiyat (price) */
   f: number | null;
-  /** F/K (P/E). null: son 12 ayda zarar ya da veri yok */
+  /** F/K (P/E). null: son 12 ayda zarar (loss: true) ya da veri yok */
   fk: number | null;
+  /** Son 12 ayda zarar etti (hisse başına kâr sıfır ya da eksi). Yoksa: zarar yok ya da bilinmiyor. */
+  loss?: boolean;
   /** PD/DD (P/B) */
   pd: number | null;
   /** FD/FAVÖK (EV/EBITDA) */
@@ -77,8 +79,13 @@ export interface Stock {
 
 export interface MarketData {
   schema: 1;
-  /** Verinin tarihi (ISO 8601) */
+  /** En son veri güncellemesinin tarihi (ISO 8601) */
   asOf: string;
+  /**
+   * Piyasa başına verinin tarihi. Zamanlanmış iş her seferinde tek piyasayı çeker;
+   * bu yüzden BIST ve ABD verisinin tarihi farklı olabilir. Yoksa asOf geçerlidir.
+   */
+  asOfBy?: Partial<Record<MarketId, string>>;
   /** Ekranda gösterilecek kaynak adı */
   source: string;
   /** Piyasa başına bilanço dönemi, ör. { BIST: "2026/6" } */

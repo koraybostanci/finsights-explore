@@ -14,7 +14,7 @@ import { aiErrorMessage, aiStatus, generateQuiz } from '../ai/index.ts';
 
 import { BANK } from './bank.ts';
 import { dataCount, dataQuestions } from './datagen.ts';
-import { buildRound, fromAi, score } from './logic.ts';
+import { ROUND_SIZE, buildRound, fromAi, score } from './logic.ts';
 import type { QuizQuestion } from './types.ts';
 
 type Phase = 'intro' | 'play' | 'done';
@@ -106,7 +106,7 @@ function introHtml(): string {
     : `${esc(MARKET_LABEL[market])} listenizde verisi olan hisse yok; bu turda yalnızca kavram soruları sorulur.`;
   return `
     <div class="box qz-card">
-      <p style="font-family:var(--body)">Her tur ${Math.min(8, BANK.length)} sorudur: hikâyelerdeki kavramlar ve Tarayıcı'nın kuralları. Her sorudan sonra doğru yanıtın nedeni ve dönüp bakılacak yer gösterilir. ${dataLine}</p>
+      <p style="font-family:var(--body)">Her tur ${Math.min(ROUND_SIZE, BANK.length)} sorudur: hikâyelerdeki kavramlar ve Tarayıcı'nın kuralları. Her sorudan sonra doğru yanıtın nedeni ve dönüp bakılacak yer gösterilir. ${dataLine}</p>
       ${message ? `<p class="note">${esc(message)}</p>` : ''}
       <div class="toolbar">
         <button type="button" class="btn primary" data-act="start"${busy ? ' disabled' : ''}>Başla</button>

@@ -6,7 +6,8 @@ import { nf, pct, esc, money } from '../src/lib/format.ts';
 import { median, industryMedian, groupByIndustry } from '../src/lib/stats.ts';
 import { smaSeries, lastSma, distancePct, lastCross, trend } from '../src/lib/sma.ts';
 import { DEF, evaluate, cellColor } from '../src/lib/evaluate.ts';
-import { toView } from '../src/data/store.ts';
+import { marketAsOf, marketHasData, setData, toView } from '../src/data/store.ts';
+import { noteIsCurrent } from '../src/lib/note.ts';
 import type { MarketData, StockView } from '../src/types.ts';
 
 const DATA = JSON.parse(readFileSync(new URL('../public/data/market.json', import.meta.url), 'utf8')) as MarketData;
@@ -126,4 +127,39 @@ test('industryMedian ve groupByIndustry', () => {
   const groups = groupByIndustry(views.filter((s) => s.market === 'BIST' && !s.bank));
   assert.ok(groups.length >= 15);
   assert.ok(groups.every((g) => g.stocks.every((s) => s.ind === g.ind)));
+});
+
+test('evaluate: boş F/K zarar mı, eksik veri mi ayrılır', () => {
+  const pg = view('PGSUS');
+  assert.equal(pg.loss, true);
+  assert.equal(evaluate(pg, DEF).checks[0].s, 'Zarar ediyor (son 12 ay)');
+  assert.equal(evaluate(pg, DEF).checks[0].st, 'bad');
+  // Aynı hisse, zarar bilgisi olmadan: kaynak F/K vermemiş olabilir, zarar denmez
+  const unknown = evaluate({ ...pg, loss: undefined }, DEF);
+  assert.equal(unknown.checks[0].s, 'F/K verisi yok');
+  assert.equal(unknown.checks[0].st, 'warn');
+  // Seed verisinde F/K'sı boş olan her banka dışı BIST hissesi zarar olarak işaretlidir
+  const blank = views.filter((s) => s.market === 'BIST' && !s.bank && s.hasData && s.fk == null);
+  assert.deepEqual(blank.map((s) => s.k).sort(), ['EKGYO', 'PETKM', 'PGSUS', 'SASA']);
+  assert.ok(blank.every((s) => s.loss === true));
+});
+
+test('noteIsCurrent: veri yorumdan yeniyse yorum geçersizdir', () => {
+  assert.equal(noteIsCurrent('2026-10-02', '2026-10-02T15:00:00+03:00'), true);
+  assert.equal(noteIsCurrent('2026-10-02', '2026-10-05T18:45:00+03:00'), false);
+  assert.equal(noteIsCurrent('2026-10-02', '2026-09-30T18:45:00+03:00'), true);
+  assert.equal(noteIsCurrent(undefined, '2026-10-05T18:45:00+03:00'), true);
+  assert.equal(noteIsCurrent('2026-10-02', undefined), true);
+});
+
+test('marketAsOf: piyasa başına tarih, yoksa genel tarih', () => {
+  setData(DATA);
+  assert.equal(marketAsOf('BIST'), '2026-10-02T15:00:00+03:00');
+  assert.equal(marketAsOf('US'), DATA.asOf);
+  assert.equal(marketHasData('BIST'), true);
+  assert.equal(marketHasData('US'), false);
+  setData({ ...DATA, asOf: '2026-10-05T23:45:00+03:00', asOfBy: { BIST: '2026-10-05T18:45:00+03:00', US: '2026-10-05T23:45:00+03:00' } });
+  assert.equal(marketAsOf('BIST'), '2026-10-05T18:45:00+03:00');
+  assert.equal(marketAsOf('US'), '2026-10-05T23:45:00+03:00');
+  setData(DATA);
 });

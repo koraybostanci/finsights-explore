@@ -13,7 +13,7 @@ from typing import Any, Callable, Mapping
 
 from . import MARKETS, SOURCE_LABEL
 from .config import StockSpec, Universe
-from .mapping import FIGURE_KEYS, TEXT_KEYS, RowError, map_tv_row, most_common_period, sma_set
+from .mapping import FIGURE_KEYS, FLAG_KEYS, TEXT_KEYS, RowError, map_tv_row, most_common_period, sma_set
 from .sources import SourceError, TradingViewClient, YahooClient
 from .util import clean_number, r2
 
@@ -85,6 +85,9 @@ def carry(prev: Mapping[str, Any] | None) -> dict[str, Any]:
     for t in TEXT_KEYS:
         if prev and isinstance(prev.get(t), str) and prev[t]:
             fig[t] = prev[t]
+    for flag in FLAG_KEYS:
+        if prev and prev.get(flag) is True:
+            fig[flag] = True
     return fig
 
 
@@ -100,6 +103,8 @@ def compose(spec: StockSpec, banks: Mapping[tuple[str, str], Mapping[str, Any]],
     for key in ("fgT", "ngT"):
         if fig.get(key):
             rec[key] = fig[key]
+    if fig.get("loss") is True and rec["fk"] is None:
+        rec["loss"] = True
     for key in ("h", "sma20", "sma50", "sma200"):
         rec[key] = fig.get(key)
     if spec.usd:
@@ -120,17 +125,37 @@ def assemble(
     figures: Mapping[tuple[str, str], Mapping[str, Any]],
     *,
     as_of: str,
+    as_of_by: Mapping[str, str],
     source: str,
     period: Mapping[str, str],
 ) -> dict[str, Any]:
     return {
         "schema": 1,
         "asOf": as_of,
+        "asOfBy": {m: as_of_by[m] for m in MARKETS if m in as_of_by},
         "source": source,
         "period": dict(period),
         "industries": {k: dict(v) for k, v in universe.industries.items()},
         "stocks": [compose(s, banks, figures.get((s.market, s.k)) or carry(None)) for s in universe.stocks],
     }
+
+
+def keep_as_of_by(prev_doc: Any, markets: tuple[str, ...] = MARKETS) -> dict[str, str]:
+    """The data time per market of the previous file.
+
+    A file written before `asOfBy` existed has one `asOf`; it then counts for every market
+    that has at least one stock with a price.
+    """
+    if not valid_doc(prev_doc):
+        return {}
+    by = prev_doc.get("asOfBy")
+    if isinstance(by, dict):
+        return {m: by[m] for m in markets if isinstance(by.get(m), str)}
+    as_of = prev_doc.get("asOf")
+    if not isinstance(as_of, str) or not as_of:
+        return {}
+    have = {s.get("market") for s in prev_doc["stocks"] if isinstance(s, dict) and clean_number(s.get("f")) is not None}
+    return {m: as_of for m in markets if m in have}
 
 
 def keep_period(prev_doc: Any, markets: tuple[str, ...] = MARKETS) -> dict[str, str]:
@@ -184,6 +209,8 @@ def run_fetch(
     start = (now - timedelta(days=int(days * CALENDAR_PER_TRADING_DAY))).date()
     figures: dict[tuple[str, str], dict[str, Any]] = {key: carry(rec) for key, rec in prev.items()}
     period = keep_period(prev_doc)
+    as_of_by = keep_as_of_by(prev_doc)
+    now_iso = now.isoformat(timespec="seconds")
     prices: dict[str, dict[str, Any]] = {}
     statuses: dict[str, MarketStatus] = {}
 
@@ -202,14 +229,15 @@ def run_fetch(
         prices.update(market_prices)
         if market_period:
             period[market] = market_period
+        as_of_by[market] = now_iso  # only the market that was fetched gets the new time
 
     updated = any(not s.failed and s.total for s in statuses.values())
     if updated:
-        as_of, source = now.isoformat(timespec="seconds"), SOURCE_LABEL
+        as_of, source = now_iso, SOURCE_LABEL
     else:
-        as_of = prev_doc["asOf"] if valid_doc(prev_doc) and prev_doc.get("asOf") else now.isoformat(timespec="seconds")
+        as_of = prev_doc["asOf"] if valid_doc(prev_doc) and prev_doc.get("asOf") else now_iso
         source = prev_doc["source"] if valid_doc(prev_doc) and prev_doc.get("source") else SOURCE_LABEL
-    doc = assemble(universe, banks, figures, as_of=as_of, source=source, period=period)
+    doc = assemble(universe, banks, figures, as_of=as_of, as_of_by=as_of_by, source=source, period=period)
     for s in statuses.values():
         log.info(s.summary())
     return RunResult(doc=doc, prices=prices, statuses=statuses, updated=updated)
@@ -327,15 +355,18 @@ def build_seed(
 
     if valid_doc(prev_doc):
         as_of, source, period = prev_doc.get("asOf"), prev_doc.get("source"), keep_period(prev_doc)
+        as_of_by = keep_as_of_by(prev_doc)
     else:
         as_of = (reference or {}).get("asOf")
         source = (reference or {}).get("source")
         period = {ref_market: reference["period"]} if reference and ref_market and reference.get("period") else {}
+        as_of_by = {ref_market: as_of} if ref_market and as_of else {}
     return assemble(
         universe,
         banks,
         figures,
         as_of=as_of or now.isoformat(timespec="seconds"),
+        as_of_by=as_of_by,
         source=source or "Veri bekliyor",
         period=period,
     )

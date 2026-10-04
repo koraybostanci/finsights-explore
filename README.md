@@ -21,10 +21,12 @@ Needs Node 22.18 or later.
 ```
 npm install
 npm run dev         # local server
-npm run typecheck
+npm run typecheck   # app code and tests
 npm test            # unit tests (Node's test runner)
 npm run build       # output in dist/
 ```
+
+There is no `package-lock.json` in the repository yet. Commit the one your first `npm install` creates; the Pages workflow then installs with `npm ci` and builds become reproducible.
 
 Data job (Python 3.12): see [docs/DATA.md](docs/DATA.md).
 

@@ -11,7 +11,7 @@ import './screener.css';
 
 import { aiErrorMessage, aiStatus, commentStock, compareIndustry } from '../ai/index.ts';
 import type { AiText } from '../ai/index.ts';
-import { MARKET_LABEL, data, industry, loadPrices, lsGet, lsSet, on, sid, stocks } from '../data/store.ts';
+import { MARKET_LABEL, industry, loadPrices, lsGet, lsSet, marketAsOf, on, sid, stocks } from '../data/store.ts';
 import { cw } from '../lib/dom.ts';
 import { DEF } from '../lib/evaluate.ts';
 import { esc, fmtDate } from '../lib/format.ts';
@@ -100,7 +100,7 @@ const q = <T extends HTMLElement = HTMLElement>(sel: string): T | null => (root 
 const attr = (name: string, value: string): string => `[${name}="${CSS.escape(value)}"]`;
 
 const priceDate = (): string => {
-  const d = data().asOf;
+  const d = marketAsOf(state.market);
   return d ? fmtDate(d, false) : '';
 };
 
@@ -244,6 +244,7 @@ function detailFor(r: Row): string {
   const id = sid(r.s);
   return detailHtml(r.s, r.ev, {
     id,
+    asOf: marketAsOf(r.s.market),
     ai: commentBlockHtml(id, comments.get(id), aiStatus()),
     sma: smaBlockHtml(r.s, prices.has(id) ? prices.get(id) : undefined, priceDate(), smaChartId(id)),
   });

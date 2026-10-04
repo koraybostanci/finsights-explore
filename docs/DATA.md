@@ -24,6 +24,7 @@ Neither source could be called from the environment this code was written in. Th
 |---|---|---|---|
 | `f` | Price | `close` | Must be positive, otherwise the row is rejected |
 | `fk` | F/K (P/E), trailing 12 months | `price_earnings_ttm` | Empty when `earnings_per_share_diluted_ttm` is zero or negative |
+| `loss` | Loss over the trailing 12 months | `earnings_per_share_diluted_ttm` | `true` when it is zero or negative, otherwise left out. Lets the app tell "loss" from "no P/E in the source". |
 | `pd` | PD/DD (P/B) | `price_book_fq` | Positive values only |
 | `fdf` | FD/FAVÖK (EV/EBITDA) | `enterprise_value_ebitda_ttm` | Positive values only; empty for banks |
 | `peg` | PEG | `price_earnings_growth_ttm` | As given (can be negative) |
@@ -34,6 +35,7 @@ Neither source could be called from the environment this code was written in. Th
 | `h` | Average analyst target | `price_target_average` | Positive values only |
 | `sma20/50/200` | Simple moving averages | Computed from the Yahoo closes | Falls back to the screener's `SMA20/50/200` when there are no closes |
 | `period` | Balance-sheet period | `fiscal_period_end_fq` | The period most stocks of the market share, as `YYYY/M` |
+| `asOfBy` | Data time per market | (the run's clock) | Set for a market only when that market was fetched successfully; `asOf` is the latest of them |
 
 Growth texts: when a percentage would be meaningless the number is left empty and a short text is stored instead (`fgT`, `ngT`): "zarardan kâra" or "eksiden artıya" when the source gives no growth figure although the current amount is positive (the base was zero or negative), "kârdan zarara" or "artıdan eksiye" when the current amount is negative after a drop of more than 100%.
 
@@ -63,7 +65,7 @@ To add a stock, add one object to `stocks`:
 - `industry`: an id from `industries` in the same file. Stocks of one market with the same industry are compared with each other. To add an industry, add `"id": { "tr": "…", "en": "…", "cyclical": true|false }`.
 - `tv`: TradingView symbol with exchange (`BIST:THYAO`, `NASDAQ:AAPL`, `NYSE:KO`). Required for US stocks; BIST defaults to `BIST:<k>`.
 - `yf`: Yahoo symbol. Defaults to `<k>.IS` for BIST and `<k>` for US (write it out when it differs, e.g. `BRK-B`).
-- Optional: `bank` (BIST only for now), `cyc` (overrides the industry's cyclical flag), `usd` (functional currency note), `note` and `noteAsOf` (a hand-written comment shown with its date).
+- Optional: `bank` (BIST only for now), `cyc` (overrides the industry's cyclical flag), `usd` (functional currency note), `note` and `noteAsOf` (a hand-written comment). The app shows a note only while the market's data is from the `noteAsOf` day; once newer data arrives the note is hidden, because it could contradict the new figures. To keep a note visible, rewrite it and set `noteAsOf` to the date of the data it describes.
 
 To remove a stock, delete its object. Its price file is removed on the next full run.
 
@@ -78,7 +80,7 @@ The bank tab is BIST-only. Its NPL, CAR and NIM figures are not in the free sour
 ## How the job runs
 
 - **Schedule** (weekdays, UTC): 15:45 for BIST (after the 18:10 Istanbul close plus the screener delay) and 21:45 for the US (after the New York close in both summer and winter time). Each scheduled run fetches only its own market. A manual run (Actions → data → Run workflow) can fetch one market or both.
-- **Steps**: install, run the Python unit tests, fetch, compare, commit `public/data` if it changed. The `pages` workflow then rebuilds and deploys the site.
+- **Steps**: install, run the Python unit tests, fetch, compare, commit `public/data` if it changed (if `main` moved during the run, the commit is rebased and the push retried). The `pages` workflow then rebuilds and deploys the site.
 - **When things go wrong**
   - A stock missing from the screener keeps its previous figures (carried forward) and is listed in the log.
   - If more than half of a market's stocks have no screener data (`--fail-share`), that market keeps its previous data entirely and the run ends red. The other market is still written.
@@ -108,6 +110,7 @@ python scripts/fetch_data.py --seed                       # offline: rebuild mar
    - "carried forward" lists stocks the screener did not return. Usually the `tv` symbol in the config is wrong (exchange changed).
    - "no closes" lists stocks Yahoo did not return. Usually the `yf` symbol is wrong.
    - A warning that the last Yahoo close and the screener price differ a lot points at a wrong symbol too.
-4. Read the compare table. Small gaps in PD/DD and larger ones in F/K and FD/FAVÖK are expected (see above). A gap of several hundred percent on one stock usually means a wrong symbol or a currency problem.
-5. If a source is blocked from GitHub's servers (HTTP 403/429 for every request), the run ends red and the site keeps its previous data. Re-run later; if it persists, the source seam in `scripts/fsdata/sources.py` is where another provider would be plugged in.
-6. Check the site: Tarayıcı should show US stocks with figures, and an opened row should show the moving-average chart.
+4. Check the "Piy. değ." column for a few BIST stocks against a source you trust: market cap should be in billions of TL. If it looks like US dollars, the screener is returning converted values and `mv` needs a currency fix in `scripts/fsdata/mapping.py`.
+5. Read the compare table. Small gaps in PD/DD and larger ones in F/K and FD/FAVÖK are expected (see above). A gap of several hundred percent on one stock usually means a wrong symbol or a currency problem.
+6. If a source is blocked from GitHub's servers (HTTP 403/429 for every request), the run ends red and the site keeps its previous data. Re-run later; if it persists, the source seam in `scripts/fsdata/sources.py` is where another provider would be plugged in.
+7. Check the site: Tarayıcı should show US stocks with figures, and an opened row should show the moving-average chart.

@@ -673,7 +673,11 @@ test('commentStock: sağlayıcıya gider, önbelleğe yazar, force ile yeniler',
     config.setModel('anthropic', 'claude-y');
     await commentStock(input);
     assert.equal(calls.length, 4);
-    setData({ ...DATA, asOf: '2026-10-05T15:00:00+03:00' });
+    // Yalnızca ABD verisi yenilendi: BIST hissesinin yorumu önbellekte kalır
+    setData({ ...DATA, asOf: '2026-10-05T23:45:00+03:00', asOfBy: { ...DATA.asOfBy, US: '2026-10-05T23:45:00+03:00' } });
+    assert.equal((await commentStock(input)).cached, true);
+    assert.equal(calls.length, 4);
+    setData({ ...DATA, asOf: '2026-10-05T18:45:00+03:00', asOfBy: { ...DATA.asOfBy, BIST: '2026-10-05T18:45:00+03:00' } });
     await commentStock(input);
     assert.equal(calls.length, 5);
     // Eşik değişince değerlendirme, dolayısıyla istem ve önbellek anahtarı değişir

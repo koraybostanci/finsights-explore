@@ -7,6 +7,7 @@
 import type { Evaluation, PriceSeries, StockView } from '../types.ts';
 import { ICON } from '../lib/evaluate.ts';
 import { esc, fmtDate, money, nf, pct } from '../lib/format.ts';
+import { noteIsCurrent } from '../lib/note.ts';
 import { distancePct, lastCross, lastSma, trend } from '../lib/sma.ts';
 import { TERMS } from '../terms.ts';
 import { SMA_WINDOW, seriesUsable } from './smachart.ts';
@@ -42,9 +43,12 @@ export function checksHtml(ev: Evaluation): string {
     .join('')}</ul>`;
 }
 
-/** Elle yazılmış yorum; yazıldığı verinin tarihiyle etiketlenir. */
-export function noteHtml(s: StockView): string {
-  if (!s.not) return '';
+/**
+ * Elle yazılmış yorum; yazıldığı verinin tarihiyle etiketlenir. Veri yorumdan
+ * sonraki bir güne aitse (dataAsOf) yorum gösterilmez: yeni rakamlarla çelişebilir.
+ */
+export function noteHtml(s: StockView, dataAsOf?: string): string {
+  if (!s.not || !noteIsCurrent(s.notAsOf, dataAsOf)) return '';
   const lbl = s.notAsOf ? `Yorum (${fmtDate(s.notAsOf, false)} verisine göre yazıldı)` : 'Yorum';
   return `<p><span class="muted small">${esc(lbl)}:</span> ${esc(s.not)}</p>`;
 }
@@ -204,6 +208,8 @@ export interface DetailParts {
   sma: string;
   /** Kimlikler ve veri öznitelikleri için hissenin kimliği, ör. "BIST-THYAO" */
   id: string;
+  /** Hissenin piyasasındaki verinin tarihi; elle yazılmış yorumun güncelliği buna göre sınanır */
+  asOf?: string;
 }
 
 export function detailHtml(s: StockView, ev: Evaluation, p: DetailParts): string {
@@ -216,7 +222,7 @@ export function detailHtml(s: StockView, ev: Evaluation, p: DetailParts): string
   return `<div class="det">
 <div><div class="lbl">Ölçüt ölçüt</div>${checksHtml(ev)}</div>
 <div class="stack">
-<div>${title}${noteHtml(s)}</div>
+<div>${title}${noteHtml(s, p.asOf)}</div>
 <div class="stack sc-ai" data-ai-for="${esc(p.id)}">${p.ai}</div>
 ${extra.length ? `<div><div class="lbl">Ek bilgiler</div><p>${extra.map(esc).join(' ')}</p></div>` : ''}
 </div>

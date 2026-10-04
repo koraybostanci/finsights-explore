@@ -8,7 +8,7 @@
  * ve ekran hazır soru bankasına döner.
  */
 
-import { data } from '../data/store.ts';
+import { data, marketAsOf } from '../data/store.ts';
 import { DEF, evaluate } from '../lib/evaluate.ts';
 import type { MarketId, StockView, Thresholds } from '../types.ts';
 import { complete } from './client.ts';
@@ -236,7 +236,7 @@ export async function generateQuiz(input: GenerateQuizInput, deps: ClientDeps = 
   const sample = quizSample(input.market, input.stocks, input.rnd);
   if (sample.length < 2)
     throw new AiError('bad_response', 'Bu piyasada soru üretmeye yetecek kadar verisi olan hisse yok.');
-  const prompt = quizPrompt(input.market, sample, { asOf: data().asOf });
+  const prompt = quizPrompt(input.market, sample, { asOf: marketAsOf(input.market) });
   const text = await complete({ system: prompt.system, user: prompt.user, maxTokens: prompt.maxTokens, json: true }, deps);
   const tickers = sample.map((s) => s.k);
   const out = validateQuiz(extractJson(text), { sample: tickers, known: input.known ?? data().stocks.map((s) => s.k) });

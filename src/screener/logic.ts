@@ -171,7 +171,7 @@ export function verdictLabel(r: Row): string {
 
 /* ---------- Hücre metinleri ---------- */
 
-export const fkText = (s: StockView): string => (!s.hasData ? '–' : s.fk == null ? 'zarar' : nf(s.fk));
+export const fkText = (s: StockView): string => (!s.hasData ? '–' : s.fk == null ? (s.loss ? 'zarar' : '–') : nf(s.fk));
 
 export const growthText = (v: number | null, why?: string): string => (v == null ? why || '–' : pct(v));
 

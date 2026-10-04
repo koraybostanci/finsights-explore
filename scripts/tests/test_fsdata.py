@@ -197,8 +197,13 @@ class Mapping(unittest.TestCase):
     def test_map_row_loss_and_turnaround(self):
         fig = map_tv_row(self.spec(), tv_row("X", earnings_per_share_diluted_ttm=-2.0, net_income_yoy_growth_ttm=-300.0))
         self.assertIsNone(fig["fk"])
+        self.assertIs(fig["loss"], True)
         self.assertIsNone(fig["ng"])
         self.assertEqual(fig["ngT"], NET_TO_LOSS)
+        # P/E missing although earnings are positive: no loss flag, the app says "no data"
+        fig = map_tv_row(self.spec(), tv_row("X", price_earnings_ttm=None))
+        self.assertIsNone(fig["fk"])
+        self.assertNotIn("loss", fig)
         fig = map_tv_row(self.spec(), tv_row("X", ebitda_yoy_growth_ttm=None, net_income_yoy_growth_ttm=None))
         self.assertEqual(fig["fgT"], EBITDA_FROM_NEGATIVE)
         self.assertEqual(fig["ngT"], NET_FROM_LOSS)
@@ -297,6 +302,8 @@ class Pipeline(unittest.TestCase):
         self.assertTrue(res.updated)
         self.assertEqual(res.doc["source"], "TradingView ve Yahoo Finance")
         self.assertEqual(res.doc["period"], {"BIST": "2026/6", "US": "2026/6"})
+        self.assertEqual(res.doc["asOfBy"], {"BIST": NOW.isoformat(timespec="seconds"), "US": NOW.isoformat(timespec="seconds")})
+        self.assertFalse(any("loss" in s for s in res.doc["stocks"]), "every synthetic row is profitable")
         by = {(s["market"], s["k"]): s for s in res.doc["stocks"]}
         self.assertEqual(len(by), len(UNIVERSE.stocks))
         thy = by[("BIST", "THYAO")]
@@ -331,10 +338,30 @@ class Pipeline(unittest.TestCase):
             self.assertEqual(thy[key], old[key], key)
         self.assertEqual(res.exit_code, 0)
 
+    def test_one_market_run_leaves_the_other_markets_date(self):
+        tv, yh = clients(all_rows())
+        res = run_fetch(UNIVERSE, BANKS, SEED, lambda sid: None, tv, yh, NOW, markets=("US",))
+        now = NOW.isoformat(timespec="seconds")
+        self.assertEqual(res.doc["asOf"], now)
+        self.assertEqual(res.doc["asOfBy"], {"BIST": SEED["asOf"], "US": now})
+        # BIST figures and loss flags untouched
+        pg = next(s for s in res.doc["stocks"] if s["k"] == "PGSUS")
+        self.assertIs(pg["loss"], True)
+        self.assertEqual(validate_market(res.doc), [])
+
+    def test_loss_flag_goes_away_when_earnings_return(self):
+        tv, yh = clients(all_rows())  # every synthetic row has positive earnings
+        res = run_fetch(UNIVERSE, BANKS, SEED, lambda sid: None, tv, yh, NOW, markets=("BIST",))
+        pg = next(s for s in res.doc["stocks"] if s["k"] == "PGSUS")
+        self.assertNotIn("loss", pg)
+        self.assertEqual(pg["fk"], 12.35)
+
     def test_failed_market_keeps_previous_data(self):
         tv, yh = clients(all_rows(), fail_markets=("turkey",))
         res = run_fetch(UNIVERSE, BANKS, SEED, lambda sid: None, tv, yh, NOW)
         self.assertTrue(res.statuses["BIST"].failed)
+        self.assertEqual(res.doc["asOfBy"]["BIST"], SEED["asOf"])
+        self.assertEqual(res.doc["asOfBy"]["US"], NOW.isoformat(timespec="seconds"))
         self.assertFalse(res.statuses["US"].failed)
         self.assertEqual(res.exit_code, 1)
         old = {s["k"]: s for s in SEED["stocks"] if s["market"] == "BIST"}
@@ -375,6 +402,12 @@ class Pipeline(unittest.TestCase):
         doc = build_seed(UNIVERSE, BANKS, SEED, None, NOW)
         self.assertEqual(validate_market(doc), [])
         self.assertEqual(json.dumps(doc, sort_keys=True), json.dumps(SEED, sort_keys=True))
+        self.assertEqual(doc["asOfBy"], {"BIST": SEED["asOf"]})  # the US has no data yet, so no date
+
+    def test_file_without_per_market_dates_is_upgraded(self):
+        old = {k: v for k, v in SEED.items() if k != "asOfBy"}
+        doc = build_seed(UNIVERSE, BANKS, old, None, NOW)
+        self.assertEqual(doc["asOfBy"], {"BIST": SEED["asOf"]})
 
 
 class Validation(unittest.TestCase):

@@ -1,7 +1,8 @@
 /**
  * Tarama mantığı: bir hisseyi eşiklere göre ölçüt ölçüt değerlendirir.
  * Kurallar ve metinler ilk sürümle (BIST 30 Çarpan Rehberi) aynıdır;
- * eklenenler: verisi olmayan hisse ve eksik borç verisi durumları.
+ * eklenenler: verisi olmayan hisse, eksik borç verisi ve F/K'nın zarar yüzünden mi
+ * yoksa veri eksikliğinden mi boş olduğunun ayrılması (Stock.loss).
  */
 
 import type { Check, Evaluation, StockView, Thresholds, Verdict } from '../types.ts';
@@ -51,11 +52,17 @@ export function evaluate(s: StockView, th: Thresholds): Evaluation {
     return { checks: C, verdict: 'na', warns: 0 };
   }
 
-  C.push(
-    s.fk == null
-      ? { n: 'Kâr', st: 'bad', s: 'Zarar ediyor (son 12 ay)', t: 'Son 12 ayda zarar ediyor; F/K ve PEG hesaplanamaz.' }
-      : { n: 'Kâr', st: 'good', s: 'Kârlı', t: `Son 12 ayda kârlı. Kazanç verimi %${nf(100 / s.fk, 1)}.` },
-  );
+  if (s.fk != null)
+    C.push({ n: 'Kâr', st: 'good', s: 'Kârlı', t: `Son 12 ayda kârlı. Kazanç verimi %${nf(100 / s.fk, 1)}.` });
+  else if (s.loss)
+    C.push({ n: 'Kâr', st: 'bad', s: 'Zarar ediyor (son 12 ay)', t: 'Son 12 ayda zarar ediyor; F/K ve PEG hesaplanamaz.' });
+  else
+    C.push({
+      n: 'Kâr',
+      st: 'warn',
+      s: 'F/K verisi yok',
+      t: 'Kaynakta F/K yok; son 12 ayın kârı buradan okunamıyor. Zarar da olabilir, veri eksik de.',
+    });
 
   if (s.fk != null)
     C.push(

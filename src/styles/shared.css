@@ -42,3 +42,6 @@ tr.med td:first-child{font-family:var(--ui);background:var(--accent-soft)}
 /* Seçim ve imleç renkleri */
 ::selection{background:var(--accent-soft);color:var(--ink)}
 input,select,textarea{caret-color:var(--accent)}
+
+/* Sekme çubuğu yapışkan olduğu için, bir hikâyeye atlandığında başlığı çubuğun altında kalmasın */
+article.case{scroll-margin-top:64px}

@@ -7,12 +7,13 @@
  */
 
 import { VLABEL } from '../lib/evaluate.ts';
+import { noteIsCurrent } from '../lib/note.ts';
 import { distancePct, lastCross, lastSma, trend } from '../lib/sma.ts';
 import { TERMS } from '../terms.ts';
 import type { Evaluation, IndustryMedian, StockView } from '../types.ts';
 import type { IndustryCompareInput, StockCommentInput } from './types.ts';
 
-export const PROMPT_VERSION = 1;
+export const PROMPT_VERSION = 2;
 
 export interface Prompt {
   system: string;
@@ -94,6 +95,7 @@ export function stockFigures(s: StockView): Record<string, unknown> {
     yaklasikOzkaynakKarliligiYuzde: r(s.roe, 1),
     piyasaDegeriMilyar: r(s.mv, 1),
   };
+  if (s.fk == null) out.fkNotu = s.loss ? 'son 12 ayda zarar' : 'veri yok (zarar mı, eksik veri mi bilinmiyor)';
   if (s.fg == null && s.fgT) out.favokBuyumeNotu = s.fgT;
   if (s.ng == null && s.ngT) out.netKarBuyumeNotu = s.ngT;
   return out;
@@ -166,7 +168,7 @@ export function matchingStories(s: StockView, e: Evaluation): StoryId[] {
 const storyName = (id: StoryId): string => STORIES[id].split(':')[0];
 
 export interface PromptContext {
-  /** Verinin tarihi (data().asOf) */
+  /** Hissenin piyasasındaki verinin tarihi (marketAsOf) */
   asOf: string;
 }
 
@@ -189,7 +191,8 @@ export function stockPrompt(input: StockCommentInput, ctx: PromptContext): Promp
     hisse.sermayeYeterlilikOraniYuzde = r(s.car);
     hisse.netFaizMarjiYuzde = r(s.nim);
   }
-  if (s.not) {
+  // Elle yazılmış yorum yalnızca yazıldığı günün verisiyle birlikte verilir; veri yenilendiyse çelişebilir.
+  if (s.not && noteIsCurrent(s.notAsOf, ctx.asOf)) {
     hisse.elleYazilmisNot = s.not;
     if (s.notAsOf) hisse.notTarihi = s.notAsOf;
   }

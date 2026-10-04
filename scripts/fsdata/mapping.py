@@ -49,6 +49,7 @@ FIGURE_KEYS: tuple[str, ...] = (
     "f", "fk", "pd", "fdf", "peg", "nb", "mv", "fg", "ng", "h", "sma20", "sma50", "sma200",
 )
 TEXT_KEYS: tuple[str, ...] = ("fgT", "ngT")
+FLAG_KEYS: tuple[str, ...] = ("loss",)  # written only when true
 
 
 class RowError(Exception):
@@ -113,7 +114,7 @@ def sma_set(closes: Sequence[float]) -> dict[str, float | None]:
 def map_tv_row(spec: StockSpec, row: Mapping[str, Any]) -> dict[str, Any]:
     """Figures for one stock from a screener row {column: value}.
 
-    Returns FIGURE_KEYS (None where missing) plus fgT / ngT when set, and `_period_end`
+    Returns FIGURE_KEYS (None where missing) plus fgT / ngT and `loss` when set, and `_period_end`
     (the raw fiscal_period_end_fq value) for the caller to pick up. Raises RowError when the
     row is unusable.
     """
@@ -126,7 +127,8 @@ def map_tv_row(spec: StockSpec, row: Mapping[str, Any]) -> dict[str, Any]:
 
     eps = clean_number(row.get("earnings_per_share_diluted_ttm"))
     pe = positive(row.get("price_earnings_ttm"))
-    if eps is not None and eps <= 0:
+    loss = eps is not None and eps <= 0
+    if loss:
         pe = None  # a P/E over a loss is not a multiple
 
     ebitda = row.get("ebitda")
@@ -156,6 +158,8 @@ def map_tv_row(spec: StockSpec, row: Mapping[str, Any]) -> dict[str, Any]:
         row.get("net_income_yoy_growth_ttm"), eps, from_negative=NET_FROM_LOSS, to_negative=NET_TO_LOSS
     )
     out["fg"], out["ng"] = fg, ng
+    if loss:
+        out["loss"] = True  # tells the app that the empty F/K is a loss, not missing data
     if fg_text:
         out["fgT"] = fg_text
     if ng_text:

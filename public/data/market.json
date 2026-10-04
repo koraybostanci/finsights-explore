@@ -1,6 +1,9 @@
 {
  "schema": 1,
  "asOf": "2026-10-02T15:00:00+03:00",
+ "asOfBy": {
+  "BIST": "2026-10-02T15:00:00+03:00"
+ },
  "source": "Fintables (2 Ekim 2026 anlık görüntüsü)",
  "period": {
   "BIST": "2026/6"
@@ -236,6 +239,7 @@
    "mv": 72,
    "fg": -30,
    "ng": -81,
+   "loss": true,
    "h": 32.54,
    "sma20": null,
    "sma50": null,
@@ -417,6 +421,7 @@
    "ng": null,
    "fgT": "eksiden artıya",
    "ngT": "zarardan kâra",
+   "loss": true,
    "h": 20.53,
    "sma20": null,
    "sma50": null,
@@ -440,6 +445,7 @@
    "fg": -64,
    "ng": null,
    "ngT": "kârdan zarara",
+   "loss": true,
    "h": 264.99,
    "sma20": null,
    "sma50": null,
@@ -487,6 +493,7 @@
    "fg": 159,
    "ng": null,
    "ngT": "zarardan kâra",
+   "loss": true,
    "h": null,
    "sma20": null,
    "sma50": null,

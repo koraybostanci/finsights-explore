@@ -99,6 +99,12 @@ export async function loadData(url = './data/market.json'): Promise<void> {
 }
 
 export const data = (): MarketData => DATA;
+
+/** Bir piyasanın verisinin tarihi; piyasa başına tarih yoksa dosyanın genel tarihi. */
+export const marketAsOf = (m: MarketId): string => DATA.asOfBy?.[m] ?? DATA.asOf;
+
+/** Bu piyasada verisi olan en az bir hisse var mı */
+export const marketHasData = (m: MarketId): boolean => VIEWS.some((s) => s.market === m && s.hasData);
 export const dataError = (): string | null => loadError;
 export const industry = (id: string): Industry => DATA.industries[id] ?? UNKNOWN_INDUSTRY;
 

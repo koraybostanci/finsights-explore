@@ -75,7 +75,14 @@ jobs:
             echo "No data changes."
           else
             git commit -m "Veri güncellemesi $(date -u +%Y-%m-%d)"
-            git push
+            # main may have moved while the job ran: rebase the data commit on top and try again
+            for attempt in 1 2 3; do
+              if git push; then exit 0; fi
+              echo "Push rejected (attempt $attempt); rebasing on the latest main."
+              git pull --rebase
+            done
+            echo "Could not push the data commit after three attempts." >&2
+            exit 1
           fi
 
       - name: Fail the run if the fetch was incomplete

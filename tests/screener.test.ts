@@ -460,6 +460,9 @@ test('extraInfo ve noteHtml: hedef fiyat hissenin para birimiyle; yorum tarihiyl
 
   assert.ok(noteHtml(view('THYAO')).includes('Yorum (2 Ekim 2026 verisine göre yazıldı):'));
   assert.equal(noteHtml(view('VZ')), '');
+  // Veri yorumdan yeniyse yorum gösterilmez; aynı günün verisiyle gösterilir
+  assert.equal(noteHtml(view('THYAO'), '2026-10-05T18:45:00+03:00'), '');
+  assert.ok(noteHtml(view('THYAO'), '2026-10-02T15:00:00+03:00').includes('Yorum (2 Ekim 2026'));
   assert.ok(!noteHtml(withFields('THYAO', { not: '<b>x</b>' })).includes('<b>x</b>'));
 });
 

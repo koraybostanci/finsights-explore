@@ -46,7 +46,7 @@ function fact(id: string, v: string, d?: string): QuizFact {
 }
 
 const fkFact = (s: StockView, th: Thresholds | null): QuizFact =>
-  fact('fk', s.fk == null ? '–' : nf(s.fk), s.fk == null ? 'Son 12 ayda zarar' : th ? `Eşik: en çok ${nf(th.fk, 0)}` : undefined);
+  fact('fk', s.fk == null ? '–' : nf(s.fk), s.fk == null ? (s.loss ? 'Son 12 ayda zarar' : 'Veri yok') : th ? `Eşik: en çok ${nf(th.fk, 0)}` : undefined);
 
 const pegFact = (s: StockView, th: Thresholds): QuizFact =>
   fact('peg', s.peg == null ? '–' : nf(s.peg), s.peg == null ? 'Hesaplanamıyor' : `Eşik: en çok ${nf(th.peg, 1)}`);
