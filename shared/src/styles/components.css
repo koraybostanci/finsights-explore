@@ -1,0 +1,57 @@
+/* Components shared by the fintools apps: buttons, tiles, legend, chips, form controls, pills, notes, boxes. */
+.btn{font-family:var(--ui);font-size:.85rem;font-weight:600;padding:8px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px}
+@media (min-width:700px){.tiles{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}}
+.tiles > div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--bg);display:flex;flex-direction:column;gap:3px;min-width:0}
+.tiles .k{font-family:var(--ui);font-size:.74rem;color:var(--muted);font-weight:700;line-height:1.3}
+.tiles .k .en{display:block;font-weight:500;font-size:.95em}
+.tiles .v{font-family:var(--mono);font-size:1.25rem;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tiles .d{font-family:var(--ui);font-size:.77rem;color:var(--muted);line-height:1.35}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--ui);font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--ui);font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
+
+.ctl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ctl label{font-size:.8rem;font-weight:600;line-height:1.3}
+.ctl:not(.check) label{min-height:2.7em}
+.ctl label .en{display:block;font-size:.72rem}
+.ctl small{font-size:.74rem;color:var(--muted);line-height:1.35}
+.ctl input[type=number]{font-family:var(--mono);font-size:.95rem;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+.ctl.check{flex-direction:row;align-items:flex-start;gap:8px}
+.ctl.check input{margin-top:3px;accent-color:var(--accent)}
+
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--ui);font-size:.78rem;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.na{background:var(--accent-soft);color:var(--muted)}
+
+.note{font-family:var(--ui);font-size:.85rem;background:var(--warn-soft);color:var(--ink);border-radius:8px;padding:10px 12px}
+
+/* İkili/üçlü geçiş düğmesi: piyasa (BIST / ABD), görünüm (Tüm liste / Sektör kıyası) */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{font-family:var(--ui);font-size:.85rem;font-weight:600;padding:8px 14px;border:0;background:none;color:var(--muted);cursor:pointer}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+
+/* Seçilebilir çip (sektör seçimi vb.) */
+button.chip{border:0;cursor:pointer;font-size:.85rem;padding:6px 12px}
+button.chip .en{font-size:.85em}
+button.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+button.chip[aria-pressed="true"] .en{color:var(--accent-soft)}
+
+/* Beyaz kutu: ayar ve form grupları */
+.box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:16px;font-family:var(--ui)}
+
+/* Metin, parola, arama ve seçim alanları; sayı alanlarıyla aynı görünüm */
+.ctl input[type=text],.ctl input[type=password],.ctl input[type=search],.ctl input[type=url],.ctl select{font-family:var(--mono);font-size:.95rem;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+
+/* Başlık satırı: solda başlık, sağda düğmeler */
+.headrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px}

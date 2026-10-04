@@ -4,6 +4,9 @@
  * ve sayfa genişliği değişince çağrılır.
  */
 
+import '@fintools/shared/styles/tokens.css';
+import '@fintools/shared/styles/layout.css';
+import '@fintools/shared/styles/components.css';
 import './styles/app.css';
 import './styles/shared.css';
 
