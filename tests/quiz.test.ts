@@ -10,7 +10,7 @@ import { ROUND_DATA, ROUND_SIZE, buildRound, fromAi, score, shuffleOptions } fro
 import type { QuizQuestion } from '../src/quiz/types.ts';
 import type { MarketData, StockView } from '../src/types.ts';
 
-const DATA = JSON.parse(readFileSync(new URL('../public/data/market.json', import.meta.url), 'utf8')) as MarketData;
+const DATA = JSON.parse(readFileSync(new URL('./fixtures/market.json', import.meta.url), 'utf8')) as MarketData;
 const views: StockView[] = DATA.stocks.map((s) => toView(s, DATA.industries));
 const bist = views.filter((s) => s.market === 'BIST' && !s.bank);
 const us = views.filter((s) => s.market === 'US');
