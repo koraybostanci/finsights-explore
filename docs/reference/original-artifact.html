@@ -1,0 +1,1109 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>BIST 30 Çarpan Rehberi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: ders kitabı + terminal — sticky sekme çubuğu, okuma sütunu ~760px, tarayıcı tam genişlik */
+:root{
+  --bg:#F2F5F6; --surface:#FFFFFF; --ink:#14212B; --muted:#55636F; --line:#D7DEE2;
+  --accent:#1B6871; --accent-soft:#DFEDEE;
+  --good:#2C774B; --good-soft:#E1F1E7; --warn:#9A620E; --warn-soft:#FBEFD9; --bad:#AE3636; --bad-soft:#F8E3E2;
+  --c1:#007FA8; --c2:#C27C1E; --c3:#5466C2; --c4:#B04A78;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Literata", Georgia, "Times New Roman", serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --ui:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E151B; --surface:#16202A; --ink:#E5ECEF; --muted:#95A3AE; --line:#283641;
+  --accent:#62B6BF; --accent-soft:#15333A;
+  --good:#62C08A; --good-soft:#163323; --warn:#E3A845; --warn-soft:#3A2B12; --bad:#E57A7A; --bad-soft:#3B1C1C;
+  --c1:#2AA3B0; --c2:#C47E1C; --c3:#7A8BF0; --c4:#D6679A;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0E151B; --surface:#16202A; --ink:#E5ECEF; --muted:#95A3AE; --line:#283641;
+  --accent:#62B6BF; --accent-soft:#15333A;
+  --good:#62C08A; --good-soft:#163323; --warn:#E3A845; --warn-soft:#3A2B12; --bad:#E57A7A; --bad-soft:#3B1C1C;
+  --c1:#2AA3B0; --c2:#C47E1C; --c3:#7A8BF0; --c4:#D6679A;
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;padding:0 16px}
+.wrap{max-width:1320px;margin:0 auto;padding-block:20px 56px}
+.read{max-width:860px}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,6vw,3.1rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.2rem;font-weight:700}
+p{margin:0}
+.en{font-family:var(--ui);font-weight:500;font-size:.78em;color:var(--muted);letter-spacing:0}
+.eyebrow{font-family:var(--ui);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.small{font-family:var(--ui);font-size:.82rem}
+.stack{display:flex;flex-direction:column;gap:14px}
+.stack-lg{display:flex;flex-direction:column;gap:28px}
+
+header.top{display:flex;flex-direction:column;gap:12px;padding-block:8px 18px}
+header.top .lede{font-size:1.08rem;max-width:62ch}
+
+/* Veri şeridi */
+.databar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:var(--ui);font-size:.84rem}
+.databar .meta{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--muted);flex:1 1 260px;min-width:0}
+.databar .meta b{color:var(--ink);font-weight:600}
+.refresh{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.refresh-msg{font-size:.8rem;color:var(--muted);flex-basis:100%}
+.btn{font-family:var(--ui);font-size:.85rem;font-weight:600;padding:8px 12px;border-radius:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:-16px;padding-inline:16px;margin-top:16px}
+.tabrow{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;max-width:1320px;margin:0 auto}
+.tabrow::-webkit-scrollbar{display:none}
+.tab{font-family:var(--ui);font-size:.92rem;font-weight:600;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:12px 12px 10px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible,tr.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+section.panel{padding-top:28px}
+
+.howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
+.howto div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;font-family:var(--ui);font-size:.9rem}
+.howto b{display:block;font-family:var(--display);font-size:1rem;margin-bottom:2px}
+
+/* Kartlar */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card .tag{font-family:var(--ui);font-size:.85rem;color:var(--muted)}
+.card h3 .en, dl.gloss dt .en{display:block;margin-top:3px;font-size:.78rem}
+.formula{font-family:var(--mono);font-size:.86rem;background:var(--accent-soft);color:var(--ink);padding:8px 10px;border-radius:6px;overflow-x:auto}
+.lbl{font-family:var(--ui);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:2px}
+.band{display:flex;gap:4px;flex-wrap:wrap}
+.band span{font-family:var(--ui);font-size:.78rem;padding:3px 8px;border-radius:4px;border:1px solid var(--line)}
+.trap{border-left:3px solid var(--warn);padding-left:10px;font-size:.95rem}
+.ex{font-size:.92rem}
+.tr-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.tr-list div{border-top:2px solid var(--line);padding-top:10px}
+.tr-list b{font-family:var(--display);display:block;margin-bottom:2px}
+
+/* Senaryolar */
+.case{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.case-head{display:flex;flex-direction:column;gap:6px}
+.story{display:flex;flex-direction:column;gap:14px;min-width:0}
+.story p{max-width:68ch}
+.viz{min-width:0;display:flex;flex-direction:column;gap:10px}
+.viz svg{display:block;max-width:100%}
+@media (min-width:1000px){
+  .case{grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:32px}
+  .case > .case-head,.case > .tiles,.case > .learn{grid-column:1 / -1}
+  .case > .story{grid-column:1}
+  .case > .viz{grid-column:2}
+}
+.learn{background:var(--accent-soft);border-radius:10px;padding:12px 14px;font-size:.95rem;display:flex;flex-direction:column;gap:6px}
+.learn b{font-family:var(--display)}
+.slider{display:flex;flex-direction:column;gap:6px;font-family:var(--ui)}
+.slider label{display:flex;justify-content:space-between;gap:10px;font-size:.88rem;font-weight:600}
+.slider output{font-family:var(--mono);font-weight:600}
+.slider input[type=range]{width:100%;accent-color:var(--accent)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px}
+@media (min-width:700px){.tiles{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}}
+.tiles > div{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--bg);display:flex;flex-direction:column;gap:3px;min-width:0}
+.tiles .k{font-family:var(--ui);font-size:.74rem;color:var(--muted);font-weight:700;line-height:1.3}
+.tiles .k .en{display:block;font-weight:500;font-size:.95em}
+.tiles .v{font-family:var(--mono);font-size:1.25rem;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tiles .d{font-family:var(--ui);font-size:.77rem;color:var(--muted);line-height:1.35}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--ui);font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* Sözlük */
+.gsearch{font-family:var(--ui);font-size:1rem;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);width:100%;max-width:420px}
+.ggroup{display:flex;flex-direction:column;gap:10px}
+dl.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:10px;margin:0}
+dl.gloss div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+dl.gloss dt{font-family:var(--display);font-weight:700;font-size:1.02rem}
+dl.gloss dd{margin:4px 0 0;font-size:.93rem}
+dl.gloss .fx{font-family:var(--mono);font-size:.8rem;color:var(--accent);display:block;margin-top:4px}
+
+/* Adımlar */
+ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px;counter-reset:s}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+ol.steps li::before{content:counter(s);font-family:var(--display);font-weight:800;font-size:1.6rem;color:var(--accent);line-height:1}
+ol.steps li > div{min-width:0;display:flex;flex-direction:column;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--ui);font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
+
+/* Tarayıcı */
+.controls{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;font-family:var(--ui)}
+.ctl{display:flex;flex-direction:column;gap:4px;min-width:0}
+.ctl label{font-size:.8rem;font-weight:600;line-height:1.3}
+.ctl:not(.check) label{min-height:2.7em}
+.ctl label .en{display:block;font-size:.72rem}
+.ctl small{font-size:.74rem;color:var(--muted);line-height:1.35}
+.ctl input[type=number]{font-family:var(--mono);font-size:.95rem;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+.ctl.check{flex-direction:row;align-items:flex-start;gap:8px}
+.ctl.check input{margin-top:3px;accent-color:var(--accent)}
+.summary{display:flex;flex-wrap:wrap;gap:8px;font-family:var(--ui)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-family:var(--ui);font-size:.78rem;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.na{background:var(--accent-soft);color:var(--muted)}
+.summary .pill{font-size:.88rem;padding:6px 12px}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-family:var(--ui);font-size:.86rem}
+th,td{padding:9px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;user-select:none;background:var(--surface)}
+th small{display:block;text-transform:none;letter-spacing:0;font-weight:500;font-size:.7rem}
+th.nosort{cursor:default}
+th.left{text-align:left}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1}
+th.sorted{color:var(--accent)}
+td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+td.name{font-family:var(--ui)}
+td.name b{font-family:var(--mono);font-size:.9rem}
+td.name span{display:block;font-size:.72rem;color:var(--muted)}
+td.res{text-align:left;font-family:var(--ui)}
+td.why{text-align:left;white-space:normal;font-family:var(--ui);min-width:290px;max-width:340px}
+td.why ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px}
+td.why li{display:grid;grid-template-columns:auto 1fr;gap:6px;font-size:.8rem;line-height:1.35}
+tr.row{cursor:pointer}
+tr.row:hover td{background:var(--accent-soft)}
+tr.detail td{white-space:normal;text-align:left;font-family:var(--body);background:var(--bg);position:static}
+.v-bad{color:var(--bad)} .v-good{color:var(--good)} .v-warn{color:var(--warn)}
+.det{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:18px;padding:6px 2px 10px;max-width:1000px}
+.det ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.det li{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start;font-size:.92rem}
+.det p{font-size:.93rem}
+.ico{font-family:var(--ui);font-weight:800;width:18px;height:18px;border-radius:50%;display:inline-grid;place-items:center;font-size:.68rem;margin-top:1px}
+.ico.good{background:var(--good-soft);color:var(--good)} .ico.warn{background:var(--warn-soft);color:var(--warn)} .ico.bad{background:var(--bad-soft);color:var(--bad)} .ico.na{background:var(--accent-soft);color:var(--muted)}
+
+.chartbox{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;position:relative}
+.chartbox svg{display:block;max-width:100%}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-family:var(--ui);font-size:.8rem;padding:6px 9px;border-radius:6px;white-space:nowrap;z-index:3}
+
+.calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px;align-items:start}
+.calc .controls{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.out{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.note{font-family:var(--ui);font-size:.85rem;background:var(--warn-soft);color:var(--ink);border-radius:8px;padding:10px 12px}
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-family:var(--ui);font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+footer a{color:var(--accent)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Borsa İstanbul · Temel analize giriş</span>
+    <h1>BIST 30 Çarpan Rehberi</h1>
+    <p class="lede">Önce bir kahvecinin hikâyesiyle temel kavramları öğrenin, sonra aynı mantığı BIST 30 hisselerine gerçek verilerle uygulayın.</p>
+    <div class="databar">
+      <div class="meta" id="datameta"><span>Veri: <b id="m-asof">2 Ekim 2026</b></span><span>Kaynak: <b>Fintables</b></span><span>Bilanço dönemi: <b id="m-period">2026/6</b></span><span id="m-status"></span></div>
+      <div class="refresh">
+        <button class="btn primary" id="refresh-btn" type="button" disabled>Verileri güncelle</button>
+        <span class="refresh-msg" id="refresh-msg">Güncelleme bağlantısı kontrol ediliyor…</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Bölümler">
+    <div class="tabrow" role="tablist">
+      <button class="tab" role="tab" data-tab="senaryo" id="t-senaryo">Senaryolar</button>
+      <button class="tab" role="tab" data-tab="kavramlar" id="t-kavramlar">Çarpanlar</button>
+      <button class="tab" role="tab" data-tab="sozluk" id="t-sozluk">Sözlük</button>
+      <button class="tab" role="tab" data-tab="adimlar" id="t-adimlar">Karar adımları</button>
+      <button class="tab" role="tab" data-tab="tarayici" id="t-tarayici">BIST 30 tarayıcı</button>
+      <button class="tab" role="tab" data-tab="bankalar" id="t-bankalar">Bankalar</button>
+      <button class="tab" role="tab" data-tab="hesap" id="t-hesap">Kendi hesabın</button>
+    </div>
+  </nav>
+
+  <!-- SENARYOLAR -->
+  <section class="panel stack-lg" id="senaryo" role="tabpanel">
+    <div class="stack read">
+      <h2>Bir kahveciyi satın almak</h2>
+      <p>Borsadaki her hisse, bir şirketin küçük bir parçasıdır. Dev şirketlerin rakamları gözü korkutur, ama mantık mahalledeki bir kahvecininkiyle aynıdır. Aşağıdaki beş hikâye her kavramı tek tek tanıtır; her birinin sonunda BIST 30'da aynı durumun nerede görüldüğü yazıyor.</p>
+    </div>
+    <div class="howto">
+      <div><b>Senaryolar</b>Kavramları hikâyeyle öğrenin. Kaydırıcıları oynatın.</div>
+      <div><b>Çarpanlar ve Sözlük</b>Formüller, tuzaklar ve terimlerin İngilizce karşılıkları.</div>
+      <div><b>Karar adımları</b>Bir hisseye hangi sırayla bakılır.</div>
+      <div><b>Tarayıcı ve hesaplayıcı</b>Aynı mantığı gerçek hisselere uygulayın.</div>
+    </div>
+
+    <article class="case" id="case1">
+      <div class="case-head"><span class="eyebrow">Hikâye 1 · Bilanço</span><h3>Ayşe'nin Kahvesi neye sahip?</h3></div>
+      <div class="story">
+        <p>Ayşe bir kahveci açıyor. Kendisi ve iki ortağı 600.000 TL koyuyor, bankadan 200.000 TL kredi alıyor. Bu 800.000 TL ile kahve makinesi ve dekorasyona 600.000 TL harcıyor, 50.000 TL'lik çekirdek ve süt stoğu alıyor, 150.000 TL kasada kalıyor.</p>
+        <p>Şirketin sermayesi 100.000 paya (lot) bölünmüş. Sağdaki iki çubuk aynı 800.000 TL'nin iki yüzü: üstteki paranın nereye gittiğini, alttaki nereden geldiğini gösteriyor.</p>
+      </div>
+      <div class="viz"><div id="v-bilanco"></div><div class="legend" id="l-bilanco"></div></div>
+      <div class="tiles">
+        <div><div class="k">Özkaynak<span class="en">Shareholders' equity</span></div><div class="v">600.000 TL</div><div class="d">Varlıklar − borçlar</div></div>
+        <div><div class="k">Pay sayısı<span class="en">Shares outstanding</span></div><div class="v">100.000</div><div class="d">Ödenmiş sermaye 100.000 TL</div></div>
+        <div><div class="k">Pay başına defter değeri<span class="en">Book value per share</span></div><div class="v">6,00 TL</div><div class="d">600.000 ÷ 100.000</div></div>
+        <div><div class="k">Net borç<span class="en">Net debt</span></div><div class="v">50.000 TL</div><div class="d">200.000 kredi − 150.000 nakit</div></div>
+      </div>
+      <div class="learn"><b>Ne öğrendik?</b>
+        <span>Bilanço (balance sheet) iki taraftan oluşur ve iki taraf hep eşittir: <b>varlıklar = borçlar + özkaynak</b>. Özkaynak (shareholders' equity), şirket bugün kapansa borçlar ödendikten sonra ortaklara kalan paradır; buna defter değeri (book value) da denir. Ayşe'nin Kahvesi'nin defter değeri 600.000 TL, pay başına 6 TL.</span>
+        <span class="muted">BIST 30'da: THYAO'nun özkaynağı 1 trilyon TL'yi aşıyor ama piyasa değeri bunun yarısından az. PD/DD 0,40 bundan çıkıyor.</span>
+      </div>
+    </article>
+
+    <article class="case" id="case2">
+      <div class="case-head"><span class="eyebrow">Hikâye 2 · Gelir tablosu</span><h3>Bir yılda ne kazandı?</h3></div>
+      <div class="story">
+        <p>Kahveci yılda 2 milyon TL'lik kahve satıyor. Bu paranın nasıl erimeye başladığını yukarıdan aşağı izleyin: önce kahvenin maliyeti, sonra kira ve maaşlar, sonra makinenin yıpranması, faiz ve vergi. En altta kalan net kârdır.</p>
+        <p>Mavi çubuklar ara toplamlar, kırmızılar giderler. Her kırmızı çubuk bir önceki toplamdan düşülür.</p>
+      </div>
+      <div class="viz"><div id="v-gelir"></div><div class="legend"><span><i style="background:var(--c3)"></i>Ara toplam</span><span><i style="background:var(--c1)"></i>FAVÖK ve net kâr</span><span><i style="background:var(--bad);opacity:.55"></i>Gider</span></div></div>
+      <div class="learn"><b>Ne öğrendik?</b>
+        <span><b>FAVÖK (EBITDA)</b> işin kendisinin ne kazandırdığını gösterir; faiz, vergi ve amortisman gibi finansman ve muhasebe kalemlerinden önce durur. <b>Net kâr (net income)</b> ortaklara kalan paradır. Net kâr pay sayısına bölünürse <b>hisse başına kâr (EPS)</b> çıkar: 210.000 ÷ 100.000 = 2,10 TL.</span>
+        <span class="muted">BIST 30'da: TCELL'in 2026/6 döneminde FAVÖK'ü 61 milyar TL, net kârı ise 10 milyar TL. Aradaki farkı amortisman ve finansman giderleri açıklıyor.</span>
+      </div>
+    </article>
+
+    <article class="case" id="case3">
+      <div class="case-head"><span class="eyebrow">Hikâye 3 · Piyasa değeri ve çarpanlar</span><h3>Pay başına kaç TL verirdiniz?</h3></div>
+      <div class="story">
+        <p>Bir yatırımcı Ayşe'nin Kahvesi'nin paylarını almak istiyor. Fiyatı kaydırıcıyla siz belirleyin. Fiyat değiştikçe şirketin piyasa değeri (market cap) ve tüm çarpanlar nasıl değişiyor, izleyin. Kahveci önümüzdeki yıl ikinci şubesini açacak; kâr büyümesini de kendiniz tahmin edin.</p>
+        <div class="slider"><label for="s-price">Pay fiyatı <output id="o-price">30 TL</output></label><input type="range" id="s-price" min="6" max="60" step="1" value="30"></div>
+        <div class="slider"><label for="s-growth">Beklenen net kâr büyümesi <output id="o-growth">%25</output></label><input type="range" id="s-growth" min="-20" max="80" step="5" value="25"></div>
+        <div id="v-fiyat"></div>
+      </div>
+      <div class="viz"><div class="tiles" id="tiles-fiyat"></div></div>
+      <div class="learn"><b>Ne öğrendik?</b>
+        <span>Kâr ve özkaynak değişmeden, sadece fiyat değişince bütün çarpanlar değişir. Çarpanlar şirketi değil, <b>fiyatı</b> ölçer. Pay başına 6 TL'de PD/DD tam 1 olur, yani defter değerine alırsınız. Ama bu kahveci özkaynağına %35 getiri sağlıyor; bu kadar kârlı bir işi defter değerine satan olmaz.</span>
+        <span class="muted">BIST 30'da: BIMAS'ın PD/DD'si 2,46 ama özkaynak kârlılığı yüksek ve istikrarlı olduğu için piyasa bu primi ödüyor.</span>
+      </div>
+    </article>
+
+    <article class="case" id="case4">
+      <div class="case-head"><span class="eyebrow">Hikâye 4 · Büyüme ve PEG</span><h3>Aynı fiyat, üç farklı kahveci</h3></div>
+      <div class="story">
+        <p>Şehirde üç kahveci satılık. Üçünün de bu yılki net kârı 210.000 TL, üçü de 3 milyon TL'ye satılıyor. Yani üçünün F/K'sı da 14,3. Ama hikâyeleri çok farklı:</p>
+        <ul class="small" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;max-width:68ch">
+          <li><b>Köşe Kahvecisi:</b> yıllardır aynı müşteriler, kâr her yıl %5 artıyor. Borcu yok.</li>
+          <li><b>Zincir Kahve:</b> üç yeni şube açtı, kâr %35 büyüyor. Şubeler için 1,5 milyon TL kredi kullandı.</li>
+          <li><b>Film Seti Kahvesi:</b> geçen yıl 70.000 TL kazanmıştı. Bu yıl dükkân üç ay bir dizi çekimine kiralandı, kâr 210.000 TL'ye fırladı. Kahve satışları aynı.</li>
+        </ul>
+      </div>
+      <div class="viz"><div id="v-peg"></div><div id="t-peg"></div></div>
+      <div class="learn"><b>Ne öğrendik?</b>
+        <span><b>PEG = F/K ÷ büyüme</b>. Aynı F/K'ya ödenen fiyat, büyüyen şirkette daha makuldür: Zincir Kahve 0,41 ile en cazip görünüyor. Ama borcu da en yüksek; firma değeri (EV) borcu ekleyince 4,5 milyon TL'ye çıkıyor. Film Seti Kahvesi'nin PEG'i 0,07 ile "süper ucuz" görünüyor, oysa büyümenin tamamı tek seferlik kira gelirinden geliyor. Gelecek yıl kâr eski seviyesine dönecek.</span>
+        <span class="muted">BIST 30'da: TOASO (PEG 0,02) ve TUPRS (0,07) Film Seti Kahvesi'ne benziyor; GUBRF (0,57) ise büyümesi faaliyetten gelen bir Zincir Kahve örneği.</span>
+      </div>
+    </article>
+
+    <article class="case" id="case5">
+      <div class="case-head"><span class="eyebrow">Hikâye 5 · Enflasyon muhasebesi</span><h3>Kahve satmadan gelen kâr</h3></div>
+      <div class="story">
+        <p>Ayşe'nin bankaya 200.000 TL borcu var ve bu tutar sabit. Fiyatlar yılda %35 artıyorsa, bir yıl sonra o 200.000 TL'nin alım gücü epey azalır; borç reel olarak erir. Türkiye'de 2024'ten beri uygulanan enflasyon muhasebesi (TMS 29 / IAS 29) bu erimeyi kâr olarak yazar: <b>net parasal pozisyon kazancı</b> (net monetary position gain).</p>
+        <div class="slider"><label for="s-inf">Yıllık enflasyon <output id="o-inf">%35</output></label><input type="range" id="s-inf" min="0" max="70" step="5" value="35"></div>
+      </div>
+      <div class="viz"><div id="v-enf"></div><div class="legend"><span><i style="background:var(--c1)"></i>Kahve satışından gelen kâr</span><span><i style="background:var(--c2)"></i>Parasal kazanç (borcun reel erimesi)</span></div></div>
+      <div class="tiles" id="tiles-enf"></div>
+      <div class="learn"><b>Ne öğrendik?</b>
+        <span>Ayşe tek fincan fazla kahve satmadan net kârı büyüyor. Net kâr sıçradığında ilk soru şu olmalı: <b>FAVÖK de büyüdü mü?</b> Büyümediyse artış muhtemelen parasal kazanç ya da tek seferlik bir kalemden geliyor. Hesap burada basitleştirildi; gerçek uygulamada tüm kalemler enflasyona göre yeniden ifade edilir.</span>
+        <span class="muted">BIST 30'da: MGROS'un esas faaliyeti zararda ama net kârı pozitif; TTKOM'un net kâr artışında parasal kazanç (+%135) belirleyici.</span>
+      </div>
+    </article>
+
+    <article class="case" id="case6">
+      <div class="case-head"><span class="eyebrow">Hikâye 6 · Döngüsellik</span><h3>Sahil dondurmacısı</h3></div>
+      <div class="story">
+        <p>Ayşe'nin kuzeni Mert, sahilde bir dondurmacı işletiyor. Kışın zarar ediyor, yazın çok kazanıyor. Yıllık net kârı 535.000 TL ve dükkânı 5 milyon TL'ye satılık.</p>
+        <p>Biri sadece yaz aylarına bakıp "çeyrekte 430.000 kazanıyor, yılda 1,7 milyon eder" derse ne olur?</p>
+      </div>
+      <div class="viz"><div id="v-dondurma"></div></div>
+      <div class="tiles" id="tiles-dondurma"></div>
+      <div class="learn"><b>Ne öğrendik?</b>
+        <span>Döngüsel (cyclical) işlerde kârın zirvede olduğu dönem, F/K'yı ve PEG'i yapay olarak düşük gösterir. Bu "değer tuzağı"nın (value trap) en bilinen hâlidir. Döngü burada mevsim; borsada ise emtia fiyatları, rafineri marjları ya da çelik talebi gibi yıllara yayılan döngülerdir.</span>
+        <span class="muted">BIST 30'da: TUPRS (rafineri marjı), EREGL ve KRDMD (çelik), TRALT (altın fiyatı), THYAO ve PGSUS (turizm sezonu, yakıt fiyatı).</span>
+      </div>
+    </article>
+
+    <article class="case" id="case7">
+      <div class="case-head"><span class="eyebrow">Hikâye 7 · Banka mantığı</span><h3>Mahalle sandığı</h3></div>
+      <div class="story">
+        <p>Mahallede bir sandık kuruluyor. Kurucular 100.000 TL koyuyor (özkaynak). Komşulardan 1 milyon TL mevduat topluyor ve onlara %35 faiz ödüyor. Bu paranın 950.000 TL'sini esnafa %45 faizle kredi olarak veriyor.</p>
+        <p>Yani sandık, kendi parasının 11 katı büyüklüğünde bir bilançoyu yönetiyor. Peki kredilerin bir kısmı geri dönmezse?</p>
+        <div class="slider"><label for="s-npl">Geri ödenmeyen kredi oranı <output id="o-npl">%2</output></label><input type="range" id="s-npl" min="0" max="10" step="0.5" value="2"></div>
+      </div>
+      <div class="viz"><div id="v-sandik"></div></div>
+      <div class="tiles" id="tiles-sandik"></div>
+      <div class="learn"><b>Ne öğrendik?</b>
+        <span>Banka borçla çalışır; borç onun hammaddesidir. Bu yüzden bankalarda FAVÖK ve net borç anlamsızdır. Önemli olan özkaynak kârlılığı (ROE) ve bunu bozan takipteki kredilerdir (NPL). Kaldıraç 11 kat olduğu için batık kredideki küçük bir artış kârı tamamen silebilir. Sermaye yeterlilik oranı (CAR) bu yüzden izlenir. Bankada pratik bir kural var: <b>PD/DD ≈ ÖK kârlılığı × F/K</b>.</span>
+        <span class="muted">BIST 30'da: GARAN %24,5 ÖK kârlılığı ve 1,08 PD/DD; ISCTR %13,3 kârlılık ve 0,61 PD/DD. Piyasa getirisi düşük bankayı daha ucuz fiyatlıyor.</span>
+      </div>
+    </article>
+  </section>
+
+  <!-- ÇARPANLAR -->
+  <section class="panel stack-lg" id="kavramlar" role="tabpanel" hidden>
+    <div class="stack read">
+      <h2>Çarpanlar ne anlatır?</h2>
+      <p>Bir çarpan (multiple), şirketin fiyatını kârı, özkaynağı veya nakit üretimiyle karşılaştırır. Tek başına "ucuz" ya da "pahalı" demez; sadece bir soru sorar: <em>Bu fiyatı neye karşılık ödüyorum?</em> Doğru cevap için birkaç çarpanı birlikte, kârın kalitesiyle beraber okumak gerekir. Örnekler 2 Ekim 2026 verisiyle yazıldı.</p>
+    </div>
+    <div class="cards" id="cards"></div>
+    <div class="stack">
+      <h2>Türkiye'ye özgü dikkat noktaları</h2>
+      <div class="tr-list" id="trlist"></div>
+    </div>
+  </section>
+
+  <!-- SÖZLÜK -->
+  <section class="panel stack-lg" id="sozluk" role="tabpanel" hidden>
+    <div class="stack read">
+      <h2>Sözlük</h2>
+      <p>Bilançoda, haberlerde ve analist raporlarında en sık karşılaşacağınız terimler. Parantez içinde İngilizce karşılıkları var; yabancı kaynak okurken işinize yarar.</p>
+      <label class="small" for="g-q">Terim ara</label>
+      <input class="gsearch" id="g-q" type="search" placeholder="ör. özkaynak, EBITDA, temettü">
+    </div>
+    <div class="stack-lg" id="glossary"></div>
+  </section>
+
+  <!-- ADIMLAR -->
+  <section class="panel stack-lg" id="adimlar" role="tabpanel" hidden>
+    <div class="stack read">
+      <h2>Bir hisseye hangi sırayla bakılır?</h2>
+      <p>Çarpanlar en sona bakılırsa daha doğru okunur. Önce kârın gerçek olduğundan ve bilançonun sağlam olduğundan emin olun; fiyat sorusu ondan sonra gelir. Sıra önemlidir, çünkü her adım bir sonrakini anlamlı kılar.</p>
+    </div>
+    <ol class="steps" id="steps"></ol>
+    <div class="stack read">
+      <h2>Bakışı genişletmek: tablonun göstermedikleri</h2>
+      <p>Tarayıcıdaki çarpanlar başlangıçtır. Gerçek bir karar için şunlara da bakılır:</p>
+    </div>
+    <div class="tr-list" id="widen"></div>
+    <p class="note read">Tarama bir aday listesi üretir, alım kararı üretmez. Tek bir hisseye tüm birikimi yatırmamak, pozisyonları küçük tutmak ve neden aldığınızı yazıya dökmek, hangi çarpanı kullandığınızdan daha çok fark yaratır.</p>
+  </section>
+
+  <!-- TARAYICI -->
+  <section class="panel stack-lg" id="tarayici" role="tabpanel" hidden>
+    <div class="stack read">
+      <h2>BIST 30 tarayıcı</h2>
+      <p>Eşikleri kendi bakışınıza göre değiştirin. Her hisse altı ölçütle sınanır ve "Gerekçe" sütunu hangi ölçütten geçtiğini ya da kaldığını gösterir. Bir satıra dokunursanız uzun açıklama açılır.</p>
+    </div>
+    <div class="controls" id="ctl">
+      <div class="ctl"><label for="c-fk">En yüksek F/K <span class="en">(P/E)</span></label><input type="number" id="c-fk" step="1" min="1" value="30"><small>Kârın kaç yılda fiyatı geri ödediği.</small></div>
+      <div class="ctl"><label for="c-peg">En yüksek PEG</label><input type="number" id="c-peg" step="0.1" min="0.1" value="1"><small>1'in altı: büyümesine göre ucuz.</small></div>
+      <div class="ctl"><label for="c-nb">En yüksek Net borç/FAVÖK <span class="en">(Net debt/EBITDA)</span></label><input type="number" id="c-nb" step="0.5" min="0" value="2.5"><small>Borcu kaç yıllık faaliyet kârıyla öder.</small></div>
+      <div class="ctl"><label for="c-fg">En düşük FAVÖK büy. % <span class="en">(EBITDA growth)</span></label><input type="number" id="c-fg" step="5" value="0"><small>Faaliyetten gelen büyüme.</small></div>
+      <div class="ctl check"><input type="checkbox" id="c-cyc" checked><label for="c-cyc">Döngüsel sektörleri uyar<br><small>Emtia, rafineri, metal, havayolu.</small></label></div>
+      <div class="ctl check"><input type="checkbox" id="c-bank"><label for="c-bank">Bankaları listede göster<br><small>Ayrı yöntemle değerlendirilir.</small></label></div>
+      <div class="ctl"><button class="btn" id="c-reset" type="button">Varsayılan eşikler</button></div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="tablebox"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+    <p class="muted small">Büyüme sütunları son bilanço dönemini geçen yılın aynı dönemiyle karşılaştırır. PEG kaynağın kendi hesabıdır ve farklı bir dönem büyümesi kullanabilir. "ÖK kârl." özkaynak kârlılığının yaklaşık değeridir (PD/DD ÷ F/K). Sütun başlıklarına dokunarak sıralayın.</p>
+  </section>
+
+  <!-- BANKALAR -->
+  <section class="panel stack-lg" id="bankalar" role="tabpanel" hidden>
+    <div class="stack read">
+      <h2>Bankalar neden ayrı?</h2>
+      <p>Bir sanayi şirketi için borç bir yüktür; banka için ise hammaddedir. Mevduat (deposits) toplayıp kredi (loans) verir. Bu yüzden bankalarda FAVÖK, FD/FAVÖK ve net borç anlamsızdır. Temel soru şudur: <em>Özkaynağına ne kadar getiri sağlıyor ve piyasa bu özkaynağa kaç kat değer biçiyor?</em> "Mahalle sandığı" hikâyesi bunun küçük bir örneği.</p>
+      <p>Kural basittir: özkaynak kârlılığı yüksek bir bankanın PD/DD'si de yüksek olmayı hak eder. Getirisi yüksek ama PD/DD'si düşük kalan banka görece ucuz, getirisi düşük ama PD/DD'si yüksek olan banka görece pahalı sayılır.</p>
+    </div>
+    <div class="chartbox" id="bankchart"></div>
+    <div class="tablebox"><table id="banktbl"></table></div>
+    <div class="cards" id="bankterms"></div>
+  </section>
+
+  <!-- HESAP -->
+  <section class="panel stack-lg" id="hesap" role="tabpanel" hidden>
+    <div class="stack read">
+      <h2>Kendi hesabın</h2>
+      <p>Herhangi bir hissenin bilanço ve gelir tablosundan birkaç rakam girin; çarpanlar ve tarayıcıdaki ölçütler anında hesaplanır. Rakamları KAP'taki finansal tablolardan ya da bir veri sitesinden alabilirsiniz. Tüm tutarları aynı birimde girin (örneğin milyar TL).</p>
+      <p class="note">Örnek olarak BİM'in yaklaşık rakamları dolu geliyor. Kendi hissenizin rakamlarıyla değiştirin.</p>
+    </div>
+    <div class="calc">
+      <div class="controls" id="calcin">
+        <div class="ctl"><label for="h-pd">Piyasa değeri <span class="en">(Market cap)</span></label><input type="number" id="h-pd" step="any" value="495.6"><small>Hisse fiyatı × pay sayısı</small></div>
+        <div class="ctl"><label for="h-nk">Yıllık net kâr <span class="en">(Net income, TTM)</span></label><input type="number" id="h-nk" step="any" value="29.54"><small>Son 12 ay, ana ortaklık payı</small></div>
+        <div class="ctl"><label for="h-ok">Özkaynak <span class="en">(Equity)</span></label><input type="number" id="h-ok" step="any" value="201.35"><small>Bilançodaki toplam özkaynak</small></div>
+        <div class="ctl"><label for="h-fv">Yıllık FAVÖK <span class="en">(EBITDA)</span></label><input type="number" id="h-fv" step="any" value="55.75"><small>Faiz, vergi, amortisman öncesi kâr</small></div>
+        <div class="ctl"><label for="h-nb">Net borç <span class="en">(Net debt)</span></label><input type="number" id="h-nb" step="any" value="32.39"><small>Finansal borç − nakit (eksi olabilir)</small></div>
+        <div class="ctl"><label for="h-ng">Net kâr büyümesi %</label><input type="number" id="h-ng" step="any" value="44"><small>PEG için kullanılır</small></div>
+        <div class="ctl"><label for="h-fg">FAVÖK büyümesi %</label><input type="number" id="h-fg" step="any" value="23"><small>Büyümenin kalitesi için</small></div>
+        <div class="ctl check"><input type="checkbox" id="h-cyc"><label for="h-cyc">Döngüsel sektör<br><small>Emtia, metal, rafineri vb.</small></label></div>
+      </div>
+      <div class="out" id="calcout"></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Bu sayfa eğitim amaçlıdır, yatırım tavsiyesi değildir. Veriler gün içinde değişir; karar vermeden önce güncel bilançoyu ve fiyatı kontrol edin.</span>
+    <span>Kaynaklar: <a href="https://fintables.com" target="_blank" rel="noopener">Fintables</a> şirket sayfaları (çarpanlar, özet finansallar, analist hedefleri) · <a href="https://borsaistanbul.com/duyuru/15598/bist-pay-endeksleri-donemsel-degisiklikleri" target="_blank" rel="noopener">Borsa İstanbul endeks değişiklikleri</a></span>
+    <span>"Verileri güncelle" düğmesi, hesabınızdaki "BIST 30 veri güncelleme" adlı zamanlanmış görevi başlatır. Görev Fintables'tan verileri çeker ve birkaç dakika içinde bu sayfaya yazar.</span>
+  </footer>
+</div>
+
+<script>
+/* ---------- Biçimlendirme ---------- */
+const nf = (v,d=2)=> v==null||isNaN(v) ? "–" : Number(v).toLocaleString("tr-TR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct = (v,d=0)=> v==null ? "–" : (v>0?"+":"")+"%"+nf(v,d);
+const tl = v => nf(v,0)+" TL";
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $ = id => document.getElementById(id);
+
+/* ---------- Veri (Fintables, 2 Ekim 2026; büyüme: 2026/6 vs 2025/6) ---------- */
+const BASE_ASOF = "2026-10-02T15:00:00+03:00";
+let META = {asOf: BASE_ASOF, period: "2026/6", updated: false};
+const S=[
+{k:"AEFES",ad:"Anadolu Efes",sek:"Gıda-içecek",f:17.81,fk:10.51,pd:0.84,fdf:3.30,peg:-0.32,nb:1.26,mv:105,fg:26,ng:-7,h:27.56,cyc:false,not:"FAVÖK %26 artarken net kâr %7 gerilemiş; fark faaliyet dışı kalemlerden geliyor."},
+{k:"ASELS",ad:"Aselsan",sek:"Savunma",f:372.75,fk:40.66,pd:5.47,fdf:27.96,peg:0.64,nb:0.55,mv:1677,fg:31,ng:71,h:466.72,cyc:false,not:"Güçlü büyüme beklentisi fiyata yansımış. PEG makul ama F/K endeksin çok üzerinde."},
+{k:"ASTOR",ad:"Astor Enerji",sek:"Enerji ekipmanı",f:228.10,fk:20.23,pd:5.18,fdf:15.51,peg:0.49,nb:-0.67,mv:227,fg:16,ng:88,h:374.88,cyc:false,not:"Net kâr artışı FAVÖK artışının çok üzerinde; net parasal kaybın azalması kârı yukarı itmiş."},
+{k:"BIMAS",ad:"BİM",sek:"Perakende",f:407.50,fk:16.78,pd:2.46,fdf:9.47,peg:0.38,nb:0.58,mv:496,fg:23,ng:103,h:499.87,cyc:false,not:"Faaliyetler büyüyor; net kâr artışının bir kısmı net parasal pozisyon kazancından (+%32)."},
+{k:"EKGYO",ad:"Emlak Konut GYO",sek:"Gayrimenkul",f:19.03,fk:null,pd:0.47,fdf:5.95,peg:null,nb:2.49,mv:72,fg:-30,ng:-81,h:32.54,cyc:false,not:"Son 12 ayda zarar. GYO'larda PD/DD ve proje stoğu öne çıkar."},
+{k:"ENKAI",ad:"Enka İnşaat",sek:"İnşaat-enerji",f:82.65,fk:12.88,pd:1.22,fdf:9.84,peg:0.38,nb:-5.13,mv:503,fg:-2,ng:19,h:121.10,cyc:false,usd:"USD",not:"FAVÖK gerilerken net kâr artmış; fark faaliyet dışı gelirlerden. Güçlü net nakit pozisyonu var."},
+{k:"EREGL",ad:"Ereğli Demir Çelik",sek:"Demir-çelik",f:36.62,fk:33.28,pd:0.81,fdf:12.04,peg:0.70,nb:1.61,mv:257,fg:50,ng:415,h:46.79,cyc:true,usd:"USD",not:"Kâr düşük bir bazdan toparlanıyor; çelik fiyatlarına bağlı döngüsel iş."},
+{k:"FROTO",ad:"Ford Otosan",sek:"Otomotiv",f:73.80,fk:7.78,pd:1.44,fdf:7.29,peg:-0.24,nb:2.20,mv:258,fg:-34,ng:-40,h:139.88,cyc:false,not:"Satış, FAVÖK ve net kâr birlikte gerilemiş. Düşük F/K bu yüzden ucuzluk anlamına gelmeyebilir."},
+{k:"GUBRF",ad:"Gübre Fabrikaları",sek:"Gübre-kimya",f:420.50,fk:17.63,pd:3.56,fdf:9.25,peg:0.57,nb:-0.36,mv:140,fg:23,ng:58,h:null,cyc:false,not:"Satış, FAVÖK ve esas faaliyet kârı aynı hızda (%22-23) büyüyor; net nakit pozisyonunda. Analist kapsamı yok."},
+{k:"KCHOL",ad:"Koç Holding",sek:"Holding",f:212.50,fk:14.06,pd:0.67,fdf:5.48,peg:null,nb:3.63,mv:534,fg:32,ng:147,h:316.40,cyc:false,not:"Holding: değeri iştiraklerin toplamıdır ve net aktif değer iskontosuyla değerlendirilir. Konsolide borç, finans iştiraklerini de içerdiği için yüksek görünür."},
+{k:"KRDMD",ad:"Kardemir",sek:"Demir-çelik",f:43.42,fk:11.31,pd:0.46,fdf:5.26,peg:null,nb:0.03,mv:50,fg:51,ng:null,ngT:"zarardan kâra",h:51.05,cyc:true,not:"Geçen yıl aynı dönemde zarar, bu yıl kâr; büyüme oranı anlamlı hesaplanamaz."},
+{k:"MGROS",ad:"Migros",sek:"Perakende",f:500.00,fk:13.16,pd:0.97,fdf:3.09,peg:-0.91,nb:0.21,mv:91,fg:-7,ng:-42,h:906.20,cyc:false,not:"Esas faaliyet zararda; kâr büyük ölçüde net parasal pozisyon kazancından."},
+{k:"PETKM",ad:"Petkim",sek:"Petrokimya",f:19.38,fk:null,pd:0.65,fdf:64.61,peg:null,nb:32.41,mv:49,fg:null,fgT:"eksiden artıya",ng:null,ngT:"zarardan kâra",h:20.53,cyc:true,not:"Son 12 ayda zarar. FAVÖK çok düşük olduğu için borç oranı aşırı yüksek görünüyor."},
+{k:"PGSUS",ad:"Pegasus",sek:"Havayolu",f:141.50,fk:null,pd:0.63,fdf:8.68,peg:null,nb:6.28,mv:71,fg:-64,ng:null,ngT:"kârdan zarara",h:264.99,cyc:true,usd:"EUR",not:"Son dönemde zarara geçmiş; uçak finansmanı kaynaklı yüksek borç."},
+{k:"SAHOL",ad:"Sabancı Holding",sek:"Holding",f:86.70,fk:8.77,pd:0.43,fdf:3.87,peg:null,nb:2.39,mv:182,fg:16,ng:null,ngT:"zarardan kâra",h:157.71,cyc:false,not:"Holding: geçen yıl aynı dönemde zarar, bu yıl kâr. Banka iştiraki konsolide olduğundan borç oranları dikkatle okunmalı."},
+{k:"SASA",ad:"Sasa Polyester",sek:"Kimya-tekstil",f:1.92,fk:null,pd:0.52,fdf:18.03,peg:null,nb:10.36,mv:101,fg:159,ng:null,ngT:"zarardan kâra",h:null,cyc:true,not:"Son 12 ayda zarar; net borç FAVÖK'ün 10 katından fazla."},
+{k:"SISE",ad:"Şişecam",sek:"Cam-kimya",f:37.22,fk:9.74,pd:0.42,fdf:13.33,peg:0.06,nb:7.41,mv:114,fg:-26,ng:2,h:61.10,cyc:false,not:"Esas faaliyet kârı neredeyse sıfır; kâr parasal kazançtan geliyor. Çok düşük PEG yanıltıcı."},
+{k:"TAVHL",ad:"TAV Havalimanları",sek:"Havalimanı",f:262.00,fk:18.15,pd:1.17,fdf:6.58,peg:0.10,nb:3.19,mv:96,fg:31,ng:null,ngT:"zarardan kâra",h:445.76,cyc:false,usd:"EUR",not:"Geçen yıl zarardan bu yıl kâra geçiş; PEG baz etkisiyle düşük görünüyor."},
+{k:"TCELL",ad:"Turkcell",sek:"Telekom",f:98.80,fk:10.33,pd:0.70,fdf:2.11,peg:-0.25,nb:0.36,mv:217,fg:1,ng:3,h:158.46,cyc:false,not:"FAVÖK yatay; büyüme yok denecek kadar az. FD/FAVÖK ise endeksin en düşüklerinden."},
+{k:"THYAO",ad:"Türk Hava Yolları",sek:"Havayolu",f:291.00,fk:3.60,pd:0.40,fdf:7.01,peg:0.33,nb:4.25,mv:403,fg:-22,ng:-25,h:454.33,cyc:true,usd:"USD",not:"Kaynak PEG'i pozitif gösteriyor ama 2026/6'da FAVÖK ve net kâr gerilemiş; veri tutarsız."},
+{k:"TOASO",ad:"Tofaş",sek:"Otomotiv",f:265.25,fk:9.47,pd:2.02,fdf:15.43,peg:0.02,nb:4.76,mv:133,fg:16,ng:197,h:421.90,cyc:false,not:"Kâr düşük bazdan sıçramış; PEG 0,02 baz etkisi. Borç oranı yüksek."},
+{k:"TRALT",ad:"Türk Altın",sek:"Altın madenciliği",f:43.42,fk:25.58,pd:2.62,fdf:11.71,peg:0.48,nb:-2.13,mv:140,fg:213,ng:28,h:60.52,cyc:true,not:"Faaliyet kârı güçlü büyüyor ama altın fiyatına bağlı; net nakit pozisyonunda."},
+{k:"TRMET",ad:"TR Anadolu Metal",sek:"Metal madenciliği",f:127.30,fk:21.80,pd:1.63,fdf:2.76,peg:null,nb:-2.20,mv:49,fg:198,ng:-4,h:201.30,cyc:true,not:"1 Ekim'de BIST 30'a girdi. FAVÖK üç katına çıkmış ama net kâr yatay; parasal kayıp artmış."},
+{k:"TTKOM",ad:"Türk Telekom",sek:"Telekom",f:52.30,fk:6.06,pd:0.70,fdf:2.51,peg:0.07,nb:0.98,mv:186,fg:9,ng:26,h:88.48,cyc:false,not:"Net kâr artışında parasal kazanç (+%135) etkili; faaliyet büyümesi ılımlı."},
+{k:"TUPRS",ad:"Tüpraş",sek:"Rafineri",f:384.25,fk:10.31,pd:1.64,fdf:5.51,peg:0.07,nb:-1.16,mv:750,fg:123,ng:320,h:384.44,cyc:true,not:"Rafineri marjlarının yüksek olduğu dönem. Döngüsel zirvede kâr şişer, PEG çok düşük görünür."}
+];
+const B=[
+{k:"AKBNK",ad:"Akbank",f:67.40,fk:5.27,pd:1.08,mv:352,ng:38,h:99.98,npl:3.5,car:16.4,nim:3.1},
+{k:"GARAN",ad:"Garanti BBVA",f:125.70,fk:4.41,pd:1.08,mv:530,ng:20,h:190.22,npl:3.5,car:15.9,nim:5.7},
+{k:"ISCTR",ad:"İş Bankası (C)",f:12.43,fk:4.58,pd:0.61,mv:329,ng:0,h:19.31,npl:3.8,car:14.2,nim:2.9},
+{k:"VAKBN",ad:"VakıfBank",f:33.92,fk:4.40,pd:0.88,mv:336,ng:-2,h:42.60,npl:3.95,car:14.1,nim:3.7},
+{k:"YKBNK",ad:"Yapı Kredi",f:34.78,fk:5.33,pd:1.03,mv:295,ng:36,h:49.58,npl:4.3,car:14.4,nim:2.92}
+];
+B.forEach(b=>{b.bank=true;b.sek="Banka";});
+function derive(){ S.forEach(s=>{s.roe = s.fk ? s.pd/s.fk*100 : null;}); B.forEach(b=>{b.roe = b.fk ? b.pd/b.fk*100 : null;}); }
+derive();
+
+/* ---------- Grafik yardımcıları ---------- */
+const svgText=(x,y,t,o={})=>`<text x="${x}" y="${y}" font-size="${o.fs||12}" fill="${o.fill||"var(--ink)"}" font-family="${o.ff||"var(--ui)"}" font-weight="${o.fw||400}" text-anchor="${o.a||"start"}">${esc(t)}</text>`;
+const cw = id => { const el=$(id); const w = el ? el.clientWidth : 0; return w>0 ? Math.max(260, Math.floor(w)) : 0; };
+const tw = (t,fs=12,mono=false,bold=false)=> String(t).length*fs*(mono?0.62:(bold?0.6:0.56));
+const svgWrap=(W,H,label,g)=>`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}">${g}</svg>`;
+
+/* Yatay akış grafiği: gelir tablosu ve sandık için ortak.
+   Dar ekranda etiket çubuğun üstüne, genişte sola yazılır. */
+function flowChart(id, rows, o){
+  const W=cw(id); if(!W) return;
+  const narrow = W < 560, labW = narrow ? 0 : Math.min(210, Math.round(W*0.32));
+  const valW = 84, x0 = labW, x1 = W - valW, lo=o.lo, hi=o.hi;
+  const X = v => x0 + (v-lo)/(hi-lo)*(x1-x0);
+  const rh = narrow ? 44 : 34, bh = narrow ? 16 : 20;
+  let g="", run=0;
+  if(lo<0) g+=`<line x1="${X(0)}" x2="${X(0)}" y1="0" y2="${rows.length*rh}" stroke="var(--muted)" stroke-width="1"/>`;
+  rows.forEach((r,i)=>{
+    const y=i*rh; let a,b;
+    if(r.t==="minus"){a=run+r.v; b=run; run+=r.v;} else {a=Math.min(0,r.v); b=Math.max(0,r.v); run=r.v;}
+    const fill = r.t==="minus" ? "var(--bad)" : (r.t==="key" ? (r.v<0?"var(--bad)":"var(--c1)") : "var(--c3)");
+    const strong = r.t!=="minus";
+    let by;
+    if(narrow){
+      g+=svgText(0,y+12,r.lbl,{fw:strong?700:400,fs:12.5})+svgText(tw(r.lbl,12.5,false,strong)+10,y+12,r.en,{fs:10.5,fill:"var(--muted)"});
+      by=y+18;
+    } else {
+      g+=svgText(0,y+14,r.lbl,{fw:strong?700:400,fs:13})+svgText(0,y+28,r.en,{fs:10.5,fill:"var(--muted)"});
+      by=y+6;
+    }
+    g+=`<rect x="${X(a)}" y="${by}" width="${Math.max(X(b)-X(a),2)}" height="${bh}" rx="3" fill="${fill}" opacity="${r.t==="minus"?.55:1}"><title>${esc(r.lbl)}: ${o.fmt(r.v)}</title></rect>`;
+    g+=svgText(Math.max(X(a),X(b))+6,by+bh/2+4,o.fmt(r.v),{ff:"var(--mono)",fs:11.5,fw:r.t==="key"?700:400,fill:strong?"var(--ink)":"var(--muted)"});
+  });
+  $(id).innerHTML=svgWrap(W,rows.length*rh,o.aria,g);
+}
+const fmtBin = v => (v<0?"−":"")+nf(Math.abs(v)/1000,0)+" bin";
+const fmtBin1 = v => (v<0?"−":"")+nf(Math.abs(v)/1000,1)+" bin";
+
+/* Hikâye 1: bilanço yatay yığılmış çubuklar */
+function renderBilanco(){
+  const W=cw("v-bilanco"); if(!W) return;
+  const rows=[
+    {lbl:"Varlıklar",en:"Assets",parts:[["Makine ve dekorasyon",600000,"var(--c1)"],["Stok",50000,"var(--c2)"],["Nakit",150000,"var(--c3)"]]},
+    {lbl:"Borç + özkaynak",en:"Liabilities + equity",parts:[["Banka kredisi",200000,"var(--c4)"],["Özkaynak",600000,"var(--c1)"]]}];
+  const narrow = W<520, x0 = narrow?0:150, x1=W, sc=v=>v/800000*(x1-x0), bh=46;
+  let g="", y=0;
+  rows.forEach(r=>{
+    if(narrow){ g+=svgText(0,y+13,r.lbl,{fw:700,fs:13})+svgText(tw(r.lbl,13,false,true)+10,y+13,r.en,{fill:"var(--muted)",fs:10.5}); y+=20; }
+    else { g+=svgText(0,y+21,r.lbl,{fw:700,fs:13.5})+svgText(0,y+37,r.en,{fill:"var(--muted)",fs:11}); }
+    let x=x0;
+    r.parts.forEach(p=>{const w=sc(p[1]), amt=tl(p[1]);
+      g+=`<rect x="${x+1}" y="${y}" width="${Math.max(w-2,1)}" height="${bh}" rx="4" fill="${p[2]}"><title>${esc(p[0])}: ${amt}</title></rect>`;
+      const need=Math.max(tw(p[0],12),tw(amt,11,true))+16;
+      if(w>need){ g+=svgText(x+8,y+20,p[0],{fill:"#fff",fw:700,fs:12})+svgText(x+8,y+36,amt,{fill:"#fff",ff:"var(--mono)",fs:11}); }
+      x+=w;});
+    y+=bh+(narrow?18:26);
+  });
+  $("v-bilanco").innerHTML=svgWrap(W,y-(narrow?18:26),"Ayşe'nin Kahvesi bilançosu: varlıklar 800 bin TL; kaynaklar 200 bin kredi ve 600 bin özkaynak",g);
+  $("l-bilanco").innerHTML=[["Makine ve dekorasyon",600000,"var(--c1)"],["Stok",50000,"var(--c2)"],["Nakit",150000,"var(--c3)"],["Banka kredisi",200000,"var(--c4)"],["Özkaynak",600000,"var(--c1)"]]
+    .map(p=>`<span><i style="background:${p[2]}"></i>${esc(p[0])} <b class="mono">${tl(p[1])}</b></span>`).join("")+`<span>Her iki taraf: <b class="mono">800.000 TL</b></span>`;
+}
+
+/* Hikâye 2: gelir şelalesi */
+function renderGelir(){
+  flowChart("v-gelir",[
+    {lbl:"Hasılat",en:"Revenue",v:2000000,t:"total"},{lbl:"Satışların maliyeti",en:"COGS",v:-700000,t:"minus"},{lbl:"Brüt kâr",en:"Gross profit",v:1300000,t:"total"},
+    {lbl:"Kira, maaş, fatura",en:"Operating expenses",v:-900000,t:"minus"},{lbl:"FAVÖK",en:"EBITDA",v:400000,t:"key"},{lbl:"Amortisman",en:"Depreciation",v:-60000,t:"minus"},
+    {lbl:"Esas faaliyet kârı",en:"Operating profit (EBIT)",v:340000,t:"total"},{lbl:"Faiz gideri",en:"Interest expense",v:-60000,t:"minus"},{lbl:"Vergi (%25)",en:"Tax",v:-70000,t:"minus"},{lbl:"Net kâr",en:"Net income",v:210000,t:"key"}],
+    {lo:0,hi:2000000,fmt:fmtBin,aria:"Ayşe'nin Kahvesi gelir tablosu: 2 milyon hasılattan 210 bin net kâra"});
+}
+
+/* Hikâye 3: fiyat kaydırıcısı */
+const K={nk:210000,ok:600000,fv:400000,nb:50000,pay:100000};
+function fiyatState(){ const p=+$("s-price").value, gr=+$("s-growth").value, pd=p*K.pay, fk=pd/K.nk; return {p,gr,pd,fk}; }
+function renderFiyat(){
+  const {p,gr,pd,fk}=fiyatState();
+  $("o-price").textContent=p+" TL"; $("o-growth").textContent=(gr>0?"+":"")+"%"+gr;
+  const pddd=pd/K.ok, fd=pd+K.nb, fdf=fd/K.fv, peg= gr>0 ? fk/gr : null, roe=K.nk/K.ok*100;
+  const fkTxt = fk<8 ? "Ucuz bölge: kâr sabit kalsa bile fiyatı hızla geri öder." : fk<15 ? "Orta: kâr bu seviyede kalırsa makul bir fiyat." : "Yüksek: fiyatı haklı çıkarmak için kârın büyümesi gerekir.";
+  const pegTxt = peg==null ? "Kâr büyümüyorsa PEG anlamsızdır." : peg<1 ? "Büyümesine göre makul, tahmin doğruysa." : "Büyümesine göre pahalı.";
+  $("tiles-fiyat").innerHTML=`
+   <div><div class="k">Piyasa değeri<span class="en">Market cap</span></div><div class="v">${nf(pd/1e6,2)} mn TL</div><div class="d">${p} TL × 100.000 pay</div></div>
+   <div><div class="k">F/K<span class="en">P/E</span></div><div class="v">${nf(fk,1)}</div><div class="d">${fkTxt}</div></div>
+   <div><div class="k">PD/DD<span class="en">P/B</span></div><div class="v">${nf(pddd,2)}</div><div class="d">${pddd<0.995?"Defter değerinin altında.":pddd<1.05?"Tam defter değerinde.":"Defter değerinin "+nf(pddd,1)+" katı."}</div></div>
+   <div><div class="k">FD/FAVÖK<span class="en">EV/EBITDA</span></div><div class="v">${nf(fdf,1)}</div><div class="d">Firma değeri ${nf(fd/1e6,2)} mn TL, borç dahil.</div></div>
+   <div><div class="k">PEG<span class="en">PEG ratio</span></div><div class="v">${nf(peg,2)}</div><div class="d">${pegTxt}</div></div>
+   <div><div class="k">Kazanç verimi<span class="en">Earnings yield</span></div><div class="v">%${nf(100/fk,1)}</div><div class="d">1 ÷ F/K. Mevduat faiziyle kıyaslayın.</div></div>
+   <div><div class="k">ÖK kârlılığı<span class="en">ROE</span></div><div class="v">%${nf(roe,0)}</div><div class="d">Fiyattan bağımsız: işin kendi verimi.</div></div>
+   <div><div class="k">Hisse başına kâr<span class="en">EPS</span></div><div class="v">2,10 TL</div><div class="d">Fiyattan bağımsız.</div></div>`;
+  renderGauge();
+}
+function renderGauge(){
+  const W=cw("v-fiyat"); if(!W) return;
+  const {fk}=fiyatState(), x0=8,x1=W-8,mx=60, X=v=>x0+Math.min(v,mx)/mx*(x1-x0);
+  let g=svgText(x0,12,"F/K ölçeği",{fs:11.5,fill:"var(--muted)",fw:600});
+  g+=`<rect x="${x0}" y="22" width="${X(8)-x0}" height="10" fill="var(--good)" opacity=".35" rx="3"/><rect x="${X(8)}" y="22" width="${X(15)-X(8)}" height="10" fill="var(--warn)" opacity=".35"/><rect x="${X(15)}" y="22" width="${x1-X(15)}" height="10" fill="var(--bad)" opacity=".3" rx="3"/>`;
+  [0,8,15,30,45,60].forEach(v=>{g+=svgText(X(v),50,String(v),{a:v===0?"start":v===60?"end":"middle",fs:11,ff:"var(--mono)",fill:"var(--muted)"});});
+  g+=`<circle cx="${X(fk)}" cy="27" r="8" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`;
+  $("v-fiyat").innerHTML=svgWrap(W,56,"F/K ölçeği üzerinde mevcut konum",g);
+}
+
+/* Hikâye 4: PEG karşılaştırma */
+const PEG_C=[
+  {n:"Köşe Kahvecisi",g:5,nb:0,st:"bad",t:"büyümeye göre pahalı"},
+  {n:"Zincir Kahve",g:35,nb:1500000,st:"good",t:"ucuz ama borçlu"},
+  {n:"Film Seti Kahvesi",g:200,nb:0,st:"warn",t:"tek seferlik büyüme"}];
+function renderPeg(){
+  const W=cw("v-peg"); if(!W) return;
+  const fk=3000000/210000, narrow=W<560, labW=narrow?0:Math.min(200,Math.round(W*0.3)), top=22, rh=narrow?58:50;
+  const x0=labW, x1=W-84, mx=3, X=v=>x0+Math.min(v,mx)/mx*(x1-x0), plotH=PEG_C.length*rh;
+  let g="";
+  const band=i=> narrow ? [top+i*rh+18, top+i*rh+48] : [top+i*rh+4, top+i*rh+38];
+  [0,1,2,3].forEach(v=>{ PEG_C.forEach((c,i)=>{const [a,b]=band(i); g+=`<line x1="${X(v)}" x2="${X(v)}" y1="${a}" y2="${b}" stroke="${v===1?"var(--muted)":"var(--line)"}" stroke-width="${v===1?1.5:1}" ${v===1?'stroke-dasharray="4 4"':""}/>`;});
+    g+=svgText(X(v),top+plotH+16,nf(v,0),{a:v===0&&x0<6?"start":"middle",fs:11,ff:"var(--mono)",fill:"var(--muted)"});});
+  g+=svgText(X(1),narrow?top-8:top-6,"PEG = 1",{fs:11,fill:"var(--muted)",a:"middle",fw:600});
+  PEG_C.forEach((c,i)=>{
+    const y=top+i*rh, peg=fk/c.g, col=c.st==="good"?"var(--good)":c.st==="warn"?"var(--warn)":"var(--bad)";
+    let by;
+    if(narrow){ g+=svgText(0,y+12,c.n,{fw:700,fs:12.5})+svgText(tw(c.n,12.5,false,true)+10,y+12,"%"+c.g+" · "+c.t,{fill:"var(--muted)",fs:10.5}); by=y+22; }
+    else { g+=svgText(0,y+18,c.n,{fw:700,fs:13})+svgText(0,y+33,"büyüme %"+c.g+" · "+c.t,{fill:"var(--muted)",fs:10.5}); by=y+10; }
+    const bw=Math.max(X(peg)-x0,3);
+    g+=`<rect x="${x0}" y="${by}" width="${bw}" height="22" rx="4" fill="${col}"><title>${esc(c.n)}: PEG ${nf(peg,2)}</title></rect>`;
+    g+=svgText(x0+bw+6,by+15,nf(peg,2),{ff:"var(--mono)",fs:12,fw:700});
+  });
+  $("v-peg").innerHTML=svgWrap(W,top+plotH+22,"Üç kahvecinin PEG oranları",g);
+  $("t-peg").innerHTML=`<div class="tablebox"><table><thead><tr><th class="nosort">Kahveci</th><th class="nosort">F/K</th><th class="nosort">Büyüme</th><th class="nosort">PEG</th><th class="nosort">Net borç</th><th class="nosort">Firma değeri<small>EV</small></th></tr></thead><tbody>${PEG_C.map(c=>{const peg=fk/c.g, ev=3000000+c.nb;return `<tr><td class="name"><b style="font-family:var(--ui)">${esc(c.n)}</b></td><td>${nf(fk,1)}</td><td>%${c.g}</td><td>${nf(peg,2)}</td><td>${nf(c.nb/1e6,1)} mn</td><td>${nf(ev/1e6,1)} mn</td></tr>`;}).join("")}</tbody></table></div>`;
+}
+
+/* Hikâye 5: enflasyon */
+function enfState(){ const inf=+$("s-inf").value, op=210000, gain=200000*inf/100; return {inf,op,gain,rep:op+gain,real:200000/(1+inf/100)}; }
+function renderEnf(){
+  const {inf,op,gain,real}=enfState(); $("o-inf").textContent="%"+inf;
+  $("tiles-enf").innerHTML=`
+    <div><div class="k">Parasal kazanç<span class="en">Monetary gain</span></div><div class="v">${nf(gain/1000,0)} bin TL</div><div class="d">200.000 TL borç × %${inf}</div></div>
+    <div><div class="k">Net kâr artışı gibi görünen<span class="en">Apparent growth</span></div><div class="v">${pct(gain/op*100)}</div><div class="d">Satışlar aynı kaldığı hâlde</div></div>
+    <div><div class="k">Borcun alım gücü<span class="en">Real value of debt</span></div><div class="v">${nf(real/1000,0)} bin TL</div><div class="d">Yıl başı parasıyla</div></div>`;
+  renderEnfChart();
+}
+function renderEnfChart(){
+  const W=cw("v-enf"); if(!W) return;
+  const {op,gain,rep}=enfState(), narrow=W<560, labW=narrow?0:Math.min(200,Math.round(W*0.32)), x0=labW, x1=W-84, mx=380000, X=v=>x0+v/mx*(x1-x0);
+  const rows=[["Faaliyetten gelen kâr","Operating result",[[op,"var(--c1)"]]],["Raporlanan net kâr","Reported net income",[[op,"var(--c1)"],[gain,"var(--c2)"]]]];
+  const rh=narrow?52:48; let g="";
+  rows.forEach((r,i)=>{const y=i*rh; let by;
+    if(narrow){ g+=svgText(0,y+13,r[0],{fw:700,fs:12.5})+svgText(tw(r[0],12.5,false,true)+10,y+13,r[1],{fs:10.5,fill:"var(--muted)"}); by=y+20; }
+    else { g+=svgText(0,y+16,r[0],{fw:700,fs:13})+svgText(0,y+31,r[1],{fs:10.5,fill:"var(--muted)"}); by=y+6; }
+    let x=x0, tot=0; r[2].forEach(([v,c])=>{ if(v<=0) return; const w=X(v)-x0; g+=`<rect x="${x}" y="${by}" width="${Math.max(w-1,1)}" height="26" rx="4" fill="${c}"/>`; x+=w; tot+=v; });
+    g+=svgText(x+6,by+17,nf(tot/1000,0)+" bin",{ff:"var(--mono)",fs:12,fw:i?700:400});
+  });
+  $("v-enf").innerHTML=svgWrap(W,rows.length*rh,"Faaliyet kârı ve parasal kazanç dahil raporlanan net kâr",g);
+}
+
+/* Hikâye 6: dondurmacı */
+const DON_V=[-10,-10,0,20,60,120,160,150,60,10,-10,-15];
+function renderDondurma(){
+  const yr=DON_V.reduce((a,b)=>a+b,0), summer=DON_V[5]+DON_V[6]+DON_V[7], price=5000;
+  $("tiles-dondurma").innerHTML=`
+   <div><div class="k">Gerçek yıllık kâr<span class="en">Full-year net income</span></div><div class="v">${yr} bin TL</div><div class="d">12 ayın toplamı</div></div>
+   <div><div class="k">Gerçek F/K<span class="en">True P/E</span></div><div class="v">${nf(price/yr,1)}</div><div class="d">5 mn TL ÷ ${yr} bin</div></div>
+   <div><div class="k">Yazı yıla yayınca kâr<span class="en">Annualized peak</span></div><div class="v">${nf(summer*4,0)} bin TL</div><div class="d">Yaz çeyreği ${summer} bin × 4</div></div>
+   <div><div class="k">Yanıltıcı F/K<span class="en">Peak-earnings P/E</span></div><div class="v">${nf(price/(summer*4),1)}</div><div class="d">Üç kat ucuz görünüyor</div></div>`;
+  const W=cw("v-dondurma"); if(!W) return;
+  const M=["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"];
+  const H=Math.round(Math.min(280,Math.max(200,W*0.45))), m={l:38,r:4,t:26,b:24}, y0=-40,y1=160;
+  const bw=(W-m.l-m.r)/12, Y=v=>m.t+(y1-v)/(y1-y0)*(H-m.t-m.b);
+  let g=`<rect x="${m.l+5*bw}" y="${m.t-18}" width="${3*bw}" height="${H-m.t-m.b+18}" fill="var(--warn-soft)"/>`+svgText(m.l+6.5*bw,m.t-5,"Yaz çeyreği",{a:"middle",fs:11.5,fill:"var(--warn)",fw:700});
+  [-40,0,40,80,120,160].forEach(v=>{g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v===0?"var(--muted)":"var(--line)"}" stroke-width="1"/>`+svgText(m.l-6,Y(v)+4,String(v),{a:"end",fs:10.5,ff:"var(--mono)",fill:"var(--muted)"});});
+  DON_V.forEach((v,i)=>{const x=m.l+i*bw+bw*.2, w=bw*.6, top=v>=0?Y(v):Y(0), h=Math.max(Math.abs(Y(v)-Y(0)),2);
+    g+=`<rect x="${x}" y="${top}" width="${w}" height="${h}" rx="3" fill="${v<0?"var(--bad)":"var(--c1)"}"><title>${M[i]}: ${v} bin TL</title></rect>`;
+    g+=svgText(x+w/2,H-6,M[i],{a:"middle",fs:W<420?9.5:11,fill:"var(--muted)"});});
+  g+=svgText(0,m.t-5,"bin TL",{fs:10.5,fill:"var(--muted)"});
+  $("v-dondurma").innerHTML=svgWrap(W,H,"Dondurmacının aylık net kârı: yazın yüksek, kışın zarar",g);
+}
+
+/* Hikâye 7: sandık */
+function sandikState(){
+  const npl=+$("s-npl").value, L=950000, D=1000000, E=100000, fi=L*.45, fg=D*.35, nii=fi-fg, opex=30000, prov=L*npl/100, pre=nii-opex-prov, tax=pre>0?pre*.25:0, net=pre-tax;
+  return {npl,L,E,fi,fg,nii,opex,prov,tax,net,roe:net/E*100};
+}
+function renderSandik(){
+  const st=sandikState(); $("o-npl").textContent="%"+nf(st.npl,1);
+  const pd=150000;
+  $("tiles-sandik").innerHTML=`
+   <div><div class="k">ÖK kârlılığı<span class="en">ROE</span></div><div class="v ${st.roe<0?"v-bad":st.roe<10?"v-warn":"v-good"}">%${nf(st.roe,1)}</div><div class="d">Net kâr ÷ 100.000 TL özkaynak</div></div>
+   <div><div class="k">Kaldıraç<span class="en">Leverage</span></div><div class="v">11 kat</div><div class="d">1,1 mn TL varlık ÷ 100 bin özkaynak</div></div>
+   <div><div class="k">Sermaye yeterliliği (kaba)<span class="en">Capital adequacy</span></div><div class="v">%${nf(st.E/st.L*100,1)}</div><div class="d">Özkaynak ÷ krediler</div></div>
+   <div><div class="k">150 bin TL'ye satılırsa<span class="en">If sold for 150k TL</span></div><div class="v">PD/DD 1,50</div><div class="d">${st.net>0?"F/K "+nf(pd/st.net,1)+" · ÖK kârl. × F/K ≈ "+nf(st.roe/100*pd/st.net,2):"Zararda: F/K hesaplanamaz"}</div></div>`;
+  renderSandikChart();
+}
+function renderSandikChart(){
+  const st=sandikState();
+  flowChart("v-sandik",[
+    {lbl:"Kredi faiz geliri",en:"Interest income",v:st.fi,t:"total"},{lbl:"Mevduat faiz gideri",en:"Interest expense",v:-st.fg,t:"minus"},{lbl:"Net faiz geliri",en:"Net interest income",v:st.nii,t:"total"},
+    {lbl:"Personel, kira",en:"Operating expenses",v:-st.opex,t:"minus"},{lbl:"Batık kredi karşılığı",en:"Loan loss provisions",v:-st.prov,t:"minus"},{lbl:"Vergi",en:"Tax",v:-st.tax,t:"minus"},{lbl:"Net kâr",en:"Net income",v:st.net,t:"key"}],
+    {lo:-60000,hi:430000,fmt:fmtBin1,aria:"Mahalle sandığının gelir tablosu"});
+}
+
+/* ---------- Çarpan kartları ---------- */
+const CARDS=[
+{n:"F/K",en:"P/E, Price-to-Earnings",tam:"Fiyat / Kazanç",tag:"Bugünkü kârla, fiyatı kaç yılda geri öderim?",fx:"Piyasa değeri ÷ Yıllık net kâr",
+ band:[["< 8","düşük"],["8–15","orta"],["> 15","yüksek"]],
+ oku:"F/K 10 ise, kâr hiç değişmese şirket piyasa değerini 10 yılda kazanır. Tersini alırsanız kazanç verimi (earnings yield) elde edersiniz: F/K 10 = %10 kazanç verimi. Bunu faiz ve enflasyonla kıyaslamak işe yarar.",
+ tuzak:"Düşük F/K kâr geçici olarak şişmişse (döngüsel zirve, tek seferlik gelir) yanıltır. Zarar eden şirkette F/K hesaplanamaz.",
+ ex:"THYAO 3,60 ile en düşüklerden ama kârı gerilemiş; ASELS 40,66 ile en yüksek, çünkü piyasa güçlü büyüme bekliyor."},
+{n:"PD/DD",en:"P/B, Price-to-Book",tam:"Piyasa Değeri / Defter Değeri",tag:"Şirketin özkaynağına kaç kat fiyat ödüyorum?",fx:"Piyasa değeri ÷ Özkaynak",
+ band:[["< 1","özkaynağın altında"],["1–2","orta"],["> 2","primli"]],
+ oku:"1'in altı, piyasanın şirketi muhasebedeki özkaynağından düşük fiyatladığını gösterir. Bankalar ve varlık ağırlıklı şirketler için en önemli çarpandır.",
+ tuzak:"Özkaynağına iyi getiri sağlamayan şirket haklı olarak 1'in altında işlem görür. PD/DD her zaman özkaynak kârlılığıyla birlikte okunmalı.",
+ ex:"SAHOL 0,43 ve SISE 0,42 defterin çok altında; BIMAS 2,46 primli ama özkaynağına istikrarlı getiri sağlıyor."},
+{n:"FD/FAVÖK",en:"EV/EBITDA",tam:"Firma Değeri / FAVÖK",tag:"Borç dahil şirketi, faaliyet kârının kaç katına alıyorum?",fx:"(Piyasa değeri + Net borç) ÷ Yıllık FAVÖK",
+ band:[["< 6","düşük"],["6–10","orta"],["> 10","yüksek"]],
+ oku:"F/K'dan farkı borcu hesaba katmasıdır. İki şirketin F/K'sı aynıysa, borçlu olanın FD/FAVÖK'ü daha yüksek çıkar. Faaliyet kârına baktığı için faiz, kur ve parasal kazanç gibi kalemlerden etkilenmez.",
+ tuzak:"Bankalarda kullanılmaz. Yatırım dönemindeki, FAVÖK'ü henüz oluşmamış şirketlerde çok yüksek görünür.",
+ ex:"TCELL 2,11 ve TTKOM 2,51 en düşükler; PETKM 64,61 ile FAVÖK'ü çok zayıf."},
+{n:"PEG",en:"PEG ratio, Price/Earnings-to-Growth",tam:"F/K / Büyüme",tag:"Ödediğim F/K, şirketin büyümesine göre makul mü?",fx:"F/K ÷ Yıllık net kâr büyümesi (%)",
+ band:[["< 0","kâr düşüyor"],["0–1","büyümeye göre ucuz"],["> 1","pahalı"]],
+ oku:"F/K 20 olan ama kârını yılda %40 büyüten şirketin PEG'i 0,5'tir; F/K 10 olup %5 büyüyenin PEG'i 2'dir. PEG, yüksek F/K'lı büyüme şirketlerini adil kıyaslamaya yarar.",
+ tuzak:"Büyüme oranı düşük bir bazdan geliyorsa (zarardan kâra, kötü bir yıldan toparlanma) PEG yapay olarak sıfıra yaklaşır. 0,1'in altındaki PEG çoğunlukla bir uyarıdır, fırsat değil.",
+ ex:"GUBRF 0,57 büyümesi faaliyetten geldiği için güvenilir; TOASO 0,02 ve TUPRS 0,07 baz etkisi yüzünden yanıltıcı."},
+{n:"ÖK kârlılığı",en:"ROE, Return on Equity",tam:"Özkaynak kârlılığı",tag:"Ortakların koyduğu her 100 TL'ye yılda kaç TL kâr?",fx:"Net kâr ÷ Özkaynak  ≈  PD/DD ÷ F/K",
+ band:[["< %10","zayıf"],["%10–20","iyi"],["> %20","güçlü"]],
+ oku:"Şirketin sermayeyi ne kadar verimli kullandığını gösterir. Pratik bir kısayol: PD/DD'yi F/K'ya bölerseniz yaklaşık özkaynak kârlılığını bulursunuz. Yüksek ve istikrarlı kârlılık, yüksek PD/DD'yi haklı çıkarır.",
+ tuzak:"Yüksek borçla şişirilmiş kârlılık risklidir. Enflasyon döneminde nominal kârlılığı enflasyonla kıyaslamak gerekir.",
+ ex:"GARAN ≈ %24,5 ile bankalar arasında en yüksek; ISCTR ≈ %13,3 ile en düşük ve PD/DD'si de en düşük."},
+{n:"Net borç / FAVÖK",en:"Net debt/EBITDA",tam:"Borçluluk",tag:"Borcunu kaç yıllık faaliyet kârıyla kapatır?",fx:"(Finansal borç − Nakit) ÷ Yıllık FAVÖK",
+ band:[["< 0","net nakit"],["0–2,5","rahat"],["> 3","yüksek"]],
+ oku:"Eksi değer, şirketin borcundan fazla nakdi olduğu anlamına gelir (net cash). Yüksek faiz ortamında yüksek borç, faaliyet kârının büyük kısmını faize gönderir.",
+ tuzak:"FAVÖK geçici olarak düşükse oran aşırı büyük görünür. Holdinglerde finans iştirakleri konsolide edildiği için oran yanıltıcı olabilir.",
+ ex:"ENKAI −5,13 ile çok güçlü nakit; SASA 10,36 ve PETKM 32,41 ile borç baskısı yüksek."}
+];
+$("cards").innerHTML = CARDS.map(c=>`
+<article class="card">
+  <div><span class="eyebrow">${esc(c.tam)}</span><h3>${esc(c.n)} <span class="en">(${esc(c.en)})</span></h3><p class="tag">${esc(c.tag)}</p></div>
+  <div class="formula">${esc(c.fx)}</div>
+  <div><div class="lbl">Kabaca okuma</div><div class="band">${c.band.map(b=>`<span><b class="mono">${esc(b[0])}</b> ${esc(b[1])}</span>`).join("")}</div></div>
+  <div><div class="lbl">Nasıl okunur</div><p>${esc(c.oku)}</p></div>
+  <p class="trap"><b>Tuzak:</b> ${esc(c.tuzak)}</p>
+  <div class="ex"><div class="lbl">BIST 30'dan örnek</div><p>${esc(c.ex)}</p></div>
+</article>`).join("");
+
+const TR=[
+["Enflasyon muhasebesi (TMS 29 / IAS 29, hyperinflation accounting)","2024'ten beri Türk şirketleri bilançolarını enflasyona göre düzeltiyor. Rakamlar reel hale geliyor ama yeni bir kalem doğuyor: net parasal pozisyon kazancı veya kaybı."],
+["Parasal kazanç ≠ faaliyet kârı (monetary gain vs operating profit)","Parasal kazanç, enflasyon karşısında borcun reel olarak erimesinden doğar; şirket bir ürün satmadan oluşur. Net kâr bu kalemle büyüyorsa FAVÖK'e ve esas faaliyet kârına bakın. MGROS ve SISE bunun örneği."],
+["Baz etkisi (base effect)","Geçen yıl kâr çok düşük ya da zarardaysa, bu yılki normal bir kâr bile %300 büyüme gibi görünür. PEG bu durumda sıfıra yaklaşır ve yanıltır."],
+["Fonksiyonel para birimi (functional currency)","THYAO, EREGL ve ENKAI USD; PGSUS ve TAVHL EUR ile raporlar. Bu şirketlerin kârı kur hareketinden TL bazında farklı etkilenir."],
+["Analist hedef fiyatları (consensus target price)","Hedefler 12 aylık ve nominal TL'dir, yani enflasyon payını da içerir. %50 potansiyel yüksek enflasyonda olağandır. Hedefler zaman zaman eski kalabilir."],
+["Fiili dolaşım (free float)","Halka açık ve işlem gören payların oranı. VAKBN'de yaklaşık %6, KRDMD'de %92. Düşük dolaşım, fiyatın daha sert hareket edebileceği anlamına gelir."]
+];
+$("trlist").innerHTML = TR.map(t=>`<div><b>${esc(t[0])}</b><span>${esc(t[1])}</span></div>`).join("");
+
+/* ---------- Sözlük ---------- */
+const GL=[
+["Temel büyüklükler",[
+ ["Piyasa değeri","Market capitalization, market cap","Şirketin borsadaki toplam değeri. Bütün payları bugünkü fiyattan alsaydınız ödeyeceğiniz tutar.","Hisse fiyatı × Pay sayısı"],
+ ["Pay / lot","Share","Şirketin sahiplik birimi. Borsa İstanbul'da 1 lot = 1 pay. Ayşe'nin Kahvesi 100.000 paya bölünmüş."],
+ ["Ödenmiş sermaye","Paid-in capital","Ortakların şirkete koyduğu nominal sermaye. 1 TL nominal değer 1 pay demektir, bu yüzden pay sayısını verir."],
+ ["Varlıklar (aktifler)","Assets","Şirketin sahip olduğu her şey: nakit, stok, alacaklar, makine, bina."],
+ ["Yükümlülükler (borçlar)","Liabilities","Şirketin başkalarına borçlu olduğu her şey: banka kredisi, tedarikçi borcu, kira yükümlülüğü."],
+ ["Özkaynak / özsermaye","Shareholders' equity","Varlıklardan borçlar çıkınca ortaklara kalan kısım. Ortakların koyduğu sermaye ve yıllar içinde dağıtılmayıp biriken kârlardan oluşur.","Varlıklar − Yükümlülükler"],
+ ["Defter değeri","Book value","Özkaynağın başka bir adı. Hisse başına defter değeri, özkaynağın pay sayısına bölümüdür.","Özkaynak ÷ Pay sayısı"],
+ ["Net borç","Net debt","Şirketin finansal borcundan elindeki nakdi düşünce kalan. Eksiyse şirket net nakit (net cash) pozisyonundadır.","Finansal borç − Nakit ve benzerleri"],
+ ["Firma değeri","Enterprise value, EV","Şirketi borcuyla birlikte satın almanın maliyeti. Borçlu bir şirketi alan, borcunu da üstlenir.","Piyasa değeri + Net borç"]]],
+["Gelir tablosu",[
+ ["Hasılat / satışlar","Revenue, sales","Şirketin bir dönemde sattığı mal ve hizmetlerin toplam tutarı. Gelir tablosunun en üst satırı (top line)."],
+ ["Satışların maliyeti","Cost of goods sold, COGS","Satılan ürünün doğrudan maliyeti: kahvecide çekirdek, süt ve bardak."],
+ ["Brüt kâr","Gross profit","Satıştan satışların maliyeti çıkınca kalan. Brüt kâr marjı (gross margin), ürünün kendi kârlılığını gösterir.","Hasılat − Satışların maliyeti"],
+ ["Faaliyet giderleri","Operating expenses, OPEX","İşi döndürmek için yapılan genel giderler: kira, maaşlar, pazarlama, faturalar."],
+ ["FAVÖK","EBITDA","Faiz, vergi ve amortisman öncesi kâr. İşin kendisinin nakit üretme gücünün kaba ölçüsü.","Brüt kâr − Faaliyet giderleri (amortisman hariç)"],
+ ["Amortisman","Depreciation & amortization, D&A","Makine ve bina gibi uzun ömürlü varlıkların yıllar içinde yıpranma payının gidere yazılması. Nakit çıkışı değildir."],
+ ["Esas faaliyet kârı","Operating profit, EBIT","Asıl işten elde edilen kâr; amortisman düşülmüş, faiz ve vergi düşülmemiş hâli.","FAVÖK − Amortisman"],
+ ["Finansman gideri","Interest expense","Borçlar için ödenen faiz. Yüksek faizli dönemde borçlu şirketlerin kârını eritir."],
+ ["Net kâr / net dönem kârı","Net income, net profit","Tüm giderler, faiz ve vergi düşüldükten sonra ortaklara kalan kâr. Gelir tablosunun en alt satırı (bottom line)."],
+ ["Hisse başına kâr (HBK)","Earnings per share, EPS","Net kârın pay sayısına bölümü. Fiyatı HBK'ya bölerseniz F/K'yı bulursunuz.","Net kâr ÷ Pay sayısı"],
+ ["Kâr marjı","Profit margin","Satışların ne kadarının kâra dönüştüğü. FAVÖK marjı (EBITDA margin) ve net kâr marjı (net margin) en sık kullanılanlardır.","Kâr ÷ Hasılat"],
+ ["Son 12 ay","Trailing twelve months, TTM","Çarpanlarda kullanılan yıllık kâr. Son dört çeyreğin toplamıdır, böylece mevsimsellik ortadan kalkar."]]],
+["Nakit ve temettü",[
+ ["Faaliyetlerden nakit akışı","Operating cash flow","İşten fiilen kasaya giren nakit. Kâr muhasebe rakamıdır; nakit gerçektir."],
+ ["Yatırım harcaması","Capital expenditure, CapEx","Yeni makine, şube, fabrika gibi uzun vadeli varlıklara yapılan harcama."],
+ ["Serbest nakit akımı","Free cash flow, FCF","Yatırımlar yapıldıktan sonra şirkette kalan nakit. Temettü ve borç ödemesi buradan yapılır.","Faaliyetlerden nakit − Yatırım harcaması"],
+ ["Temettü","Dividend","Şirketin kârının bir kısmını nakit olarak ortaklarına dağıtması."],
+ ["Temettü verimi","Dividend yield","Hisse başına temettünün fiyata oranı. Mevduat faiziyle kıyaslanır.","Hisse başı temettü ÷ Fiyat"],
+ ["Dağıtım oranı","Payout ratio","Net kârın ne kadarının temettü olarak dağıtıldığı.","Temettü ÷ Net kâr"]]],
+["Oranlar",[
+ ["Kazanç verimi","Earnings yield","F/K'nın tersi. Hisseye yatırdığınız her 100 TL için şirketin yılda kaç TL kâr ettiği.","1 ÷ F/K"],
+ ["Aktif kârlılığı","Return on assets, ROA","Şirketin tüm varlıklarına göre kârlılığı. Bankalarda ROE ile birlikte izlenir.","Net kâr ÷ Toplam varlıklar"],
+ ["Cari oran","Current ratio","Kısa vadeli borçları, bir yıl içinde nakde dönecek varlıklarla ödeyebilme gücü. 1'in altı dikkat ister.","Dönen varlıklar ÷ Kısa vadeli yükümlülükler"],
+ ["Kaldıraç","Leverage","Şirketin kendi parasına göre ne kadar borçla çalıştığı. Kârı da zararı da büyütür.","Toplam varlıklar ÷ Özkaynak"],
+ ["Çarpan","Multiple","Fiyatın bir finansal büyüklüğe oranı: F/K, PD/DD, FD/FAVÖK gibi."]]],
+["Piyasa",[
+ ["Endeks","Index","Bir hisse grubunun toplu performansını gösteren gösterge. BIST 30, piyasa değeri ve likiditesi en yüksek 30 hisseden oluşur ve üç ayda bir güncellenir."],
+ ["Fiili dolaşım oranı","Free float","Halka açık ve borsada işlem gören payların toplam paylara oranı."],
+ ["Halka arz","Initial public offering, IPO","Bir şirketin paylarını ilk kez borsada satışa sunması."],
+ ["Bedelsiz sermaye artırımı","Bonus issue, stock split","Kâr veya yedeklerden yeni pay dağıtılması. Pay sayısı artar, fiyat aynı oranda düşer; şirketin değeri değişmez."],
+ ["Bedelli sermaye artırımı","Rights issue","Ortakların şirkete yeni para koyarak yeni pay alması. Şirkete taze sermaye girer."],
+ ["Pay geri alımı","Share buyback","Şirketin kendi paylarını borsadan satın alması. Yönetimin hisseyi ucuz bulduğuna dair bir işaret olarak okunur."],
+ ["Konsensüs hedef fiyat","Consensus target price","Hisseyi takip eden analistlerin 12 aylık hedef fiyatlarının ortalaması."],
+ ["KAP","Public Disclosure Platform","Kamuyu Aydınlatma Platformu. Şirketlerin bilanço ve önemli açıklamalarını yayımladığı resmî kaynak."]]],
+["Türkiye'ye ve yönteme özgü",[
+ ["Enflasyon muhasebesi","Hyperinflation accounting, IAS 29 / TMS 29","Yüksek enflasyonlu ülkelerde finansal tabloların satın alma gücüne göre yeniden ifade edilmesi. Türkiye'de 2024 yılından beri uygulanıyor."],
+ ["Net parasal pozisyon kazancı","Net monetary position gain","Parasal borçların enflasyon karşısında reel olarak erimesinden doğan muhasebe kârı. Satıştan gelmez."],
+ ["Fonksiyonel para birimi","Functional currency","Şirketin ana faaliyetlerini yürüttüğü ve kayıtlarını tuttuğu para birimi (THYAO için USD)."],
+ ["Baz etkisi","Base effect","Kıyaslanan önceki dönemin olağandışı düşük ya da yüksek olması nedeniyle büyüme oranının abartılı görünmesi."],
+ ["Döngüsel hisse","Cyclical stock","Kârı ekonomik döngüye, emtia fiyatına veya mevsime göre güçlü biçimde dalgalanan şirket."],
+ ["Değer tuzağı","Value trap","Çarpanları ucuz göründüğü hâlde ucuzluğunun haklı bir nedeni olan, kârı geriye gidecek hisse."]]],
+["Bankacılık",[
+ ["Mevduat","Deposits","Bankaya yatırılan para. Bankanın en büyük fonlama kaynağı ve borcudur."],
+ ["Net faiz marjı","Net interest margin, NIM","Kredilerden alınan faizle mevduata ödenen faiz arasındaki farkın varlıklara oranı."],
+ ["Takipteki krediler oranı","Non-performing loans ratio, NPL","Geri ödenmeyen kredilerin toplam kredilere oranı."],
+ ["Karşılık gideri","Loan loss provision","Geri dönmeyeceği tahmin edilen krediler için ayrılan gider. NPL arttıkça artar ve kârı düşürür."],
+ ["Sermaye yeterlilik oranı","Capital adequacy ratio, CAR","Bankanın riskli varlıklarına karşı tuttuğu sermaye tamponu. Yasal alt sınırın rahat üzerinde olması beklenir."]]]
+];
+function renderGloss(){
+  const q=($("g-q").value||"").toLocaleLowerCase("tr");
+  $("glossary").innerHTML = GL.map(([grp,items])=>{
+    const f=items.filter(i=>!q || (i[0]+" "+i[1]+" "+i[2]).toLocaleLowerCase("tr").includes(q));
+    if(!f.length) return "";
+    return `<div class="ggroup"><h3>${esc(grp)}</h3><dl class="gloss">${f.map(i=>`<div><dt>${esc(i[0])} <span class="en">(${esc(i[1])})</span></dt><dd>${esc(i[2])}${i[3]?`<span class="fx">${esc(i[3])}</span>`:""}</dd></div>`).join("")}</dl></div>`;
+  }).join("") || `<p class="muted">"${esc($("g-q").value)}" için terim bulunamadı.</p>`;
+}
+$("g-q").addEventListener("input",renderGloss);
+
+/* ---------- Adımlar ---------- */
+const STEPS=[
+["Şirket ne iş yapıyor?","Sektör, hangi çarpanın geçerli olduğunu belirler. Bankada PD/DD ile özkaynak kârlılığı, holdingde net aktif değer (NAV), sanayide FD/FAVÖK, büyüme şirketinde PEG öne çıkar. Döngüsel bir işte bugünkü kâr, ortalama kârın üstünde ya da altında olabilir.",["Sektör","Döngüsellik (cyclicality)"],"TUPRS'ın kârı rafineri marjına, TRALT'ınki altın fiyatına bağlı."],
+["Kâr gerçek mi?","Net kâr büyümesini FAVÖK ve esas faaliyet kârıyla karşılaştırın. Faaliyetler büyümeden net kâr sıçrıyorsa, kaynağı parasal kazanç, finansal gelir ya da baz etkisidir ve kalıcı olmayabilir.",["FAVÖK büyümesi (EBITDA growth)","Esas faaliyet kârı (EBIT)","Parasal kazanç"],"GUBRF'ta satış, FAVÖK ve net kâr aynı yönde büyüyor; MGROS'ta esas faaliyet zararda."],
+["Bilanço sağlam mı?","Net borç/FAVÖK 2,5'in altında mı? Nakit fazlası var mı? Yüksek faizde borçlu şirketin kârını faiz gideri yer.",["Net borç/FAVÖK","Nakit (cash)"],"ENKAI ve TUPRS net nakitte; SASA ve PETKM borç baskısı altında."],
+["Fiyat makul mü?","Ancak şimdi çarpanlara bakın: F/K, PD/DD, FD/FAVÖK. Hissenin kendi geçmiş ortalamasıyla ve sektördeki benzerleriyle kıyaslayın. Büyüme varsa PEG ile düzeltin.",["F/K (P/E)","PD/DD (P/B)","FD/FAVÖK (EV/EBITDA)","PEG"],"ASELS pahalı görünür ama PEG 0,64; TCELL ucuz görünür ama büyümüyor."],
+["Büyüme sürecek mi?","Geçmiş büyüme geleceği garanti etmez. Kapasite yatırımları, sipariş birikimi, sektör döngüsü ve analist beklentileri bu soruyu cevaplar. Tarayıcı geçmişe bakar; bu adım geleceğe.",["Analist beklentisi","Yatırım planı (CapEx)","Sektör trendi"],"Kasım başındaki 3. çeyrek bilançoları bu tablonun güncellenmesi için ilk fırsat."]
+];
+$("steps").innerHTML = STEPS.map(s=>`<li><div><h3>${esc(s[0])}</h3><p>${esc(s[1])}</p><div class="chips">${s[2].map(c=>`<span class="chip">${esc(c)}</span>`).join("")}</div><p class="muted ex"><b>Örnek:</b> ${esc(s[3])}</p></div></li>`).join("");
+const WIDEN=[
+["Serbest nakit akımı (free cash flow)","Kâr muhasebe rakamıdır; nakit ise gerçektir. Faaliyetten gelen nakit, yatırım harcamasını karşılıyor mu? Kâr eden ama nakit yakan şirketler dikkat ister."],
+["Temettü politikası (dividend policy)","Düzenli temettü, kârın gerçek olduğunun işaretlerinden biridir. Temettü verimini mevduat faiziyle kıyaslayın."],
+["Tarihsel çarpan bandı (historical multiple range)","Bir hissenin F/K'sı bugün 10 ise, son 5 yılda genelde kaç olduğuna bakın. Kendi ortalamasının altında işlem görmesi, sektör ortalamasından daha anlamlıdır."],
+["Faiz ortamı (interest rates)","Kazanç verimi (1 ÷ F/K) risksiz faizin çok altındaysa, piyasa güçlü büyüme bekliyor demektir. Faiz düştükçe çarpanlar genelde yükselir."],
+["Kur duyarlılığı (FX sensitivity)","İhracatçı ve döviz geliri olan şirketler TL değer kaybından fayda görebilir; döviz borçlu olanlar zarar görür."],
+["Sahiplik ve likidite (ownership, liquidity)","Yabancı payı, fiili dolaşım oranı ve günlük işlem hacmi, hissenin ne kadar kolay alınıp satılacağını belirler."]
+];
+$("widen").innerHTML = WIDEN.map(t=>`<div><b>${esc(t[0])}</b><span>${esc(t[1])}</span></div>`).join("");
+
+/* ---------- Tarama mantığı ---------- */
+const DEF={fk:30,peg:1,nb:2.5,fg:0,cyc:true,bank:false};
+function evaluate(s,th){
+  const C=[];
+  if(s.bank){
+    C.push({n:"Banka",st:"na",s:"Banka: ayrı yöntemle değerlendirilir",t:"Bankalar FAVÖK, borç ve PEG ile değerlendirilmez. 'Bankalar' sekmesinde PD/DD ile özkaynak kârlılığına bakın."});
+    if(s.roe!=null) C.push({n:"ÖK kârlılığı",st:s.roe>=20?"good":s.roe>=12?"warn":"bad",s:`ÖK kârlılığı ≈ %${nf(s.roe,1)}`,t:`Yaklaşık özkaynak kârlılığı %${nf(s.roe,1)} (PD/DD ${nf(s.pd)} ÷ F/K ${nf(s.fk)}).`});
+    return {checks:C,verdict:"na",warns:0};
+  }
+  C.push(s.fk==null ? {n:"Kâr",st:"bad",s:"Zarar ediyor (son 12 ay)",t:"Son 12 ayda zarar ediyor; F/K ve PEG hesaplanamaz."}
+                    : {n:"Kâr",st:"good",s:"Kârlı",t:`Son 12 ayda kârlı. Kazanç verimi %${nf(100/s.fk,1)}.`});
+  if(s.fk!=null) C.push(s.fk<=th.fk ? {n:"F/K",st:"good",s:`F/K ${nf(s.fk,1)} ≤ ${nf(th.fk,0)}`,t:`F/K ${nf(s.fk)}, eşiğin (${nf(th.fk,0)}) altında. Kâr sabit kalsa fiyatı yaklaşık ${nf(s.fk,0)} yılda geri öder.`}
+                                    : {n:"F/K",st:"bad",s:`F/K ${nf(s.fk,1)} > ${nf(th.fk,0)}: pahalı`,t:`F/K ${nf(s.fk)}, eşiğin (${nf(th.fk,0)}) üzerinde. Piyasa yüksek büyüme fiyatlıyor.`});
+  if(s.fk!=null){
+    if(s.peg==null) C.push({n:"PEG",st:"warn",s:"PEG hesaplanamıyor",t:"PEG hesaplanamıyor; büyüme oranı anlamlı değil (zarardan kâra geçiş veya veri yok)."});
+    else if(s.peg<0) C.push({n:"PEG",st:"bad",s:`PEG ${nf(s.peg)}: kâr düşüyor`,t:`PEG ${nf(s.peg)}: eksi değer kârın düştüğünü gösterir.`});
+    else if(s.peg<=0.15) C.push({n:"PEG",st:"warn",s:`PEG ${nf(s.peg)}: şüpheli derecede düşük`,t:`PEG ${nf(s.peg)} olağandışı düşük; büyüme büyük olasılıkla baz etkisi veya tek seferlik kalemlerden.`});
+    else if(s.peg<=th.peg) C.push({n:"PEG",st:"good",s:`PEG ${nf(s.peg)} ≤ ${nf(th.peg,1)}`,t:`PEG ${nf(s.peg)}, eşiğin (${nf(th.peg,1)}) altında: F/K büyümesine göre makul.`});
+    else C.push({n:"PEG",st:"bad",s:`PEG ${nf(s.peg)} > ${nf(th.peg,1)}: büyümeye göre pahalı`,t:`PEG ${nf(s.peg)}, eşiğin (${nf(th.peg,1)}) üzerinde: büyümeye göre pahalı.`});
+  }
+  if(s.fg==null) C.push({n:"Büyüme kalitesi",st:"warn",s:`FAVÖK ${s.fgT||"karşılaştırılamıyor"}`,t:`FAVÖK ${s.fgT||"karşılaştırılamıyor"}; faaliyet büyümesi ölçülemiyor.`});
+  else if(s.fg<th.fg) C.push({n:"Büyüme kalitesi",st:"bad",s:`FAVÖK ${pct(s.fg)}: faaliyet büyümüyor`,t:`FAVÖK büyümesi ${pct(s.fg)}, eşiğin (${pct(th.fg)}) altında: faaliyetler büyümüyor.`});
+  else if(s.ng==null) C.push({n:"Büyüme kalitesi",st:"warn",s:`Net kâr ${s.ngT||"karşılaştırılamıyor"}: baz etkisi`,t:`FAVÖK ${pct(s.fg)} büyümüş; net kâr ${s.ngT||"karşılaştırılamıyor"}, bu yüzden baz etkisi var.`});
+  else if(s.ng>s.fg+50) C.push({n:"Büyüme kalitesi",st:"warn",s:`Net kâr ${pct(s.ng)}, FAVÖK ${pct(s.fg)}: fark faaliyet dışı`,t:`Net kâr ${pct(s.ng)}, FAVÖK ise ${pct(s.fg)} büyümüş. Aradaki fark faaliyet dışı kalemlerden; kalıcı olmayabilir.`});
+  else C.push({n:"Büyüme kalitesi",st:"good",s:`Büyüme faaliyetten (FAVÖK ${pct(s.fg)})`,t:`FAVÖK ${pct(s.fg)}, net kâr ${pct(s.ng)}: büyüme faaliyetlerle uyumlu.`});
+  C.push(s.nb<=th.nb ? {n:"Borç",st:"good",s: s.nb<0?"Net nakit":`Borç makul (${nf(s.nb,1)}x)`,t: s.nb<0 ? `Net nakit pozisyonunda (Net borç/FAVÖK ${nf(s.nb)}).` : `Net borç/FAVÖK ${nf(s.nb)}, eşiğin (${nf(th.nb,1)}) altında.`}
+                     : {n:"Borç",st:"bad",s:`Borç yüksek (${nf(s.nb,1)}x > ${nf(th.nb,1)})`,t:`Net borç/FAVÖK ${nf(s.nb)}, eşiğin (${nf(th.nb,1)}) üzerinde: borç yükü yüksek.`});
+  if(th.cyc && s.cyc) C.push({n:"Döngüsellik",st:"warn",s:"Döngüsel sektör",t:`${s.sek} döngüsel bir sektör; bugünkü kâr ortalamanın üstünde veya altında olabilir.`});
+  const bad=C.some(c=>c.st==="bad"), warn=C.filter(c=>c.st==="warn").length;
+  return {checks:C,verdict: bad?"bad":(warn?"warn":"good"),warns:warn};
+}
+const VLABEL={good:"Temiz aday",warn:"Uyarılı aday",bad:"Elendi",na:"Ayrı değerlendir"};
+const ICON={good:"✓",warn:"!",bad:"✕",na:"–"};
+const COLS=[
+{key:"k",lbl:"Hisse"},{key:"verdict",lbl:"Sonuç"},{key:"why",lbl:"Gerekçe",en:"Why",nosort:true},{key:"fk",lbl:"F/K",en:"P/E"},{key:"pd",lbl:"PD/DD",en:"P/B"},{key:"fdf",lbl:"FD/FAVÖK",en:"EV/EBITDA"},
+{key:"peg",lbl:"PEG",en:"PEG"},{key:"nb",lbl:"Net borç/FAVÖK",en:"Net debt/EBITDA"},{key:"fg",lbl:"FAVÖK büy.",en:"EBITDA growth"},{key:"ng",lbl:"Net kâr büy.",en:"Net income growth"},{key:"roe",lbl:"ÖK kârl.≈",en:"ROE"},{key:"mv",lbl:"Piy. değ.",en:"Market cap, bn TL"}
+];
+let sortKey="verdict", sortDir=1, openRow=null;
+const VORD={good:0,warn:1,bad:2,na:3};
+function getTh(){
+  const v=id=>parseFloat($(id).value);
+  return {fk:isNaN(v("c-fk"))?DEF.fk:v("c-fk"),peg:isNaN(v("c-peg"))?DEF.peg:v("c-peg"),nb:isNaN(v("c-nb"))?DEF.nb:v("c-nb"),fg:isNaN(v("c-fg"))?DEF.fg:v("c-fg"),cyc:$("c-cyc").checked,bank:$("c-bank").checked};
+}
+function cellColor(key,val,th){
+  if(val==null) return "";
+  if(key==="fk") return val<=th.fk?"v-good":"v-bad";
+  if(key==="peg") return val<0?"v-bad":(val<=0.15?"v-warn":(val<=th.peg?"v-good":"v-bad"));
+  if(key==="nb") return val<=th.nb?"v-good":"v-bad";
+  if(key==="fg") return val>=th.fg?"v-good":"v-bad";
+  if(key==="pd") return val<1?"v-good":"";
+  return "";
+}
+function detailHTML(s,ev){
+  const pot = s.h ? (s.h/s.f-1)*100 : null, parts=[];
+  if(s.fk) parts.push(`Yaklaşık özkaynak kârlılığı %${nf(s.roe,1)} (PD/DD ${nf(s.pd)} ÷ F/K ${nf(s.fk)}).`);
+  if(s.pd<1) parts.push(`PD/DD ${nf(s.pd)}: piyasa şirketi özkaynağının altında fiyatlıyor.`);
+  if(s.usd) parts.push(`Fonksiyonel para birimi ${s.usd}; kârı kur hareketinden etkilenir.`);
+  if(pot!=null) parts.push(`Analistlerin ortalama 12 aylık hedefi ${nf(s.h)} TL, fiyat ${nf(s.f)} TL (nominal potansiyel ${pct(pot)}).`);
+  if(s.bank) parts.push(`Takipteki kredi oranı %${nf(s.npl,2)}, sermaye yeterliliği %${nf(s.car,1)}, net faiz marjı %${nf(s.nim,2)}.`);
+  const noteLbl = META.updated ? "Yorum (2 Ekim verisine göre yazıldı)" : "Yorum";
+  return `<div class="det">
+    <div><div class="lbl">Ölçüt ölçüt</div><ul>${ev.checks.map(c=>`<li><span class="ico ${c.st}" aria-label="${c.st}">${ICON[c.st]}</span><span><b>${esc(c.n)}:</b> ${esc(c.t)}</span></li>`).join("")}</ul></div>
+    <div class="stack"><div><div class="lbl">${esc(s.ad)} · ${esc(s.sek)}</div>${s.not?`<p><span class="muted small">${noteLbl}:</span> ${esc(s.not)}</p>`:""}</div><div><div class="lbl">Ek bilgiler</div><p>${parts.map(esc).join(" ")}</p></div></div>
+  </div>`;
+}
+function render(){
+  const th=getTh();
+  let rows=S.map(s=>({s,ev:evaluate(s,th)}));
+  if(th.bank) rows=rows.concat(B.map(s=>({s,ev:evaluate(s,th)})));
+  const cnt={good:0,warn:0,bad:0,na:0}; rows.forEach(r=>cnt[r.ev.verdict]++);
+  $("summary").innerHTML = ["good","warn","bad"].map(v=>`<span class="pill ${v}">${ICON[v]} ${VLABEL[v]}: ${cnt[v]}</span>`).join("") + (th.bank?`<span class="pill na">${ICON.na} Banka: ${cnt.na}</span>`:"");
+  const val=(r,k)=> k==="verdict" ? VORD[r.ev.verdict]*10+(r.ev.warns||0) : (k==="k"? r.s.k : r.s[k]);
+  rows.sort((a,b)=>{const x=val(a,sortKey),y=val(b,sortKey);
+    if(x==null&&y==null) return 0; if(x==null) return 1; if(y==null) return -1;
+    return (typeof x==="string"? x.localeCompare(y,"tr") : x-y)*sortDir;});
+  const tbl=$("tbl");
+  tbl.tHead.innerHTML="<tr>"+COLS.map(c=>`<th ${c.nosort?'class="nosort left"':`data-k="${c.key}" class="${c.key===sortKey?"sorted":""}"`} scope="col">${esc(c.lbl)}${c.key===sortKey?(sortDir>0?" ↑":" ↓"):""}${c.en?`<small>${esc(c.en)}</small>`:""}</th>`).join("")+"</tr>";
+  tbl.tBodies[0].innerHTML = rows.map(({s,ev})=>{
+    const res = ev.verdict==="warn" ? `${VLABEL.warn} (${ev.warns})` : VLABEL[ev.verdict];
+    const ngTxt = s.ng==null ? (s.ngT? esc(s.ngT):"–") : pct(s.ng);
+    const fgTxt = s.fg==null ? (s.fgT? esc(s.fgT):"–") : pct(s.fg);
+    const why = `<ul>${ev.checks.map(c=>`<li><span class="ico ${c.st}">${ICON[c.st]}</span><span>${esc(c.s)}</span></li>`).join("")}</ul>`;
+    return `<tr class="row" data-k="${s.k}" tabindex="0" aria-expanded="${openRow===s.k}">
+      <td class="name"><b>${s.k}</b><span>${esc(s.ad)}</span></td>
+      <td class="res"><span class="pill ${ev.verdict}">${ICON[ev.verdict]} ${res}</span></td>
+      <td class="why">${why}</td>
+      <td class="${cellColor("fk",s.fk,th)}">${s.fk==null?"zarar":nf(s.fk)}</td>
+      <td class="${cellColor("pd",s.pd,th)}">${nf(s.pd)}</td>
+      <td>${s.bank?"–":nf(s.fdf)}</td>
+      <td class="${s.bank?"":cellColor("peg",s.peg,th)}">${nf(s.peg)}</td>
+      <td class="${s.bank?"":cellColor("nb",s.nb,th)}">${s.bank?"–":nf(s.nb)}</td>
+      <td class="${s.bank?"":cellColor("fg",s.fg,th)}">${s.bank?"–":fgTxt}</td>
+      <td>${ngTxt}</td>
+      <td>${s.roe==null?"–":"%"+nf(s.roe,1)}</td>
+      <td>${nf(s.mv,0)}</td></tr>` + (openRow===s.k ? `<tr class="detail"><td colspan="${COLS.length}">${detailHTML(s,ev)}</td></tr>`:"");
+  }).join("");
+}
+$("tbl").addEventListener("click",e=>{
+  const th=e.target.closest("th[data-k]"); if(th){const k=th.dataset.k; if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=["k","verdict","fk","pd","fdf","peg","nb"].includes(k)?1:-1;} render(); return;}
+  const tr=e.target.closest("tr.row"); if(tr){openRow = openRow===tr.dataset.k ? null : tr.dataset.k; render();}
+});
+$("tbl").addEventListener("keydown",e=>{
+  if((e.key==="Enter"||e.key===" ") && e.target.matches("tr.row")){e.preventDefault(); const k=e.target.dataset.k; openRow=openRow===k?null:k; render(); const el=document.querySelector(`tr.row[data-k="${k}"]`); if(el) el.focus();}
+});
+$("ctl").addEventListener("input",()=>{render();renderCalc();});
+$("c-reset").addEventListener("click",()=>{
+  $("c-fk").value=DEF.fk; $("c-peg").value=DEF.peg; $("c-nb").value=DEF.nb; $("c-fg").value=DEF.fg; $("c-cyc").checked=DEF.cyc; $("c-bank").checked=DEF.bank; render(); renderCalc();
+});
+
+/* ---------- Bankalar ---------- */
+function renderBanks(){ renderBankChart(); renderBankTable(); }
+function renderBankChart(){
+  const box=$("bankchart"), W=cw("bankchart")-28; if(W<=0) return;
+  const H=Math.round(Math.min(400,Math.max(280,W*0.55))), m={l:52,r:16,t:22,b:46};
+  const pds=B.map(b=>b.pd), roes=B.map(b=>b.roe).filter(v=>v!=null);
+  const x0=Math.min(0.5,Math.floor(Math.min(...pds)*10)/10), x1=Math.max(1.2,Math.ceil(Math.max(...pds)*10)/10);
+  const y0=Math.min(10,Math.floor(Math.min(...roes)/4)*4), y1=Math.max(26,Math.ceil(Math.max(...roes)/4)*4);
+  const X=v=>m.l+(v-x0)/(x1-x0)*(W-m.l-m.r), Y=v=>H-m.b-(v-y0)/(y1-y0)*(H-m.t-m.b);
+  const xstep = W<480 ? 0.2 : 0.1;
+  let g="";
+  for(let v=x0;v<=x1+1e-9;v+=xstep){g+=`<line x1="${X(v)}" x2="${X(v)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--line)" stroke-width="1"/>`+svgText(X(v),H-m.b+17,nf(v,1),{a:"middle",fs:11,ff:"var(--mono)",fill:"var(--muted)"});}
+  for(let v=y0;v<=y1;v+=4){g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/>`+svgText(m.l-8,Y(v)+4,"%"+v,{a:"end",fs:11,ff:"var(--mono)",fill:"var(--muted)"});}
+  if(x0<=1&&x1>=1){g+=`<line x1="${X(1)}" x2="${X(1)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4"/>`+svgText(X(1)+6,m.t+12,"PD/DD = 1",{fs:11,fill:"var(--muted)"});}
+  g+=svgText((m.l+W-m.r)/2,H-8,"PD/DD · P/B (sola doğru daha ucuz)",{a:"middle",fs:11.5,fill:"var(--muted)"});
+  g+=`<text transform="translate(13 ${(m.t+H-m.b)/2}) rotate(-90)" text-anchor="middle" font-size="11.5" fill="var(--muted)" font-family="var(--ui)">ÖK kârlılığı ≈ · ROE</text>`;
+  // Etiket yerleşimi: noktalar ve önceki etiketlerle çakışmayan ilk konumu seç
+  const pts=B.filter(b=>b.roe!=null).map(b=>({b,x:X(b.pd),y:Y(b.roe)}));
+  const placed=[], lw=t=>tw(t,12,true)+4, lh=14;
+  const hit=(r)=> placed.some(p=>!(r.x2<p.x1||r.x1>p.x2||r.y2<p.y1||r.y1>p.y2)) || pts.some(p=>p.x>r.x1-7&&p.x<r.x2+7&&p.y>r.y1-7&&p.y<r.y2+7) || r.x1<m.l || r.x2>W-m.r || r.y1<m.t || r.y2>H-m.b;
+  const labels=[];
+  [...pts].sort((a,b)=>a.y-b.y).forEach(p=>{
+    const w=lw(p.b.k);
+    const cands=[[10,-lh/2],[-10-w,-lh/2],[-w/2,-lh-10],[-w/2,10],[10,-lh-6],[10,6],[-10-w,-lh-6],[-10-w,6]];
+    let best=null;
+    for(const [dx,dy] of cands){ const r={x1:p.x+dx,y1:p.y+dy,x2:p.x+dx+w,y2:p.y+dy+lh}; if(!hit(r)){best=r;break;} }
+    if(!best) best={x1:p.x+10,y1:p.y-lh/2,x2:p.x+10+w,y2:p.y+lh/2};
+    placed.push(best); labels.push({p,r:best});
+  });
+  pts.forEach(p=>{g+=`<g class="pt" data-k="${p.b.k}"><circle cx="${p.x}" cy="${p.y}" r="14" fill="transparent"/><circle cx="${p.x}" cy="${p.y}" r="6" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/></g>`;});
+  labels.forEach(({p,r})=>{g+=svgText(r.x1+2,r.y2-3,p.b.k,{fs:12,fw:700,ff:"var(--mono)"});});
+  box.innerHTML=`<div class="lbl">BIST 30 bankaları: getiri ve fiyat</div>${svgWrap(W,H,"Bankaların PD/DD ve özkaynak kârlılığı saçılım grafiği",g)}<div class="tip" id="btip" hidden></div><p class="muted small">Sol üst köşe: yüksek getiri, düşük fiyat. Sağ alt köşe: düşük getiri, yüksek fiyat. Özkaynak kârlılığı PD/DD ÷ F/K ile yaklaşık hesaplanmıştır.</p>`;
+  const tip=$("btip");
+  box.querySelectorAll(".pt").forEach(p=>{
+    p.addEventListener("mousemove",e=>{const b=B.find(z=>z.k===p.dataset.k); const r=box.getBoundingClientRect();
+      tip.textContent=`${b.ad}: PD/DD ${nf(b.pd)} · ÖK kârl. %${nf(b.roe,1)} · F/K ${nf(b.fk)}`; tip.hidden=false;
+      let lx=e.clientX-r.left+12; if(lx+tip.offsetWidth>r.width-8) lx=e.clientX-r.left-tip.offsetWidth-12;
+      tip.style.left=Math.max(4,lx)+"px"; tip.style.top=(e.clientY-r.top-34)+"px";});
+    p.addEventListener("mouseleave",()=>tip.hidden=true);
+  });
+}
+function renderBankTable(){
+  const st=[...B].sort((a,b)=>(b.roe/b.pd)-(a.roe/a.pd));
+  $("banktbl").innerHTML=`<thead><tr><th class="nosort">Banka</th><th class="nosort">F/K<small>P/E</small></th><th class="nosort">PD/DD<small>P/B</small></th><th class="nosort">ÖK kârl.≈<small>ROE</small></th><th class="nosort">Getiri / PD/DD<small>ROE ÷ P/B</small></th><th class="nosort">Takipteki kredi %<small>NPL</small></th><th class="nosort">Sermaye yeterliliği %<small>CAR</small></th><th class="nosort">Net faiz marjı %<small>NIM</small></th><th class="nosort">Net kâr büy.<small>Net income growth</small></th></tr></thead><tbody>`+
+    st.map(b=>`<tr><td class="name"><b>${b.k}</b><span>${esc(b.ad)}</span></td><td>${nf(b.fk)}</td><td class="${b.pd<1?"v-good":""}">${nf(b.pd)}</td><td>%${nf(b.roe,1)}</td><td>${nf(b.roe/b.pd,1)}</td><td>${nf(b.npl,2)}</td><td>${nf(b.car,1)}</td><td>${nf(b.nim,2)}</td><td>${pct(b.ng)}</td></tr>`).join("")+`</tbody>`;
+}
+const BT=[
+  ["Getiri / PD/DD","ROE ÷ P/B","Her 1 birim PD/DD'ye karşılık kaç puan özkaynak kârlılığı alıyorsunuz. Yüksek olması, getirisine göre daha ucuz olduğunu gösterir. Tablo bu sütuna göre sıralı."],
+  ["Takipteki kredi oranı","Non-performing loans, NPL","Geri ödenmeyen kredilerin toplam kredilere oranı. Yükselmesi gelecekte karşılık giderinin, yani kârı aşağı çekecek bir kalemin artacağını gösterir."],
+  ["Sermaye yeterlilik oranı","Capital adequacy ratio, CAR","Bankanın kayıplara karşı tampon sermayesi. Yasal alt sınırın rahat üzerinde olması, temettü ve büyüme alanı tanır."],
+  ["Net faiz marjı","Net interest margin, NIM","Kredilerden kazanılan faiz ile mevduata ödenen faiz arasındaki fark. Faiz indirimleri genelde bankaların marjını genişletir."]];
+$("bankterms").innerHTML=BT.map(t=>`<article class="card"><h3>${esc(t[0])} <span class="en">(${esc(t[1])})</span></h3><p>${esc(t[2])}</p></article>`).join("");
+
+/* ---------- Hesaplayıcı ---------- */
+function renderCalc(){
+  const g=id=>parseFloat($(id).value);
+  const pd=g("h-pd"),nk=g("h-nk"),ok=g("h-ok"),fv=g("h-fv"),nb=g("h-nb"),ng=g("h-ng"),fgv=g("h-fg");
+  const fk = nk>0 ? pd/nk : null, pddd = ok>0 ? pd/ok : null, fdf = fv>0 ? (pd+(isNaN(nb)?0:nb))/fv : null;
+  const peg = (fk!=null && !isNaN(ng) && ng!==0) ? fk/ng : null, roe = ok>0 && !isNaN(nk) ? nk/ok*100 : null, nbf = fv>0 && !isNaN(nb) ? nb/fv : null;
+  const s={k:"",ad:"",sek:"Bu sektör",fk:fk,pd:pddd,fdf:fdf,peg:peg,nb:nbf==null?99:nbf,fg:isNaN(fgv)?null:fgv,ng:isNaN(ng)?null:ng,cyc:$("h-cyc").checked};
+  const ev=evaluate(s,getTh());
+  $("calcout").innerHTML=`<div class="tiles">
+    <div><div class="k">F/K<span class="en">P/E</span></div><div class="v">${fk==null?"zarar":nf(fk)}</div></div>
+    <div><div class="k">PD/DD<span class="en">P/B</span></div><div class="v">${nf(pddd)}</div></div>
+    <div><div class="k">FD/FAVÖK<span class="en">EV/EBITDA</span></div><div class="v">${nf(fdf)}</div></div>
+    <div><div class="k">PEG<span class="en">PEG ratio</span></div><div class="v">${nf(peg)}</div></div>
+    <div><div class="k">ÖK kârlılığı<span class="en">ROE</span></div><div class="v">${roe==null?"–":"%"+nf(roe,1)}</div></div>
+    <div><div class="k">Net borç/FAVÖK<span class="en">Net debt/EBITDA</span></div><div class="v">${nf(nbf)}</div></div>
+  </div>
+  <div><span class="pill ${ev.verdict}">${ICON[ev.verdict]} ${VLABEL[ev.verdict]}${ev.verdict==="warn"?" ("+ev.warns+")":""}</span> <span class="muted small">Tarayıcıdaki eşiklere göre</span></div>
+  <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px">${ev.checks.map(c=>`<li style="display:grid;grid-template-columns:auto 1fr;gap:8px;font-size:.92rem"><span class="ico ${c.st}">${ICON[c.st]}</span><span><b>${esc(c.n)}:</b> ${esc(c.t)}</span></li>`).join("")}</ul>
+  <p class="muted small">Fintables BİM için PEG'i 0,38 gösteriyor; bu da yaklaşık %44 net kâr büyümesine denk gelir. 2026/6 dönem karşılaştırmasında artış %103'tür. Kaynaklar farklı dönemler kullanabilir; PEG'e bakarken hangi büyümenin kullanıldığını sorun.</p>`;
+}
+$("calcin").addEventListener("input",renderCalc);
+
+/* ---------- Canlı veri: veritabanı + güncelleme görevi ---------- */
+const TRIGGER_ID="trig_kaldirildi", MCP_SERVER="Claude Code Remote";
+const fmtDate = iso => { try{ const d=new Date(iso); if(isNaN(d)) return iso; return d.toLocaleString("tr-TR",{day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit",timeZone:"Europe/Istanbul"}); }catch(e){ return iso; } };
+const NUMS_S=["f","fk","pd","fdf","peg","nb","mv","fg","ng","h"], NUMS_B=["f","fk","pd","mv","ng","h","npl","car","nim"];
+function applyLatest(d){
+  if(!d || !d.asOf) return;
+  if(new Date(d.asOf) < new Date(META.asOf)) return;
+  const st=d.stocks||{}, bk=d.banks||{};
+  S.forEach(s=>{const u=st[s.k]; if(!u) return; NUMS_S.forEach(f=>{ if(f in u) s[f]=(u[f]===null||typeof u[f]==="number")?u[f]:s[f]; });
+    ["fgT","ngT"].forEach(f=>{ if(typeof u[f]==="string") s[f]=u[f]; else if(u[f.slice(0,2)]!=null) delete s[f]; });});
+  B.forEach(b=>{const u=bk[b.k]; if(!u) return; NUMS_B.forEach(f=>{ if(f in u) b[f]=(u[f]===null||typeof u[f]==="number")?u[f]:b[f]; });});
+  derive();
+  META={asOf:d.asOf, period: typeof d.period==="string"?d.period:META.period, updated: d.asOf!==BASE_ASOF && new Date(d.asOf)>new Date(BASE_ASOF)};
+  $("m-asof").textContent=fmtDate(d.asOf); $("m-period").textContent=META.period;
+  render(); renderBanks();
+}
+let localMsg=null;
+function renderStatus(st){
+  const el=$("m-status");
+  if(!st){ el.innerHTML=""; return; }
+  const ago = st.startedAt ? (Date.now()-new Date(st.startedAt))/60000 : 0;
+  if(st.state==="running"){
+    el.innerHTML = ago>25 ? `<span class="pill warn">! Güncelleme ${Math.round(ago)} dakikadır sürüyor</span>` : `<span class="pill na">⟳ Güncelleniyor (başladı ${fmtDate(st.startedAt)})</span>`;
+    $("refresh-msg").textContent = ago>25 ? "Görev beklenenden uzun sürdü. Tekrar başlatabilirsiniz." : "Görev çalışıyor; veriler geldiğinde tablo kendiliğinden yenilenecek.";
+  } else if(st.state==="done"){
+    el.innerHTML=`<span class="pill good">✓ Son güncelleme ${fmtDate(st.finishedAt)}</span>`;
+    if(st.message) $("refresh-msg").textContent=st.message;
+  } else if(st.state==="error"){
+    el.innerHTML=`<span class="pill bad">✕ Son güncelleme başarısız</span>`;
+    $("refresh-msg").textContent="Görev hata verdi: "+(st.message||"ayrıntı yok")+". Tekrar deneyebilirsiniz.";
+  }
+}
+const MCP_MSG={
+  server_not_connected:"Bu görünümde Claude Code Remote bağlantısı yok. claude.ai Ayarlar → Bağlayıcılar bölümünden ekleyin.",
+  selection_required:"Birden fazla Claude Code Remote bağlantısı var; açılan pencereden birini seçin.",
+  needs_reauth:"Claude Code Remote bağlantısının yenilenmesi gerekiyor: claude.ai Ayarlar → Bağlayıcılar.",
+  not_in_manifest:"Bu sayfanın güncelleme görevini başlatma izni verilmedi. Sayfayı yeniden açıp izin verebilirsiniz.",
+  blocked_by_policy:"Kuruluş politikası bu işlemi engelliyor.",
+  approval_required:"Bu işlem kuruluşunuzda ayrıca onay gerektiriyor.",
+  server_unavailable:"Bağlantı yanıt vermedi. Görev yine de başlamış olabilir; birkaç dakika bekleyip durum satırına bakın.",
+  upstream_error:"Bağlantı beklenmedik bir yanıt verdi. Görev başlamış olabilir; birkaç dakika bekleyin.",
+  not_granted:"Bu görünümde güncelleme düğmesi kullanılamıyor.",
+  capability_disabled:"Bu görünümde güncelleme düğmesi kullanılamıyor."
+};
+(async function live(){
+  const claude = window.claude;
+  if(!claude || !claude.use){ $("refresh-msg").textContent="Bu görünümde güncelleme kullanılamıyor. Veriler 2 Ekim 2026 tarihli."; return; }
+  claude.use("db").then(db=>{
+    if(!db) return;
+    try{
+      db.doc("market/latest").onSnapshot(s=>{ if(s.exists) applyLatest(s.data()); }, ()=>{});
+      db.doc("market/status").onSnapshot(s=>{ renderStatus(s.exists? s.data(): null); }, ()=>{});
+    }catch(e){}
+  });
+  const mcp = await claude.use("mcp");
+  const btn=$("refresh-btn"), msg=$("refresh-msg");
+  if(!mcp){ msg.textContent="Güncelleme düğmesi yalnızca sayfanın sahibi claude.ai'de açtığında çalışır. Veriler en son yazılan tarihe ait."; return; }
+  btn.disabled=false; msg.textContent="Düğme, Fintables'tan veriyi çeken zamanlanmış görevi başlatır. Birkaç dakika sürer.";
+  btn.addEventListener("click", async ()=>{
+    btn.disabled=true; msg.textContent="Görev başlatılıyor…";
+    try{
+      await mcp.callTool(MCP_SERVER,"fire_trigger",{trigger_id:TRIGGER_ID},{cache:false});
+      msg.textContent="Görev başlatıldı. Veriler genelde 3–10 dakika içinde gelir; tablo kendiliğinden yenilenecek.";
+      setTimeout(()=>{btn.disabled=false;},90000);
+    }catch(err){
+      const code=err&&err.code;
+      msg.textContent = code==="tool_error" ? "Görev başlatılamadı: "+(err.message||"bilinmeyen hata") : (MCP_MSG[code] || "Görev başlatılamadı ("+(code||"bilinmeyen hata")+"). Biraz sonra tekrar deneyin.");
+      btn.disabled = (code==="not_granted"||code==="capability_disabled"||code==="blocked_by_policy");
+    }
+  });
+})();
+
+/* ---------- Sekmeler ---------- */
+const TABS=["senaryo","kavramlar","sozluk","adimlar","tarayici","bankalar","hesap"];
+let CUR="senaryo";
+function show(t){
+  if(!TABS.includes(t)) t="senaryo";
+  CUR=t;
+  TABS.forEach(x=>{$(x).hidden = x!==t; $("t-"+x).setAttribute("aria-selected", x===t);});
+  try{localStorage.setItem("bist30-tab",t);}catch(e){}
+  renderCharts();
+}
+const CHARTS={senaryo:()=>{renderBilanco();renderGelir();renderGauge();renderPeg();renderEnfChart();renderDondurma();renderSandikChart();}, bankalar:()=>renderBankChart()};
+function renderCharts(){ const f=CHARTS[CUR]; if(f) f(); }
+let rzT=null, lastW=0;
+try{ new ResizeObserver(ents=>{ const w=Math.round(ents[0].contentRect.width); if(w===lastW) return; lastW=w; clearTimeout(rzT); rzT=setTimeout(renderCharts,120); }).observe(document.querySelector(".wrap")); }catch(e){ window.addEventListener("resize",()=>{clearTimeout(rzT); rzT=setTimeout(renderCharts,150);}); }
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{show(b.dataset.tab); try{history.replaceState(null,"","#"+b.dataset.tab);}catch(e){} window.scrollTo({top:0});}));
+["s-price","s-growth"].forEach(id=>$(id).addEventListener("input",renderFiyat));
+$("s-inf").addEventListener("input",renderEnf);
+$("s-npl").addEventListener("input",renderSandik);
+let start=(location.hash||"").slice(1);
+if(!TABS.includes(start)){ try{start=localStorage.getItem("bist30-tab")||"senaryo";}catch(e){start="senaryo";} }
+renderFiyat(); renderEnf(); renderDondurma(); renderSandik();
+renderGloss(); render(); renderBankTable(); renderCalc(); show(start);
+</script>
+
+</body></html>

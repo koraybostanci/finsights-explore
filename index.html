@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Hisse değerlemeyi bir kahvecinin hikâyesiyle öğrenin, sonra BIST ve ABD hisselerine gerçek verilerle uygulayın.">
+<title>finsights.explore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,600&family=JetBrains+Mono:wght@400;600&display=swap">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">BIST ve ABD hisseleri · Temel analize giriş</span>
+    <h1>finsights.explore</h1>
+    <p class="lede">Önce bir kahvecinin hikâyesiyle temel kavramları öğrenin, sonra aynı mantığı seçtiğiniz BIST ve ABD hisselerine gerçek verilerle uygulayın.</p>
+    <div class="databar">
+      <div class="meta" id="datameta"><span>Veri yükleniyor…</span></div>
+      <span class="refresh-msg" id="datanote" style="flex-basis:auto"></span>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Bölümler">
+    <div class="tabrow" role="tablist" id="tabrow"></div>
+  </nav>
+
+  <main id="panels"></main>
+
+  <footer>
+    <span>Bu sayfa eğitim amaçlıdır, yatırım tavsiyesi değildir. Veriler gün içinde değişir; karar vermeden önce güncel bilançoyu ve fiyatı kontrol edin.</span>
+    <span id="footsrc"></span>
+  </footer>
+</div>
+<noscript><p style="padding:16px">Bu sayfa JavaScript ile çalışır.</p></noscript>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
