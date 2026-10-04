@@ -5,8 +5,10 @@
  * uygulama okur. Alan adları İngilizcedir.
  */
 
+import type { Currency } from '@fintools/shared/format';
+
+export type { Currency };
 export type MarketId = 'BIST' | 'US';
-export type Currency = 'TRY' | 'USD';
 export type Verdict = 'good' | 'warn' | 'bad' | 'na';
 
 export interface Industry {

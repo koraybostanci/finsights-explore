@@ -1,6 +1,6 @@
 /** Biçimlendirme yardımcıları. Sayılar Türkçe yazımla (1.234,56) gösterilir. */
 
-/** Para birimi; uygulamanın types.ts dosyasındaki Currency ile aynı. shared/ uygulama koduna bağlanmasın diye burada tanımlıdır. */
+/** Para birimi. Tek tanım burada; uygulamanın types.ts dosyası bunu yeniden dışa aktarır. */
 export type Currency = 'TRY' | 'USD';
 
 export const nf = (v: number | null | undefined, d = 2): string =>
