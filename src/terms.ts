@@ -44,14 +44,52 @@ export const TERMS: Record<string, Term> = {
   sma20: { tr: '20 günlük ortalama', en: 'SMA 20' },
   sma50: { tr: '50 günlük ortalama', en: 'SMA 50' },
   sma200: { tr: '200 günlük ortalama', en: 'SMA 200' },
-  goldenCross: { tr: 'Altın kesişim', en: 'Golden cross' },
-  deathCross: { tr: 'Ölüm kesişimi', en: 'Death cross' },
-  trend: { tr: 'Eğilim', en: 'Trend' },
+  goldenCross: {
+    tr: 'Altın kesişim',
+    en: 'Golden cross',
+    def: '50 günlük ortalamanın 200 günlük ortalamayı aşağıdan yukarı kesmesi.',
+  },
+  deathCross: {
+    tr: 'Ölüm kesişimi',
+    en: 'Death cross',
+    def: '50 günlük ortalamanın 200 günlük ortalamayı yukarıdan aşağı kesmesi.',
+  },
+  trend: { tr: 'Eğilim', en: 'Trend', def: 'Fiyatın bir süredir genel olarak gittiği yön.' },
   npl: { tr: 'Takipteki kredi oranı', en: 'NPL ratio' },
   car: { tr: 'Sermaye yeterlilik oranı', en: 'CAR' },
   nim: { tr: 'Net faiz marjı', en: 'NIM' },
   apiKey: { tr: 'API anahtarı', en: 'API key' },
   aiProvider: { tr: 'Yapay zekâ sağlayıcısı', en: 'AI provider' },
+
+  /* Öğrenme sekmelerinin eklediği terimler */
+  ema: {
+    tr: 'Üstel hareketli ortalama',
+    en: 'Exponential moving average, EMA',
+    def: 'Son günlere daha fazla ağırlık veren hareketli ortalama.',
+  },
+  supportResistance: {
+    tr: 'Destek ve direnç',
+    en: 'Support and resistance',
+    def: 'Fiyatın geçmişte defalarca döndüğü alt ve üst seviyeler.',
+  },
+  close: { tr: 'Kapanış fiyatı', en: 'Closing price', def: 'Hissenin o günkü son işlem fiyatı.' },
+  lag: { tr: 'Gecikme', en: 'Lag' },
+  industryMedian: {
+    tr: 'Sektör ortancası',
+    en: 'Industry median',
+    def: 'Aynı piyasa ve sektördeki hisselerin bir çarpanı sıralandığında ortada kalan değer.',
+  },
+  earningsYield: { tr: 'Kazanç verimi', en: 'Earnings yield', def: "F/K'nın tersi: 1 ÷ F/K." },
+  riskFree: {
+    tr: 'Risksiz faiz',
+    en: 'Risk-free rate',
+    def: 'Bir para biriminde en güvenli kabul edilen yatırımın getirisi.',
+  },
+  countryRisk: { tr: 'Ülke riski', en: 'Country risk' },
+  inflationAccounting: { tr: 'Enflasyon muhasebesi', en: 'Inflation accounting, TMS 29 / IAS 29' },
+  nominalGrowth: { tr: 'Nominal büyüme', en: 'Nominal growth', def: 'Enflasyon düşülmeden ölçülen büyüme.' },
+  realGrowth: { tr: 'Reel büyüme', en: 'Real growth', def: 'Enflasyon düşüldükten sonra kalan büyüme.' },
+  multiple: { tr: 'Çarpan', en: 'Multiple', def: 'Fiyatın bir finansal büyüklüğe oranı.' },
 };
 
 function get(id: string): Term {

@@ -1,0 +1,14 @@
+{
+ "schema": 1,
+ "asOf": "2026-10-02",
+ "source": "Fintables (2 Ekim 2026 anlık görüntüsü)",
+ "banks": {
+  "BIST": {
+   "AKBNK": {"npl": 3.5, "car": 16.4, "nim": 3.1},
+   "GARAN": {"npl": 3.5, "car": 15.9, "nim": 5.7},
+   "ISCTR": {"npl": 3.8, "car": 14.2, "nim": 2.9},
+   "VAKBN": {"npl": 3.95, "car": 14.1, "nim": 3.7},
+   "YKBNK": {"npl": 4.3, "car": 14.4, "nim": 2.92}
+  }
+ }
+}

@@ -1,0 +1,223 @@
+/**
+ * Açılan satır (hisse ayrıntısı): ölçütler, elle yazılmış yorum, ek bilgiler ve
+ * hareketli ortalamalar. Buradaki işlevler yalnızca metin ve HTML üretir.
+ * Bütün sayılar veriden gelir; veri yoksa "–" ya da açık bir not yazılır.
+ */
+
+import type { Evaluation, PriceSeries, StockView } from '../types.ts';
+import { ICON } from '../lib/evaluate.ts';
+import { esc, fmtDate, money, nf, pct } from '../lib/format.ts';
+import { distancePct, lastCross, lastSma, trend } from '../lib/sma.ts';
+import { TERMS } from '../terms.ts';
+import { SMA_WINDOW, seriesUsable } from './smachart.ts';
+
+/* ---------- Ek bilgiler ---------- */
+
+/** İlk sürümdeki "Ek bilgiler" cümleleri; hedef fiyat hissenin para birimiyle yazılır. */
+export function extraInfo(s: StockView): string[] {
+  const parts: string[] = [];
+  if (s.fk != null && s.roe != null)
+    parts.push(`Yaklaşık özkaynak kârlılığı %${nf(s.roe, 1)} (PD/DD ${nf(s.pd)} ÷ F/K ${nf(s.fk)}).`);
+  if (s.pd != null && s.pd < 1) parts.push(`PD/DD ${nf(s.pd)}: piyasa şirketi özkaynağının altında fiyatlıyor.`);
+  if (s.usd) parts.push(`Fonksiyonel para birimi ${s.usd}; kârı kur hareketinden etkilenir.`);
+  if (s.h != null && s.f != null && s.f !== 0) {
+    const pot = (s.h / s.f - 1) * 100;
+    parts.push(
+      `Analistlerin ortalama 12 aylık hedefi ${money(s.h, s.cur)}, fiyat ${money(s.f, s.cur)} (nominal potansiyel ${pct(pot)}).`,
+    );
+  }
+  if (s.bank && (s.npl != null || s.car != null || s.nim != null))
+    parts.push(
+      `Takipteki kredi oranı %${nf(s.npl, 2)}, sermaye yeterliliği %${nf(s.car, 1)}, net faiz marjı %${nf(s.nim, 2)}.`,
+    );
+  return parts;
+}
+
+export function checksHtml(ev: Evaluation): string {
+  return `<ul>${ev.checks
+    .map(
+      (c) =>
+        `<li><span class="ico ${c.st}" aria-hidden="true">${ICON[c.st]}</span><span><b>${esc(c.n)}:</b> ${esc(c.t)}</span></li>`,
+    )
+    .join('')}</ul>`;
+}
+
+/** Elle yazılmış yorum; yazıldığı verinin tarihiyle etiketlenir. */
+export function noteHtml(s: StockView): string {
+  if (!s.not) return '';
+  const lbl = s.notAsOf ? `Yorum (${fmtDate(s.notAsOf, false)} verisine göre yazıldı)` : 'Yorum';
+  return `<p><span class="muted small">${esc(lbl)}:</span> ${esc(s.not)}</p>`;
+}
+
+/* ---------- Hareketli ortalamalar ---------- */
+
+export type SmaN = 20 | 50 | 200;
+
+export interface SmaAvg {
+  n: SmaN;
+  v: number | null;
+  /** Fiyatın bu ortalamaya uzaklığı % */
+  dist: number | null;
+}
+
+export interface SmaView {
+  price: number | null;
+  avgs: SmaAvg[];
+  /** Kurala dayalı cümleler (eğilim, varsa yakın kesişim) */
+  sentences: string[];
+}
+
+const NS: SmaN[] = [20, 50, 200];
+
+/** Eğilim cümlesi; yalnızca fiyatın ve ortalamaların sırasına bakar. */
+export function trendSentence(price: number | null, s50: number | null, s200: number | null): string {
+  if (price == null || (s50 == null && s200 == null)) return 'Eğilimi okumak için yeterli fiyat verisi yok.';
+  if (s50 == null || s200 == null) {
+    const known = s50 != null ? s50 : (s200 as number);
+    const name = s50 != null ? '50' : '200';
+    const missing = s50 != null ? '200' : '50';
+    return `Fiyat ${name} günlük ortalamanın ${price >= known ? 'üstünde' : 'altında'}. ${missing} günlük ortalama için yeterli veri yok.`;
+  }
+  const t = trend(price, s50, s200);
+  if (t === 'up') return 'Fiyat 50 ve 200 günlük ortalamaların üstünde: eğilim yukarı.';
+  if (t === 'down') return 'Fiyat 50 ve 200 günlük ortalamaların altında: eğilim aşağı.';
+  const a50 = price >= s50;
+  const a200 = price >= s200;
+  if (a50 && a200)
+    return 'Fiyat iki ortalamanın da üstünde ama 50 günlük ortalama henüz 200 günlüğün altında: eğilim karışık.';
+  if (!a50 && !a200)
+    return 'Fiyat iki ortalamanın da altında ama 50 günlük ortalama hâlâ 200 günlüğün üstünde: eğilim karışık.';
+  return a50
+    ? 'Fiyat 50 günlük ortalamanın üstünde, 200 günlük ortalamanın altında: eğilim karışık.'
+    : 'Fiyat 50 günlük ortalamanın altında, 200 günlük ortalamanın üstünde: eğilim karışık.';
+}
+
+/** Son 60 işlem günündeki en yeni kesişim için cümle; yoksa null. */
+export function crossSentence(series: PriceSeries | null | undefined): string | null {
+  if (!seriesUsable(series)) return null;
+  const cr = lastCross(series.c);
+  if (!cr) return null;
+  const day = fmtDate(series.t[cr.index], false);
+  return cr.kind === 'golden'
+    ? `Yakın zamanda altın kesişim (golden cross) görüldü: 50 günlük ortalama 200 günlüğü yukarı kesti (${day}).`
+    : `Yakın zamanda ölüm kesişimi (death cross) görüldü: 50 günlük ortalama 200 günlüğü aşağı kesti (${day}).`;
+}
+
+/**
+ * Kutucuk ve cümle verisi. Ortalamalar önce market.json'daki alanlardan
+ * (tablodaki sütunlarla aynı sayı), yoksa fiyat serisinden hesaplanır.
+ */
+export function smaView(s: StockView, series: PriceSeries | null | undefined): SmaView {
+  const closes = seriesUsable(series) ? series.c : null;
+  const field: Record<SmaN, number | null> = { 20: s.sma20, 50: s.sma50, 200: s.sma200 };
+  const price = s.f;
+  const avgs = NS.map((n) => {
+    const v = field[n] ?? (closes ? lastSma(closes, n) : null);
+    return { n, v, dist: distancePct(price, v) };
+  });
+  const sentences: string[] = [];
+  if (avgs.some((a) => a.v != null)) {
+    sentences.push(trendSentence(price, avgs[1].v, avgs[2].v));
+    const cr = crossSentence(series);
+    if (cr) sentences.push(cr);
+  }
+  return { price, avgs, sentences };
+}
+
+const HORIZON: Record<SmaN, string> = { 20: 'Kısa vade', 50: 'Orta vade', 200: 'Uzun vade' };
+
+/** Terim sözlüğündeki adlar; sözlükte yoksa buradaki yazım kullanılır. */
+const lblOf = (id: string, tr: string, en: string): { tr: string; en: string } => TERMS[id] ?? { tr, en };
+
+/** "fiyat %4,2 üstünde" */
+export function distPhrase(d: number | null): string {
+  if (d == null) return '';
+  const a = Math.abs(d);
+  if (a < 0.05) return 'fiyat ortalamayla aynı düzeyde';
+  return `fiyat %${nf(a, 1)} ${d > 0 ? 'üstünde' : 'altında'}`;
+}
+
+export const SMA_REMINDER =
+  'Ortalama eğilimi gösterir, değeri değil: fiyatın ortalamanın üstünde olması hissenin ucuz ya da pahalı olduğunu söylemez.';
+
+export function smaTilesHtml(s: StockView, v: SmaView, priceDate: string): string {
+  const tile = (k: string, en: string, val: string, d: string): string =>
+    `<div><div class="k">${esc(k)}<span class="en">${esc(en)}</span></div><div class="v">${esc(val)}</div><div class="d">${esc(d)}</div></div>`;
+  const pr = lblOf('price', 'Fiyat', 'Price');
+  return `<div class="tiles">${tile(pr.tr, pr.en, money(v.price, s.cur), priceDate)}${v.avgs
+    .map((a) => {
+      const t = lblOf(`sma${a.n}`, `${a.n} günlük ortalama`, `SMA ${a.n}`);
+      const ph = distPhrase(a.dist);
+      return tile(t.tr, t.en, money(a.v, s.cur), ph ? `${HORIZON[a.n]} · ${ph}` : HORIZON[a.n]);
+    })
+    .join('')}</div>`;
+}
+
+export const SMA_LEGEND = `<div class="legend">
+<span><i style="background:var(--ink)"></i>Fiyat</span>
+<span><i style="background:var(--c1)"></i>20 günlük ortalama</span>
+<span><i style="background:var(--c2)"></i>50 günlük ortalama</span>
+<span><i style="background:var(--c3)"></i>200 günlük ortalama (kesikli)</span>
+</div>`;
+
+/** Grafiğin altındaki dönem satırı: "Son 250 işlem günü · 3 Ekim 2025 – 2 Ekim 2026" */
+export function smaRangeText(series: PriceSeries): string {
+  const n = series.c.length;
+  const shown = Math.min(n, SMA_WINDOW);
+  return `Son ${shown} işlem günü · ${fmtDate(series.t[n - shown], false)} – ${fmtDate(series.t[n - 1], false)}`;
+}
+
+/**
+ * Hareketli ortalamalar bölümünün içi.
+ * series: undefined → seri yükleniyor, null → dosya yok, dizi → grafik çizilecek
+ * (grafik kabı boş bırakılır; genişlik ölçülünce ayrıca doldurulur).
+ */
+export function smaBlockHtml(
+  s: StockView,
+  series: PriceSeries | null | undefined,
+  priceDate: string,
+  chartId: string,
+): string {
+  const v = smaView(s, series);
+  let chart: string;
+  if (series === undefined) chart = `<p class="muted small"><span class="spin"></span> Fiyat serisi yükleniyor…</p>`;
+  else if (!seriesUsable(series))
+    chart = `<p class="muted small">Fiyat serisi henüz yok; ilk veri güncellemesinde gelir.</p>`;
+  else
+    chart = `<div class="chartbox" id="${esc(chartId)}"></div>${SMA_LEGEND}<p class="muted small">${esc(
+      smaRangeText(series),
+    )}</p>`;
+  const says = v.sentences.length ? `<p>${v.sentences.map(esc).join(' ')}</p>` : '';
+  return `<div class="lbl">Hareketli ortalamalar · Simple moving averages (SMA)</div>
+${smaTilesHtml(s, v, priceDate)}
+${chart}
+${says}
+<p class="muted small">${esc(SMA_REMINDER)}</p>`;
+}
+
+/* ---------- Bütün ayrıntı ---------- */
+
+export interface DetailParts {
+  /** Yapay zekâ yorumu bölümünün HTML'i (ai-ui.ts üretir) */
+  ai: string;
+  /** Hareketli ortalamalar bölümünün HTML'i */
+  sma: string;
+  /** Kimlikler ve veri öznitelikleri için hissenin kimliği, ör. "BIST-THYAO" */
+  id: string;
+}
+
+export function detailHtml(s: StockView, ev: Evaluation, p: DetailParts): string {
+  const title = `<div class="lbl">${esc(s.ad)} · ${esc(s.sek)} (${esc(s.sekEn)})</div>`;
+  if (!s.hasData)
+    return `<div class="det"><div>${title}<p>Bu hissenin verisi henüz gelmedi; bir sonraki veri güncellemesinde dolar.</p></div></div>`;
+  const extra = extraInfo(s);
+  return `<div class="det">
+<div><div class="lbl">Ölçüt ölçüt</div>${checksHtml(ev)}</div>
+<div class="stack">
+<div>${title}${noteHtml(s)}</div>
+<div class="stack sc-ai" data-ai-for="${esc(p.id)}">${p.ai}</div>
+${extra.length ? `<div><div class="lbl">Ek bilgiler</div><p>${extra.map(esc).join(' ')}</p></div>` : ''}
+</div>
+<div class="stack sc-wide" data-sma-for="${esc(p.id)}">${p.sma}</div>
+</div>`;
+}

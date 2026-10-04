@@ -1,0 +1,19 @@
+/* Tarayıcıya özgü küçük eklemeler. Yalnızca mevcut belirteçler kullanılır; yeni renk ya da yazı tipi yoktur. */
+
+#tarayici a{color:var(--accent)}
+
+/* Açılan satırda tam genişlik bölüm (hareketli ortalamalar) */
+.det .sc-wide{grid-column:1 / -1}
+.det .sc-ai{gap:8px}
+
+/* Tablonun içinde düz metin satırı (ör. süzgeçle eşleşen hisse yok) */
+td.sc-msg{text-align:left;font-family:var(--ui);white-space:normal;color:var(--muted)}
+
+/* Sıralanabilir başlıklar klavyeyle de seçilebilir */
+th[data-k]:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+
+/* Açıklama satırında biçimli işaretler (daire, kare, baklava, üçgen) */
+.legend svg{display:inline-block;vertical-align:-3px;margin-right:4px}
+
+/* Açılan satırın zemini --bg olduğu için kutucuklar beyaz yüzeyde durur */
+.det .tiles > div{background:var(--surface)}
