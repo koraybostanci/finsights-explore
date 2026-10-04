@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 
-import { nf, pct } from '../src/lib/format.ts';
-import { lastSma, smaSeries } from '../src/lib/sma.ts';
+import { nf, pct } from '@fintools/shared/format';
+import { lastSma, smaSeries } from '@fintools/shared/sma';
 import {
   BAYRAM_DAYS,
   PEG_C,
@@ -33,7 +33,6 @@ import * as steps from '../src/learn/steps.ts';
 import * as stories from '../src/learn/stories.ts';
 import * as smaHtml from '../src/learn/story-sma.ts';
 import * as marketsHtml from '../src/learn/story-markets.ts';
-import { TERMS, term, termText } from '../src/terms.ts';
 
 /** mount() yalnızca innerHTML yazar; DOM olmadan sınamak için sahte kök. */
 const fakeRoot = (): HTMLElement & { innerHTML: string } =>
@@ -416,19 +415,6 @@ test('Karar adımları: beş özgün adım, altı genişletme maddesi, eğilim a
   assert.equal([...h.matchAll(/<li>/g)].length, 6);
   /* Gerçek şirket rakamları tarihli etiketle gelir. */
   assert.equal([...h.matchAll(/Örnek \(BIST 30, 2 Ekim 2026\):/g)].length, 5);
-});
-
-/* ---------- Terimler ---------- */
-
-test('terms: yeni terimler yazılır ve eski kimlikler yerinde', () => {
-  for (const id of ['pe', 'pb', 'evEbitda', 'peg', 'netDebtEbitda', 'ebitdaGrowth', 'netIncomeGrowth', 'roe', 'marketCap', 'price', 'target', 'ebitda', 'netIncome', 'equity', 'netDebt', 'median', 'industry', 'market', 'cyclical', 'watchlist', 'sma', 'sma20', 'sma50', 'sma200', 'goldenCross', 'deathCross', 'trend', 'npl', 'car', 'nim', 'apiKey', 'aiProvider'])
-    assert.ok(TERMS[id], `kimlik silinmiş: ${id}`);
-  assert.equal(term('pe'), 'F/K <span class="en">(P/E)</span>');
-  assert.equal(termText('pe'), 'F/K (P/E)');
-  assert.equal(term('peg'), 'PEG');
-  assert.equal(termText('earningsYield'), 'Kazanç verimi (Earnings yield)');
-  assert.equal(termText('goldenCross'), 'Altın kesişim (Golden cross)');
-  assert.throws(() => term('yok-boyle-bir-terim'));
 });
 
 /* ---------- Kaynak taraması ---------- */

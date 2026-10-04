@@ -4,9 +4,9 @@
  * olarak üretilir; her açılışta aynıdır.
  */
 
-import { cw, svgText, svgWrap } from '../lib/dom.ts';
-import { esc, nf, pct, tl } from '../lib/format.ts';
-import { TERMS, termText } from '../terms.ts';
+import { cw, svgText, svgWrap } from '@fintools/shared/dom';
+import { esc, nf, pct, tl } from '@fintools/shared/format';
+import { TERMS, termText } from '@fintools/shared/terms';
 import { byId, linePath, tileK } from './charts.ts';
 import { ROADWORK_END, ROADWORK_START, SMA_LONG, SMA_SHORT, SMA_WINDOWS, smaStory } from './model.ts';
 import type { CrossMark } from './model.ts';

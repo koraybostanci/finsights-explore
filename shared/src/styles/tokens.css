@@ -1,0 +1,23 @@
+/* Design tokens shared by the fintools apps: colors (light and dark theme) and font stacks. */
+:root{
+  --bg:#F2F5F6; --surface:#FFFFFF; --ink:#14212B; --muted:#55636F; --line:#D7DEE2;
+  --accent:#1B6871; --accent-soft:#DFEDEE;
+  --good:#2C774B; --good-soft:#E1F1E7; --warn:#9A620E; --warn-soft:#FBEFD9; --bad:#AE3636; --bad-soft:#F8E3E2;
+  --c1:#007FA8; --c2:#C27C1E; --c3:#5466C2; --c4:#B04A78;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Literata", Georgia, "Times New Roman", serif;
+  --mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --ui:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E151B; --surface:#16202A; --ink:#E5ECEF; --muted:#95A3AE; --line:#283641;
+  --accent:#62B6BF; --accent-soft:#15333A;
+  --good:#62C08A; --good-soft:#163323; --warn:#E3A845; --warn-soft:#3A2B12; --bad:#E57A7A; --bad-soft:#3B1C1C;
+  --c1:#2AA3B0; --c2:#C47E1C; --c3:#7A8BF0; --c4:#D6679A;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0E151B; --surface:#16202A; --ink:#E5ECEF; --muted:#95A3AE; --line:#283641;
+  --accent:#62B6BF; --accent-soft:#15333A;
+  --good:#62C08A; --good-soft:#163323; --warn:#E3A845; --warn-soft:#3A2B12; --bad:#E57A7A; --bad-soft:#3B1C1C;
+  --c1:#2AA3B0; --c2:#C47E1C; --c3:#7A8BF0; --c4:#D6679A;
+  color-scheme:dark;}

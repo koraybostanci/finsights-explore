@@ -8,8 +8,8 @@
 
 import { VLABEL } from '../lib/evaluate.ts';
 import { noteIsCurrent } from '../lib/note.ts';
-import { distancePct, lastCross, lastSma, trend } from '../lib/sma.ts';
-import { TERMS } from '../terms.ts';
+import { distancePct, lastCross, lastSma, trend } from '@fintools/shared/sma';
+import { TERMS } from '@fintools/shared/terms';
 import type { Evaluation, IndustryMedian, StockView } from '../types.ts';
 import type { IndustryCompareInput, StockCommentInput } from './types.ts';
 

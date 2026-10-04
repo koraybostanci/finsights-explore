@@ -6,10 +6,10 @@
 
 import type { Evaluation, PriceSeries, StockView } from '../types.ts';
 import { ICON } from '../lib/evaluate.ts';
-import { esc, fmtDate, money, nf, pct } from '../lib/format.ts';
+import { esc, fmtDate, money, nf, pct } from '@fintools/shared/format';
 import { noteIsCurrent } from '../lib/note.ts';
-import { distancePct, lastCross, lastSma, trend } from '../lib/sma.ts';
-import { TERMS } from '../terms.ts';
+import { distancePct, lastCross, lastSma, trend } from '@fintools/shared/sma';
+import { TERMS } from '@fintools/shared/terms';
 import { SMA_WINDOW, seriesUsable } from './smachart.ts';
 
 /* ---------- Ek bilgiler ---------- */

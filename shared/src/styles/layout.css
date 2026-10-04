@@ -1,0 +1,44 @@
+/* Base and page layout shared by the fintools apps: reset, typography, header, tab bar, panels, footer. */
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]:not([hidden=until-found i]){display:none!important}
+
+/* Layout: ders kitabı + terminal — sticky sekme çubuğu, okuma sütunu ~760px, tarayıcı tam genişlik */
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;padding:0 16px}
+.wrap{max-width:1320px;margin:0 auto;padding-block:20px 56px}
+.read{max-width:860px}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,6vw,3.1rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.6rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.2rem;font-weight:700}
+p{margin:0}
+.en{font-family:var(--ui);font-weight:500;font-size:.78em;color:var(--muted);letter-spacing:0}
+.eyebrow{font-family:var(--ui);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.small{font-family:var(--ui);font-size:.82rem}
+.stack{display:flex;flex-direction:column;gap:14px}
+.stack-lg{display:flex;flex-direction:column;gap:28px}
+
+header.top{display:flex;flex-direction:column;gap:12px;padding-block:8px 18px}
+header.top .lede{font-size:1.08rem;max-width:62ch}
+
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:-16px;padding-inline:16px;margin-top:16px}
+.tabrow{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;max-width:1320px;margin:0 auto}
+.tabrow::-webkit-scrollbar{display:none}
+.tab{font-family:var(--ui);font-size:.92rem;font-weight:600;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:12px 12px 10px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+section.panel{padding-top:28px}
+
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-family:var(--ui);font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+footer a{color:var(--accent)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+/* Odak, seçim ve imleç */
+select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+::selection{background:var(--accent-soft);color:var(--ink)}
+input,select,textarea{caret-color:var(--accent)}

@@ -6,7 +6,7 @@
  * mount: sekme ilk kez kurulurken; refresh: sekme görünür olduğunda ve genişlik değişince (burada yapılacak bir şey yok).
  */
 
-import { esc } from '../lib/format.ts';
+import { esc } from '@fintools/shared/format';
 
 export interface Step {
   /** Adımın sorusu */

@@ -40,6 +40,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Shared tests
+        run: npm --prefix shared test
+
       - name: Unit tests
         run: npm test
 

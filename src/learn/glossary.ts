@@ -5,8 +5,8 @@
  * mount: sekme ilk kez kurulurken; refresh: sekme görünür olduğunda ve genişlik değişince (burada yapılacak bir şey yok).
  */
 
-import { esc } from '../lib/format.ts';
-import { TERMS } from '../terms.ts';
+import { esc } from '@fintools/shared/format';
+import { TERMS } from '@fintools/shared/terms';
 
 /** [Türkçe terim, İngilizce karşılık, açıklama, isteğe bağlı formül] */
 export type GlossItem = [string, string, string, string?];

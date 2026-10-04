@@ -2,7 +2,7 @@
 
 import type { IndustryMedian, StockView, Thresholds } from '../types.ts';
 import { ICON, VLABEL, cellColor } from '../lib/evaluate.ts';
-import { esc, money, nf, pct } from '../lib/format.ts';
+import { esc, money, nf, pct } from '@fintools/shared/format';
 import { distText, peText, growthText, roeText, verdictLabel } from './logic.ts';
 import type { Col, Row, SortState, VerdictCounts } from './logic.ts';
 

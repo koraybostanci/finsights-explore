@@ -7,7 +7,7 @@
 import './quiz.css';
 
 import { MARKETS, MARKET_LABEL, lsGet, lsSet, on, stocks } from '../data/store.ts';
-import { esc } from '../lib/format.ts';
+import { esc } from '@fintools/shared/format';
 import type { MarketId } from '../types.ts';
 
 import { aiErrorMessage, aiStatus, generateQuiz } from '../ai/index.ts';

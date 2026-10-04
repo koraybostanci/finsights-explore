@@ -1,6 +1,7 @@
 /** Biçimlendirme yardımcıları. Sayılar Türkçe yazımla (1.234,56) gösterilir. */
 
-import type { Currency } from '../types.ts';
+/** Para birimi. Tek tanım burada; uygulamanın types.ts dosyası bunu yeniden dışa aktarır. */
+export type Currency = 'TRY' | 'USD';
 
 export const nf = (v: number | null | undefined, d = 2): string =>
   v == null || Number.isNaN(v)

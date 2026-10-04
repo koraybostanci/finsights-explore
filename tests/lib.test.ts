@@ -2,9 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { nf, pct, esc, money } from '../src/lib/format.ts';
 import { median, industryMedian, groupByIndustry } from '../src/lib/stats.ts';
-import { smaSeries, lastSma, distancePct, lastCross, trend } from '../src/lib/sma.ts';
 import { DEF, evaluate, cellColor } from '../src/lib/evaluate.ts';
 import { marketAsOf, marketHasData, setData, toView } from '../src/data/store.ts';
 import { noteIsCurrent } from '../src/lib/note.ts';
@@ -18,49 +16,10 @@ const view = (k: string): StockView => {
   return v;
 };
 
-test('nf ve pct Türkçe yazımla biçimlendirir', () => {
-  assert.equal(nf(1234.5), '1.234,50');
-  assert.equal(nf(null), '–');
-  assert.equal(nf(3.6, 1), '3,6');
-  assert.equal(pct(9), '+%9');
-  assert.equal(pct(-22), '%-22');
-  assert.equal(pct(null), '–');
-  assert.equal(money(291, 'TRY'), '291,00 TL');
-  assert.equal(money(12.5, 'USD'), '12,50 USD');
-});
-
-test('esc HTML özel karakterlerini kaçırır', () => {
-  assert.equal(esc(`<a href="x">T&'s</a>`), '&lt;a href=&quot;x&quot;&gt;T&amp;&#39;s&lt;/a&gt;');
-});
-
 test('median boş değerleri atar', () => {
   assert.equal(median([3, 1, 2]), 2);
   assert.equal(median([4, 1, null, 3, 2]), 2.5);
   assert.equal(median([null, undefined]), null);
-});
-
-test('smaSeries ve lastSma', () => {
-  const c = [1, 2, 3, 4, 5, 6];
-  assert.deepEqual(smaSeries(c, 3), [null, null, 2, 3, 4, 5]);
-  assert.equal(lastSma(c, 3), 5);
-  assert.equal(lastSma(c, 10), null);
-  assert.equal(distancePct(110, 100), 10.000000000000009);
-  assert.equal(distancePct(null, 100), null);
-});
-
-test('lastCross altın ve ölüm kesişimini bulur', () => {
-  const down = Array.from({ length: 30 }, (_, i) => 100 - i);
-  const up = Array.from({ length: 30 }, (_, i) => 71 + i * 3);
-  assert.equal(lastCross([...down, ...up], 5, 20, 40)?.kind, 'golden');
-  assert.equal(lastCross([...up, ...down.map((v) => v + 60)], 5, 20, 40)?.kind, 'death');
-  assert.equal(lastCross(down, 5, 20, 40), null);
-});
-
-test('trend', () => {
-  assert.equal(trend(120, 110, 100), 'up');
-  assert.equal(trend(90, 100, 110), 'down');
-  assert.equal(trend(105, 110, 100), 'mixed');
-  assert.equal(trend(null, 110, 100), null);
 });
 
 test('toView türetilmiş alanları hesaplar', () => {

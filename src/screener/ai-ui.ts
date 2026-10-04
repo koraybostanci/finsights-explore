@@ -6,7 +6,7 @@
 
 import { aiTextHtml } from '../ai/index.ts';
 import type { AiStatus, AiText } from '../ai/index.ts';
-import { esc } from '../lib/format.ts';
+import { esc } from '@fintools/shared/format';
 
 export interface AiSlot {
   status: 'loading' | 'done' | 'error';

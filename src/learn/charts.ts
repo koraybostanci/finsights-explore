@@ -1,7 +1,7 @@
 /** Hikâyelerin ortak çizim yardımcıları (ilk sürümdeki elle çizilen SVG grafikler). */
 
-import { cw, svgText, svgWrap, tw } from '../lib/dom.ts';
-import { esc, nf } from '../lib/format.ts';
+import { cw, svgText, svgWrap, tw } from '@fintools/shared/dom';
+import { esc, nf } from '@fintools/shared/format';
 
 /** Sekmenin kökü içinde kimlikle öğe bulur; kimlikler başka sekmelerle çakışsa bile doğru öğeyi verir. */
 export function byId<T extends HTMLElement = HTMLElement>(root: ParentNode, id: string): T {

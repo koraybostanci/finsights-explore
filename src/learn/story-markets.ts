@@ -4,9 +4,9 @@
  * (model.ts → ULKE); gerçek oranlar değildir.
  */
 
-import { cw, svgText, svgWrap, tw } from '../lib/dom.ts';
-import { esc, nf } from '../lib/format.ts';
-import { TERMS, term } from '../terms.ts';
+import { cw, svgText, svgWrap, tw } from '@fintools/shared/dom';
+import { esc, nf } from '@fintools/shared/format';
+import { TERMS, term } from '@fintools/shared/terms';
 import { byId, tileK } from './charts.ts';
 import { ULKE, ulkeState } from './model.ts';
 
