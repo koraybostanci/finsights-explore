@@ -45,13 +45,13 @@ export const STEPS: Step[] = [
   },
   {
     title: 'Fiyat makul mü?',
-    body: 'Ancak şimdi çarpanlara bakın: F/K, PD/DD, FD/FAVÖK. Hissenin kendi geçmiş ortalamasıyla ve aynı piyasadaki, aynı sektördeki benzerleriyle kıyaslayın; Tarayıcı bunun için sektör ortancasını gösterir. BIST ile ABD hisselerini birbirine karşı koymayın: faiz, enflasyon ve para birimi farklı olduğu için aynı çarpan iki piyasada aynı şeyi söylemez (Hikâye 9). Büyüme varsa PEG ile düzeltin.',
+    body: 'Ancak şimdi çarpanlara bakın: F/K, PD/DD, FD/FAVÖK. Hissenin kendi geçmiş ortalamasıyla ve aynı piyasadaki, aynı sektördeki benzerleriyle kıyaslayın; tarayıcı uygulaması (screener app) bunun için sektör ortancasını gösterir. BIST ile ABD hisselerini birbirine karşı koymayın: faiz, enflasyon ve para birimi farklı olduğu için aynı çarpan iki piyasada aynı şeyi söylemez (Hikâye 9). Büyüme varsa PEG ile düzeltin.',
     chips: ['F/K (P/E)', 'PD/DD (P/B)', 'FD/FAVÖK (EV/EBITDA)', 'PEG', 'Sektör ortancası (industry median)'],
     ex: 'ASELS pahalı görünür ama PEG 0,64; TCELL ucuz görünür ama büyümüyor.',
   },
   {
     title: 'Büyüme sürecek mi?',
-    body: 'Geçmiş büyüme geleceği garanti etmez. Kapasite yatırımları, sipariş birikimi, sektör döngüsü ve analist beklentileri bu soruyu cevaplar. Tarayıcı geçmişe bakar; bu adım geleceğe.',
+    body: 'Geçmiş büyüme geleceği garanti etmez. Kapasite yatırımları, sipariş birikimi, sektör döngüsü ve analist beklentileri bu soruyu cevaplar. Tarayıcı uygulaması geçmişe bakar; bu adım geleceğe.',
     chips: ['Analist beklentisi', 'Yatırım planı (CapEx)', 'Sektör trendi'],
     ex: 'Kasım başındaki 3. çeyrek bilançoları bu tablonun güncellenmesi için ilk fırsat.',
   },
@@ -59,7 +59,7 @@ export const STEPS: Step[] = [
     title: 'Fiyat hangi yönde gidiyor?',
     body: "Hareketli ortalama şirketin rakamlarına bakmaz, yalnızca fiyatın son aylarda hangi yöne gittiğini gösterir. Bu yüzden ancak ilk adımlar olumlu çıktıktan sonra, zamanlama için yardımcı bir bilgi olarak okunur: fiyat 200 günlük ortalamasının üstünde mi, 50 günlük ortalama 200 günlüğün üstünde mi? Eğilim yukarıysa fiyat bir süredir yükseliyor, aşağıysa düşüyor demektir; bu, hissenin ucuz ya da pahalı olduğunu söylemez. Ortalama geriden geldiği için dönüşü geç gösterir. Türkiye'de TL fiyatlar enflasyonla birlikte yükseldiği için BIST hissesinin 200 günlük ortalamanın üstünde olması tek başına zayıf bir kanıttır.",
     chips: ['SMA 20 / 50 / 200 (simple moving average)', 'Altın / ölüm kesişimi (golden / death cross)', 'Eğilim (trend)'],
-    ex: "Hikâye 8'de pencereyi değiştirip ortalamanın dönüşü kaç gün geç gösterdiğine bakın. Tarayıcı bu ortalamaları her hisse için gösterir.",
+    ex: "Hikâye 8'de pencereyi değiştirip ortalamanın dönüşü kaç gün geç gösterdiğine bakın. Tarayıcı uygulaması bu ortalamaları her hisse için gösterir.",
     exLbl: 'Deneyin:',
   },
 ];
@@ -106,7 +106,7 @@ export function mount(root: HTMLElement): void {
     <ol class="steps" id="st-steps">${STEPS.map(step).join('')}</ol>
     <div class="stack read">
       <h2>Bakışı genişletmek: tablonun göstermedikleri</h2>
-      <p>Tarayıcıdaki çarpanlar başlangıçtır. Gerçek bir karar için şunlara da bakılır:</p>
+      <p>Tarayıcı uygulamasındaki çarpanlar başlangıçtır. Gerçek bir karar için şunlara da bakılır:</p>
     </div>
     <div class="tr-list" id="st-widen">${WIDEN.map((t) => `<div><b>${esc(t[0])}</b><span>${esc(t[1])}</span></div>`).join('')}</div>
     <p class="note read">Tarama bir aday listesi üretir, alım kararı üretmez. Tek bir hisseye tüm birikimi yatırmamak, pozisyonları küçük tutmak ve neden aldığınızı yazıya dökmek, hangi çarpanı kullandığınızdan daha çok fark yaratır.</p>`;

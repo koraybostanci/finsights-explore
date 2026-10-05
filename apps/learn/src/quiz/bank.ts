@@ -2,8 +2,7 @@
  * Kendini sına: hazır soru bankası. Sorular hikâyelerdeki kavramları ve
  * rakamları kullanır (Ayşe'nin Kahvesi, üç kahveci, Sahil dondurmacısı,
  * Mahalle sandığı, günlük hasılat, iki ülke). Gerçek şirketler hakkında
- * hiçbir rakam içermez; onlar için sorular datagen.ts içinde güncel veriden
- * üretilir.
+ * hiçbir rakam içermez.
  *
  * Her sorunun tek bir doğru yanıtı vardır ve doğru yanıt ilgili hikâyenin
  * "Ne öğrendik?" kutusundan çıkar. Seçenekler oyunda karıştırılır; bu yüzden
@@ -225,19 +224,19 @@ const ITEMS: Item[] = [
       'Kışın yaptığı zarara',
       'Geri ödenmeyen kredilerinin oranına',
     ],
-    why: 'PEG borcu görmez. Zincir Kahve üç şubeyi krediyle açtı; borç eklenince firma değeri 4,5 milyon TL\'ye çıkıyor. Tarayıcı bu yüzden PEG\'in yanında Net borç/FAVÖK\'e de bakar.',
+    why: 'PEG borcu görmez. Zincir Kahve üç şubeyi krediyle açtı; borç eklenince firma değeri 4,5 milyon TL\'ye çıkıyor. Tarayıcı uygulaması bu yüzden PEG\'in yanında Net borç/FAVÖK\'e de bakar.',
   },
   {
     id: 'peg-negative',
     topic: 'peg',
-    q: "Tarayıcı'da F/K'sı 10 olan bir hissenin PEG'i eksi çıkıyor. Bu ne anlama gelir?",
+    q: "Tarayıcı uygulamasında F/K'sı 10 olan bir hissenin PEG'i eksi çıkıyor. Bu ne anlama gelir?",
     a: 'Kârı düşüyor; eksi PEG ucuzluk göstergesi değildir',
     x: [
       'Hisse çok ucuz; PEG ne kadar düşükse o kadar iyidir',
       'Şirket net nakit pozisyonunda; borcundan çok nakdi var',
       "Şirket zarar ediyor; F/K'sı hesaplanamıyor",
     ],
-    why: 'PEG = F/K ÷ kâr büyümesi. F/K artıyken PEG\'in eksi çıkması için büyümenin eksi olması, yani kârın gerilemesi gerekir. Tarayıcı eksi PEG\'i "kâr düşüyor" diye eler.',
+    why: 'PEG = F/K ÷ kâr büyümesi. F/K artıyken PEG\'in eksi çıkması için büyümenin eksi olması, yani kârın gerilemesi gerekir. Tarayıcı uygulaması eksi PEG\'i "kâr düşüyor" diye eler.',
   },
 
   /* ---------- Hikâye 5: enflasyon muhasebesi ---------- */
@@ -263,7 +262,7 @@ const ITEMS: Item[] = [
       'Pay sayısı kaç?',
       'Şirketin hissesi hangi piyasada işlem görüyor?',
     ],
-    why: 'FAVÖK büyümeden net kâr sıçrıyorsa artış büyük olasılıkla parasal kazançtan ya da tek seferlik bir kalemden geliyordur ve kalıcı olmayabilir. Tarayıcının "Büyüme kalitesi" ölçütü tam bunu sorar.',
+    why: 'FAVÖK büyümeden net kâr sıçrıyorsa artış büyük olasılıkla parasal kazançtan ya da tek seferlik bir kalemden geliyordur ve kalıcı olmayabilir. Tarayıcı uygulamasının "Büyüme kalitesi" ölçütü tam bunu sorar.',
   },
   {
     id: 'inflation-calculation',
@@ -309,7 +308,7 @@ const ITEMS: Item[] = [
       'Hissenin 50 günlük ortalamasının 200 günlük ortalamasını kesmesi',
       'Analistlerin hedef fiyatı değiştirmesi',
     ],
-    why: 'Rafineri, çelik, madencilik ve havayolu gibi işlerde kâr, şirketin denetimi dışındaki fiyat ve talep döngülerine bağlıdır. Tarayıcı bu sektörlerdeki hisselere "Döngüsel sektör" uyarısı ekler.',
+    why: 'Rafineri, çelik, madencilik ve havayolu gibi işlerde kâr, şirketin denetimi dışındaki fiyat ve talep döngülerine bağlıdır. Tarayıcı uygulaması bu sektörlerdeki hisselere "Döngüsel sektör" uyarısı ekler.',
   },
 
   /* ---------- Hikâye 7: banka mantığı ---------- */
@@ -456,7 +455,7 @@ const ITEMS: Item[] = [
   {
     id: 'markets-separate-tables',
     topic: 'markets',
-    q: 'Tarayıcı BIST ve ABD hisselerini neden hiçbir zaman aynı tabloya ve aynı sektör ortancasına koymaz?',
+    q: 'Tarayıcı uygulaması BIST ve ABD hisselerini neden hiçbir zaman aynı tabloya ve aynı sektör ortancasına koymaz?',
     a: 'Faiz, enflasyon, muhasebe kuralları ve para birimi farklı olduğu için aynı çarpan iki piyasada aynı şeyi söylemez',
     x: [
       'İki borsanın işlem saatleri farklı olduğu için',
@@ -484,7 +483,6 @@ const ITEMS: Item[] = [
 /** Hazır soru bankası; doğru yanıt her soruda ilk sıradadır, oyunda karıştırılır. */
 export const BANK: QuizQuestion[] = ITEMS.map((it) => ({
   id: it.id,
-  kind: 'concept',
   topic: TOPICS[it.topic].label,
   q: it.q,
   options: [it.a, ...it.x],

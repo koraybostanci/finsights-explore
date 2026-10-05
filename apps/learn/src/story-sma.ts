@@ -6,6 +6,7 @@
 
 import { cw, svgText, svgWrap } from '@fintools/shared/dom';
 import { esc, nf, pct, tl } from '@fintools/shared/format';
+import { siteLink } from '@fintools/shared/sites';
 import { TERMS, termText } from '@fintools/shared/terms';
 import { byId, linePath, tileK } from './charts.ts';
 import { ROADWORK_END, ROADWORK_START, SMA_LONG, SMA_SHORT, SMA_WINDOWS, smaStory } from './model.ts';
@@ -37,7 +38,7 @@ export function html(): string {
       <div class="learn"><b>Ne öğrendik?</b>
         <span>Hareketli ortalama (SMA) günlük gürültüyü yumuşatır ama <b>her zaman geriden gelir</b>: dönüşü, olduktan sonra gösterir. Kısa pencere hızlı tepki verir ama sık sık yanıltır; uzun pencere sakindir ama geç kalır. Borsada “günlük hasılat”ın yerini hissenin günlük kapanış fiyatı (closing price) alır; en sık 20, 50 ve 200 günlük ortalamalar (SMA 20, SMA 50, SMA 200) kullanılır. 50 günlük ortalama 200 günlüğü yukarı keserse altın kesişim (golden cross), aşağı keserse ölüm kesişimi (death cross) denir.</span>
         <span>Fiyatın 200 günlük ortalamasının üstünde olması, eğilimin (trend) bir süredir yukarı olduğunu söyler; hissenin ucuz olduğunu söylemez. <b>SMA eğilimi gösterir, değeri değil.</b> Bu yüzden kârın gerçekliğinden, bilançodan ve çarpanlardan sonra gelir. Türkiye'de bir dikkat noktası daha var: fiyatlar enflasyonla birlikte yükseldiği için bir BIST hissesinin TL fiyatı 200 günlük ortalamasının üstüne kolayca çıkar. Ayşe kahveye zam yapınca hasılat da ortalamanın üstüne çıkar, ama daha çok kahve satmış olmaz. TL bazında “ortalamanın üstünde” olmak bu yüzden göründüğünden zayıf bir kanıttır.</span>
-        <span class="muted">Tarayıcı, her hissenin 20, 50 ve 200 günlük ortalamalarını ve fiyatın bu ortalamalara göre yerini gösterir.</span>
+        <span class="muted">${siteLink('screener', 'Tarayıcı uygulaması (screener app)')}, her hissenin 20, 50 ve 200 günlük ortalamalarını ve fiyatın bu ortalamalara göre yerini gösterir.</span>
       </div>
     </article>`;
 }

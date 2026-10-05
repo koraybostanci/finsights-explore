@@ -15,25 +15,15 @@ import { esc, fmtDate } from '@fintools/shared/format';
 import { must } from '@fintools/shared/dom';
 import { createApp, type TabDef } from '@fintools/shared/shell';
 
-import * as stories from './learn/stories.ts';
-import * as multiples from './learn/multiples.ts';
-import * as glossary from './learn/glossary.ts';
-import * as steps from './learn/steps.ts';
 import * as screener from './screener/index.ts';
 import * as banks from './banks/index.ts';
 import * as calc from './calc/index.ts';
-import * as quiz from './quiz/index.ts';
 import * as settings from './settings/index.ts';
 
 const TABS: TabDef[] = [
-  { id: 'stories', label: 'Senaryolar', mod: stories },
-  { id: 'multiples', label: 'Çarpanlar', mod: multiples },
-  { id: 'glossary', label: 'Sözlük', mod: glossary },
-  { id: 'steps', label: 'Karar adımları', mod: steps },
   { id: 'screener', label: 'Tarayıcı', mod: screener },
   { id: 'banks', label: 'Bankalar', mod: banks },
   { id: 'calculator', label: 'Kendi hesabın', mod: calc },
-  { id: 'quiz', label: 'Kendini sına', mod: quiz },
   { id: 'settings', label: 'Ayarlar', mod: settings },
 ];
 
@@ -45,7 +35,7 @@ function renderDataBar(): void {
   if (err || !d.asOf) {
     meta.innerHTML = `<span class="pill bad">✕ Veri yüklenemedi</span>`;
     note.textContent = err
-      ? `Veri dosyası okunamadı (${err}). Hikâyeler ve hesaplayıcı çalışır; tarayıcı boş kalır.`
+      ? `Veri dosyası okunamadı (${err}). Hesaplayıcı çalışır; tarayıcı boş kalır.`
       : 'Veri dosyası boş.';
     must('footsrc').textContent = '';
     return;
@@ -71,7 +61,7 @@ function renderDataBar(): void {
 
 void createApp({
   tabs: TABS,
-  defaultTab: 'stories',
+  defaultTab: 'screener',
   storage,
   beforeMount: async () => {
     await loadData();

@@ -14,6 +14,3 @@ tr.med td:first-child{font-family:var(--ui);background:var(--accent-soft)}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion: reduce){.spin{animation:none}}
-
-/* Sekme çubuğu yapışkan olduğu için, bir hikâyeye atlandığında başlığı çubuğun altında kalmasın */
-article.case{scroll-margin-top:64px}

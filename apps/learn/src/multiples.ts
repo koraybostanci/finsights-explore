@@ -5,6 +5,7 @@
  */
 
 import { esc, nf, pct, tl } from '@fintools/shared/format';
+import { siteLink } from '@fintools/shared/sites';
 import { TERMS } from '@fintools/shared/terms';
 import { ROADWORK_END, SMA_LONG, SMA_SHORT, smaStory } from './model.ts';
 
@@ -227,7 +228,7 @@ export function mount(root: HTMLElement): void {
       <div class="stack read">
         <span class="eyebrow">Çarpan değil, eğilim ölçüsü</span>
         <h2>Teknik gösterge: hareketli ortalama <span class="en">(Simple moving average, SMA)</span></h2>
-        <p>Çarpanlar fiyatı kârla, özkaynakla ya da nakit üretimiyle karşılaştırır. Hareketli ortalama şirketin rakamlarına hiç bakmaz; yalnızca fiyatın son günlerde hangi yöne gittiğini gösterir. Bu yüzden ayrı durur ve çarpanlardan sonra okunur. Tarayıcı, her hisse için 20, 50 ve 200 günlük ortalamaları gösterir; mantığı Hikâye 8'de anlatılıyor.</p>
+        <p>Çarpanlar fiyatı kârla, özkaynakla ya da nakit üretimiyle karşılaştırır. Hareketli ortalama şirketin rakamlarına hiç bakmaz; yalnızca fiyatın son günlerde hangi yöne gittiğini gösterir. Bu yüzden ayrı durur ve çarpanlardan sonra okunur. ${siteLink('screener', 'Tarayıcı uygulaması (screener app)')}, her hisse için 20, 50 ve 200 günlük ortalamaları gösterir; mantığı Hikâye 8'de anlatılıyor.</p>
       </div>
       <div class="cards" id="lrn-smacards">${smaCards().map(card).join('')}</div>
     </div>`;
