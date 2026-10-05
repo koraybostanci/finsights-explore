@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { BANK, TOPICS, topicOf } from '../src/quiz/bank.ts';
 import { ROUND_SIZE, buildRound, score, shuffleOptions } from '../src/quiz/logic.ts';
+import * as stories from '../src/stories.ts';
 import type { QuizQuestion } from '../src/quiz/types.ts';
 
 /** Tekrarlanabilir rastgele sayı üreteci */
@@ -36,6 +37,16 @@ test('dönüş yerleri: her sorunun sekme kimliği Learn uygulamasındaki bir se
   const tabs = new Set(['stories', 'multiples', 'glossary', 'steps', 'quiz']);
   const refs = [...BANK.map((q) => q.ref), ...Object.values(TOPICS).map((t) => t.ref)];
   for (const ref of refs) assert.ok(tabs.has(ref.tab), `bilinmeyen sekme: ${ref.tab}`);
+});
+
+test('dönüş yerleri: her çapa kimliği Senaryolar sekmesinde var', () => {
+  const ids = new Set([...stories.markup().matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
+  const refs = [...BANK.map((q) => q.ref), ...Object.values(TOPICS).map((t) => t.ref)].filter((r) => r.anchor);
+  assert.ok(refs.length > 0);
+  for (const ref of refs) {
+    assert.equal(ref.tab, 'stories', `${ref.anchor}: çapalı bağlantılar yalnızca Senaryolar'a gider`);
+    assert.ok(ids.has(ref.anchor!), `çapa yok: ${ref.anchor}`);
+  }
 });
 
 test('buildRound: boyut, tekrar yok, seçenek karışımı doğruyu korur', () => {

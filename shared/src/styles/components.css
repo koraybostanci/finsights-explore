@@ -90,3 +90,7 @@ td.name span{display:block;font-size:.72rem;color:var(--muted)}
 .v-bad{color:var(--bad)} .v-good{color:var(--good)} .v-warn{color:var(--warn)}
 .ico{font-family:var(--ui);font-weight:800;width:18px;height:18px;border-radius:50%;display:inline-grid;place-items:center;font-size:.68rem;margin-top:1px}
 .ico.good{background:var(--good-soft);color:var(--good)} .ico.warn{background:var(--warn-soft);color:var(--warn)} .ico.bad{background:var(--bad-soft);color:var(--bad)} .ico.na{background:var(--accent-soft);color:var(--muted)}
+
+/* Vurgu kutusu: Learn'ün "Ne öğrendik?" kutusu ve tarayıcının yapay zekâ sektör kutusu */
+.learn{background:var(--accent-soft);border-radius:10px;padding:12px 14px;font-size:.95rem;display:flex;flex-direction:column;gap:6px}
+.learn b{font-family:var(--display)}

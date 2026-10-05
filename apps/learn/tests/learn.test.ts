@@ -330,7 +330,7 @@ test('Sözlük: özgün gruplar ve yeni terimler grubu', () => {
     }
 });
 
-test('Sözlük: istenen dokuz yeni terim Türkçe ve İngilizce karşılığıyla var', () => {
+test('Sözlük: istenen sekiz yeni terim Türkçe ve İngilizce karşılığıyla var', () => {
   const last = GL[GL.length - 1][1];
   const want: Array<[RegExp, RegExp]> = [
     [/^Hareketli ortalama$/, /SMA/],
@@ -341,7 +341,6 @@ test('Sözlük: istenen dokuz yeni terim Türkçe ve İngilizce karşılığıyl
     [/^Destek ve direnç$/, /Support and resistance/],
     [/^Sektör ortancası$/, /median/i],
     [/^Kazanç verimi/, /Earnings yield/],
-    [/^İzleme listesi \/ Hisselerim$/, /Watchlist/],
   ];
   for (const [tr, en] of want) {
     const hit = last.find((i) => tr.test(i[0]));
@@ -370,7 +369,7 @@ test('Sözlük: arama Türkçe ve İngilizce metinde, büyük/küçük harf göz
   assert.ok(names('kaynak').includes('Özkaynak / özsermaye'));
   assert.ok(names('moving average').includes('Üstel hareketli ortalama'));
   assert.ok(names('ortanca').includes('Sektör ortancası'));
-  assert.ok(names('watchlist').includes('İzleme listesi / Hisselerim'));
+  assert.ok(!names('watchlist').length, 'izleme listesi ekran uygulamasına özgü, sözlükte yok');
   assert.deepEqual(names('xyzzy'), []);
   assert.equal(names('').length, GL.reduce((n, g) => n + g[1].length, 0));
   assert.equal(names('   ').length, names('').length);
