@@ -9,6 +9,7 @@
 
 import { cw, svgText, svgWrap, tw } from '@fintools/shared/dom';
 import { esc, nf, pct, tl } from '@fintools/shared/format';
+import { siteLink } from '@fintools/shared/sites';
 import { byId, flowChart, fmtBin, fmtBin1, tileK } from './charts.ts';
 import {
   DON_V,
@@ -49,8 +50,8 @@ export function markup(): string {
       <div><b>Senaryolar</b>Kavramları hikâyeyle öğrenin. Kaydırıcıları oynatın.</div>
       <div><b>Çarpanlar ve Sözlük</b>Formüller, tuzaklar ve terimlerin İngilizce karşılıkları.</div>
       <div><b>Karar adımları</b>Bir hisseye hangi sırayla bakılır.</div>
-      <div><b>Tarayıcı, Bankalar, Kendi hesabın</b>Aynı mantığı gerçek hisselere uygulayın. BIST ve ABD ayrı tablolarda.</div>
-      <div><b>Kendini sına ve Ayarlar</b>Öğrendiklerinizi sınayın; hisse listenizi ve yapay zekâ sağlayıcısını seçin.</div>
+      <div><b>Kendini sına</b>Öğrendiklerinizi kavram sorularıyla sınayın.</div>
+      <div><b>${siteLink('screener', 'Tarayıcı uygulaması (screener app)')}</b>Aynı mantığı gerçek hisselere uygulayın. BIST ve ABD ayrı tablolarda.</div>
     </div>
 
     <article class="case" id="case1">

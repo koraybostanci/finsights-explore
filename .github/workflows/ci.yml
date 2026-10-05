@@ -1,6 +1,6 @@
 name: ci
 
-# Checks every pull request and every push to main: shared and app unit tests, typecheck, build.
+# Checks every pull request and every push to main: shared and app unit tests, typecheck, build (screener app and Learn app).
 # Deploy logic lives in pages.yml and is not repeated here.
 on:
   pull_request:
@@ -27,6 +27,24 @@ jobs:
 
       - run: npm ci
       # Shared tests, typecheck, app tests, build (see "check" in package.json)
+      - run: npm run check
+
+  learn:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/learn
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/learn/package-lock.json
+
+      - run: npm ci
+      # Shared tests, typecheck, Learn tests, build (see "check" in apps/learn/package.json)
       - run: npm run check
 
   python:

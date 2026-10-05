@@ -55,3 +55,42 @@ button.chip[aria-pressed="true"] .en{color:var(--accent-soft)}
 /* Başlık satırı: solda başlık, sağda düğmeler */
 .headrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
 .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+
+/* Rules used by both Learn and the screener app (moved here from app.css in the Learn split). */
+/* Nasıl kullanılır kutuları */
+.howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
+.howto div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;font-family:var(--ui);font-size:.9rem}
+.howto b{display:block;font-family:var(--display);font-size:1rem;margin-bottom:2px}
+
+/* Kartlar */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card .tag{font-family:var(--ui);font-size:.85rem;color:var(--muted)}
+.card h3 .en{display:block;margin-top:3px;font-size:.78rem}
+.lbl{font-family:var(--ui);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:2px}
+
+.tr-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.tr-list div{border-top:2px solid var(--line);padding-top:10px}
+.tr-list b{font-family:var(--display);display:block;margin-bottom:2px}
+
+/* Tablo kutusu ve temel tablo biçimi */
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-family:var(--ui);font-size:.86rem}
+th,td{padding:9px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:700;cursor:pointer;user-select:none;background:var(--surface)}
+th small{display:block;text-transform:none;letter-spacing:0;font-weight:500;font-size:.7rem}
+th.nosort{cursor:default}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1}
+td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+td.name{font-family:var(--ui)}
+td.name b{font-family:var(--mono);font-size:.9rem}
+td.name span{display:block;font-size:.72rem;color:var(--muted)}
+
+/* Değer renkleri ve durum simgeleri */
+.v-bad{color:var(--bad)} .v-good{color:var(--good)} .v-warn{color:var(--warn)}
+.ico{font-family:var(--ui);font-weight:800;width:18px;height:18px;border-radius:50%;display:inline-grid;place-items:center;font-size:.68rem;margin-top:1px}
+.ico.good{background:var(--good-soft);color:var(--good)} .ico.warn{background:var(--warn-soft);color:var(--warn)} .ico.bad{background:var(--bad-soft);color:var(--bad)} .ico.na{background:var(--accent-soft);color:var(--muted)}
+
+/* Vurgu kutusu: Learn'ün "Ne öğrendik?" kutusu ve tarayıcının yapay zekâ sektör kutusu */
+.learn{background:var(--accent-soft);border-radius:10px;padding:12px 14px;font-size:.95rem;display:flex;flex-direction:column;gap:6px}
+.learn b{font-family:var(--display)}

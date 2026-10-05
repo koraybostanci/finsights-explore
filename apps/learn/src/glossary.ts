@@ -166,7 +166,6 @@ export const GL: GlossGroup[] = [
         'countryRisk',
         'Bir ülkedeki belirsizliğin (kur, siyaset, makro dengeler) yatırımcı için taşıdığı risk. Yatırımcı bunun karşılığında ek getiri ister, yani aynı kâra daha düşük fiyat öder.',
       ),
-      ['İzleme listesi / Hisselerim', 'Watchlist', 'Takip etmek istediğiniz hisselerin kendi listeniz. BIST ve ABD için ayrı tutulur ve yalnızca bu cihazda saklanır.'],
     ],
   ],
 ];

@@ -25,14 +25,14 @@ import {
   smaStory,
   takings,
   ulkeState,
-} from '../src/learn/model.ts';
-import { GL, filterGlossary, fold, render as renderGlossary } from '../src/learn/glossary.ts';
-import * as glossary from '../src/learn/glossary.ts';
-import * as multiples from '../src/learn/multiples.ts';
-import * as steps from '../src/learn/steps.ts';
-import * as stories from '../src/learn/stories.ts';
-import * as smaHtml from '../src/learn/story-sma.ts';
-import * as marketsHtml from '../src/learn/story-markets.ts';
+} from '../src/model.ts';
+import { GL, filterGlossary, fold, render as renderGlossary } from '../src/glossary.ts';
+import * as glossary from '../src/glossary.ts';
+import * as multiples from '../src/multiples.ts';
+import * as steps from '../src/steps.ts';
+import * as stories from '../src/stories.ts';
+import * as smaHtml from '../src/story-sma.ts';
+import * as marketsHtml from '../src/story-markets.ts';
 
 /** mount() yalnızca innerHTML yazar; DOM olmadan sınamak için sahte kök. */
 const fakeRoot = (): HTMLElement & { innerHTML: string } =>
@@ -260,11 +260,13 @@ test('Senaryolar: dokuz hikâye, eyebrow başlıkları ve benzersiz kimlikler', 
     assert.ok(id === 'case9' || id.startsWith('ulke-'), id);
 });
 
-test('Senaryolar: tab adları yeni sekme kümesiyle uyumlu, eski "BIST 30 tarayıcı" adı yok', () => {
+test('Senaryolar: tanıtım kutuları Learn sekmelerini ve tarayıcı uygulamasını anar, başka uygulamanın sekmelerini değil', () => {
   const html = stories.markup();
-  for (const name of ['Senaryolar', 'Çarpanlar', 'Sözlük', 'Karar adımları', 'Tarayıcı', 'Bankalar', 'Kendi hesabın', 'Kendini sına', 'Ayarlar'])
+  for (const name of ['Senaryolar', 'Çarpanlar', 'Sözlük', 'Karar adımları', 'Kendini sına', 'Tarayıcı uygulaması (screener app)'])
     assert.ok(html.includes(name), name);
+  for (const name of ['Bankalar', 'Kendi hesabın', 'Ayarlar']) assert.ok(!html.includes(name), name);
   assert.doesNotMatch(html, /BIST 30 tarayıcı/);
+  assert.doesNotMatch(html, /href="#(screener|banks|calculator|settings)"/);
 });
 
 test('Hikâye 8 ve 9 öğrenme kutuları gerekli noktaları söyler', () => {
@@ -328,7 +330,7 @@ test('Sözlük: özgün gruplar ve yeni terimler grubu', () => {
     }
 });
 
-test('Sözlük: istenen dokuz yeni terim Türkçe ve İngilizce karşılığıyla var', () => {
+test('Sözlük: istenen sekiz yeni terim Türkçe ve İngilizce karşılığıyla var', () => {
   const last = GL[GL.length - 1][1];
   const want: Array<[RegExp, RegExp]> = [
     [/^Hareketli ortalama$/, /SMA/],
@@ -339,7 +341,6 @@ test('Sözlük: istenen dokuz yeni terim Türkçe ve İngilizce karşılığıyl
     [/^Destek ve direnç$/, /Support and resistance/],
     [/^Sektör ortancası$/, /median/i],
     [/^Kazanç verimi/, /Earnings yield/],
-    [/^İzleme listesi \/ Hisselerim$/, /Watchlist/],
   ];
   for (const [tr, en] of want) {
     const hit = last.find((i) => tr.test(i[0]));
@@ -368,7 +369,7 @@ test('Sözlük: arama Türkçe ve İngilizce metinde, büyük/küçük harf göz
   assert.ok(names('kaynak').includes('Özkaynak / özsermaye'));
   assert.ok(names('moving average').includes('Üstel hareketli ortalama'));
   assert.ok(names('ortanca').includes('Sektör ortancası'));
-  assert.ok(names('watchlist').includes('İzleme listesi / Hisselerim'));
+  assert.ok(!names('watchlist').length, 'izleme listesi ekran uygulamasına özgü, sözlükte yok');
   assert.deepEqual(names('xyzzy'), []);
   assert.equal(names('').length, GL.reduce((n, g) => n + g[1].length, 0));
   assert.equal(names('   ').length, names('').length);
@@ -419,8 +420,8 @@ test('Karar adımları: beş özgün adım, altı genişletme maddesi, eğilim a
 
 /* ---------- Kaynak taraması ---------- */
 
-test('src/learn: rastgelelik, tarih ya da emoji yok', () => {
-  const dir = new URL('../src/learn/', import.meta.url);
+test('apps/learn/src: rastgelelik, tarih ya da emoji yok', () => {
+  const dir = new URL('../src/', import.meta.url);
   for (const f of readdirSync(dir).filter((n) => n.endsWith('.ts'))) {
     const src = readFileSync(new URL(f, dir), 'utf8');
     assert.ok(!src.includes('Math.random'), `${f}: Math.random`);

@@ -120,7 +120,6 @@ function aiHtml(): string {
     <div class="howto">
       <div><b>Hisse yorumu</b>Tarayıcıda açtığınız hissenin çarpanlarını ve hareketli ortalamalarını hikâyelerin diliyle açıklar.</div>
       <div><b>Sektör karşılaştırması</b>Aynı piyasada aynı sektördeki hisseleri yan yana okur, farkların ne anlama gelebileceğini söyler.</div>
-      <div><b>Kendini sına</b>Öğrendiklerinizi listenizdeki gerçek hisselere uygulatan yeni sorular üretir.</div>
     </div>`;
 }
 
@@ -322,7 +321,7 @@ function watchlistHtml(): string {
   const waiting = MARKETS.some((m) => universe(m).some((s) => !s.hasData));
   return `
     <h3>${term('watchlist')}</h3>
-    <p class="read">Tarayıcıda ve Kendini sına'da kullanılacak hisseleri seçin. BIST ve ABD listeleri ayrı tutulur; her liste kendi içinde sektörlere göre gruplanır ve aynı sektördekiler yan yana kıyaslanır.</p>
+    <p class="read">Tarayıcıda kullanılacak hisseleri seçin. BIST ve ABD listeleri ayrı tutulur; her liste kendi içinde sektörlere göre gruplanır ve aynı sektördekiler yan yana kıyaslanır.</p>
     <div class="box">
       <div class="st-add">
         <div class="ctl" style="flex:0 0 140px"><label for="st-mkt">${term('market')}</label>

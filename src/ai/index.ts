@@ -20,8 +20,6 @@ import type { AiCallOptions, AiErrorCode, AiStatus, AiText, IndustryCompareInput
 
 export { AiError } from './types.ts';
 export type { AiCallOptions, AiStatus, AiText, IndustryCompareInput, StockCommentInput } from './types.ts';
-export { generateQuiz } from './quiz.ts';
-export type { AiQuizQuestion, GeneratedQuiz, GenerateQuizInput } from './quiz.ts';
 
 /** Seçili sağlayıcı ve hazır olup olmadığı. Değişince store 'ai' olayı yayılır. */
 export function aiStatus(): AiStatus {

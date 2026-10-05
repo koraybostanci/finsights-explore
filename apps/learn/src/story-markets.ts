@@ -6,6 +6,7 @@
 
 import { cw, svgText, svgWrap, tw } from '@fintools/shared/dom';
 import { esc, nf } from '@fintools/shared/format';
+import { siteLink } from '@fintools/shared/sites';
 import { TERMS, term } from '@fintools/shared/terms';
 import { byId, tileK } from './charts.ts';
 import { ULKE, ulkeState } from './model.ts';
@@ -34,7 +35,7 @@ export function html(): string {
       <div class="learn"><b>Ne öğrendik?</b>
         <span>Aynı F/K iki ülkede aynı şeyi söylemez. Kazanç verimi (1 ÷ F/K) <b>o para birimindeki faizle</b> kıyaslanır: faiz yüksekken %7'lik verim az, faiz düşükken yeterli görünür. TL kâr büyümesinin içinde enflasyon vardır; bu yüzden nominal büyüme (nominal growth) ve ondan hesaplanan PEG, dolar kazanan bir şirketinkiyle yan yana konamaz.</span>
         <span>Başka farklar da var. Türkiye'de enflasyon muhasebesi (inflation accounting, TMS 29 / IAS 29) raporlanan kârı değiştirir (Hikâye 5); ABD şirketlerinin tablolarında genellikle böyle bir düzeltme yoktur. Yatırımcı, belirsizliği yüksek gördüğü ülkede aynı kâr için daha fazla getiri ister, yani aynı kâra daha düşük fiyat öder; bu belirsizliğe ülke riski (country risk) denir. Kur (exchange rate) da ayrı bir değişkendir: TL kârın dolar karşılığı kurla birlikte değişir.</span>
-        <span><b>Sonuç:</b> bir hisseyi kendi piyasasındaki ve kendi sektöründeki benzerleriyle kıyaslayın. Tarayıcı bu yüzden BIST ve ABD hisselerini hiçbir zaman aynı tabloya koymaz; her piyasanın kendi tablosu ve kendi sektör ortancası (industry median) vardır.</span>
+        <span><b>Sonuç:</b> bir hisseyi kendi piyasasındaki ve kendi sektöründeki benzerleriyle kıyaslayın. ${siteLink('screener', 'Tarayıcı uygulaması (screener app)')} bu yüzden BIST ve ABD hisselerini hiçbir zaman aynı tabloya koymaz; her piyasanın kendi tablosu ve kendi sektör ortancası (industry median) vardır.</span>
       </div>
     </article>`;
 }
