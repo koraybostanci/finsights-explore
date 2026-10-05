@@ -23,6 +23,9 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/screener
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,6 +34,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+          cache-dependency-path: apps/screener/package-lock.json
 
       # With a committed package-lock.json the install is reproducible (npm ci); without one it is not.
       - name: Install
@@ -41,7 +46,7 @@ jobs:
         run: npm run typecheck
 
       - name: Shared tests
-        run: npm --prefix shared test
+        run: npm --prefix ../../shared test
 
       - name: Unit tests
         run: npm test
@@ -53,7 +58,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: apps/screener/dist
 
   deploy:
     needs: build
