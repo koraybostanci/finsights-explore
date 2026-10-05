@@ -17,7 +17,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parents[1]
-REPO = SCRIPTS.parent
+APP_ROOT = SCRIPTS.parent
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
@@ -47,9 +47,9 @@ from fsdata.writer import validate_market, validate_prices  # noqa: E402
 logging.disable(logging.CRITICAL)  # the faked failures below are expected
 
 NOW = datetime(2026, 10, 5, 19, 0, tzinfo=timezone(timedelta(hours=3)))
-UNIVERSE = load_universe(REPO / "config" / "stocks.json")
-BANKS = load_banks(REPO / "config" / "banks_manual.json")
-SEED = json.loads((REPO / "tests" / "fixtures" / "market.json").read_text(encoding="utf-8"))
+UNIVERSE = load_universe(APP_ROOT / "config" / "stocks.json")
+BANKS = load_banks(APP_ROOT / "config" / "banks_manual.json")
+SEED = json.loads((APP_ROOT / "tests" / "fixtures" / "market.json").read_text(encoding="utf-8"))
 
 
 def tv_row(name: str, **over):
@@ -436,7 +436,7 @@ class Validation(unittest.TestCase):
         self.assertTrue(validate_prices({**ok, "dates": ["2026-01-02", "2026-01-01"]}))
 
     def test_config_errors_are_reported(self):
-        raw = json.loads((REPO / "config" / "stocks.json").read_text(encoding="utf-8"))
+        raw = json.loads((APP_ROOT / "config" / "stocks.json").read_text(encoding="utf-8"))
         raw["stocks"][0]["industry"] = "does_not_exist"
         with self.assertRaises(ConfigError):
             parse_universe(raw)
@@ -477,7 +477,7 @@ class Cli(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp())
         self.data = self.tmp / "data"
         self.data.mkdir()
-        shutil.copy(REPO / "tests" / "fixtures" / "market.json", self.data / "market.json")
+        shutil.copy(APP_ROOT / "tests" / "fixtures" / "market.json", self.data / "market.json")
 
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)

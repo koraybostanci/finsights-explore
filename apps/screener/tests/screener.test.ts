@@ -49,7 +49,7 @@ import {
 } from '../src/screener/detail.ts';
 import { SMA_WINDOW, seriesUsable, smaChartModel, smaChartSvg } from '../src/screener/smachart.ts';
 import { commentBlockHtml, compareBlockHtml } from '../src/screener/ai-ui.ts';
-import { BIM_EXAMPLE, calcEvaluate, calcMultiples } from '../src/calc/logic.ts';
+import { BIM_EXAMPLE, calcEvaluate, calcMultiples } from '../src/calculator/logic.ts';
 
 const DATA = JSON.parse(readFileSync(new URL('./fixtures/market.json', import.meta.url), 'utf8')) as MarketData;
 const views: StockView[] = DATA.stocks.map((s) => toView(s, DATA.industries));
@@ -196,7 +196,7 @@ test('sanitizeThresholds: eski anahtarlı (şema 1) kayıt ve yanlış türler a
 });
 
 test('getThresholds: localStorage\'daki eski biçim uygulamayı bozmaz, varsayılan eşikler gelir', () => {
-  const stored: Record<string, string> = { 'finsights.thresholds': JSON.stringify({ fk: 50, peg: 2, nb: 4, fg: 10, cyc: false, bank: true }) };
+  const stored: Record<string, string> = { 'fintools.screener.thresholds': JSON.stringify({ fk: 50, peg: 2, nb: 4, fg: 10, cyc: false, bank: true }) };
   (globalThis as { localStorage?: unknown }).localStorage = {
     getItem: (k: string) => stored[k] ?? null,
     setItem: (k: string, v: string) => void (stored[k] = v),

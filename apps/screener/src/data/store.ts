@@ -13,7 +13,7 @@ export const MARKET_LABEL: Record<MarketId, string> = { BIST: 'BIST', US: 'ABD' 
 
 /* ---------- Kalıcı küçük ayarlar ---------- */
 
-export const storage = createStorage('finsights.');
+export const storage = createStorage('fintools.screener.');
 export const { lsGet, lsSet, lsRemove } = storage;
 
 /* ---------- Olaylar ---------- */

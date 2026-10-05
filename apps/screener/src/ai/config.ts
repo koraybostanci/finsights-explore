@@ -1,6 +1,6 @@
 /**
  * Yapay zekâ ayarları: seçili sağlayıcı, sağlayıcı başına anahtar ve model,
- * özel adres. Hepsi yalnızca bu tarayıcıda (localStorage, "finsights." öneki)
+ * özel adres. Hepsi yalnızca bu tarayıcıda (localStorage, "fintools.screener." öneki)
  * durur; anahtar hiçbir yere yazdırılmaz ve hiçbir adrese eklenmez.
  *
  * Her değişiklikte store 'ai' olayı yayılır.

@@ -3,7 +3,7 @@
  * anında hesaplar. Eşikler tarayıcıyla ortaktır (screener/thresholds.ts).
  */
 
-import './calc.css';
+import './calculator.css';
 
 import { ICON, VLABEL } from '../lib/evaluate.ts';
 import { esc, nf } from '@fintools/shared/format';

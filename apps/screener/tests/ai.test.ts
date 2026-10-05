@@ -485,13 +485,13 @@ test('ayarlar sağlayıcı başına saklanır ve her değişiklik "ai" olayı ya
   assert.equal(aiStatus().configured, false);
   off();
 
-  // Depoda yalnızca "finsights." önekli anahtarlar var
-  assert.ok([...store.keys()].every((k) => k.startsWith('finsights.ai.')));
+  // Depoda yalnızca "fintools.screener." önekli anahtarlar var
+  assert.ok([...store.keys()].every((k) => k.startsWith('fintools.screener.ai.')));
 });
 
 test('bozuk depo değeri varsayılana düşer', () => {
-  store.set('finsights.ai.provider', '"yok-boyle-saglayici"');
-  store.set('finsights.ai.key.anthropic', '{"a":1}');
+  store.set('fintools.screener.ai.provider', '"yok-boyle-saglayici"');
+  store.set('fintools.screener.ai.key.anthropic', '{"a":1}');
   assert.equal(config.getProvider(), 'anthropic');
   assert.equal(config.getKey('anthropic'), '');
 });
@@ -688,7 +688,7 @@ test('commentStock: sağlayıcıya gider, önbelleğe yazar, force ile yeniler',
     assert.match(body.messages[0].content, /THYAO/);
     assert.equal(calls[0].url, 'https://api.anthropic.com/v1/messages');
     // Anahtar önbelleğe girmez
-    assert.equal((store.get('finsights.ai.cache') ?? '').includes(KEY), false);
+    assert.equal((store.get('fintools.screener.ai.cache') ?? '').includes(KEY), false);
   } finally {
     globalThis.fetch = realFetch;
   }
