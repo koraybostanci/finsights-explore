@@ -28,8 +28,6 @@ export interface ProviderDef {
   keyRequired: boolean;
   /** OpenAI biçiminde çıktı sınırının alan adı */
   tokenParam: 'max_tokens' | 'max_completion_tokens';
-  /** OpenAI biçiminde response_format: json_object gönderilsin mi */
-  jsonMode: boolean;
   /** Tarayıcıdan doğrudan çağrıya izin verdiği (CORS) doğrulandı mı */
   corsVerified: boolean;
 }
@@ -43,7 +41,6 @@ export const PROVIDERS: ProviderDef[] = [
     baseUrl: 'https://api.anthropic.com/v1',
     keyRequired: true,
     tokenParam: 'max_tokens',
-    jsonMode: false,
     corsVerified: true,
   },
   {
@@ -54,7 +51,6 @@ export const PROVIDERS: ProviderDef[] = [
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     keyRequired: true,
     tokenParam: 'max_tokens',
-    jsonMode: true,
     corsVerified: true,
   },
   {
@@ -65,7 +61,6 @@ export const PROVIDERS: ProviderDef[] = [
     baseUrl: 'https://api.openai.com/v1',
     keyRequired: true,
     tokenParam: 'max_completion_tokens',
-    jsonMode: true,
     corsVerified: true,
   },
   {
@@ -76,7 +71,6 @@ export const PROVIDERS: ProviderDef[] = [
     baseUrl: 'https://opencode.ai/zen/go/v1',
     keyRequired: true,
     tokenParam: 'max_tokens',
-    jsonMode: false,
     corsVerified: false,
   },
   {
@@ -87,7 +81,6 @@ export const PROVIDERS: ProviderDef[] = [
     baseUrl: '',
     keyRequired: false,
     tokenParam: 'max_tokens',
-    jsonMode: false,
     corsVerified: false,
   },
 ];
@@ -117,8 +110,6 @@ export interface CompletionRequest {
   user: string;
   /** Görünen yanıt için bütçe; düşünen modeller için uyarlayıcı pay ekler */
   maxTokens: number;
-  /** Yanıt JSON olmalı (destekleyen sağlayıcıda JSON kipi açılır) */
-  json?: boolean;
 }
 
 export interface HttpRequest {
@@ -217,7 +208,6 @@ export function buildCompletionRequest(cfg: ResolvedConfig, req: CompletionReque
 
   if (def.shape === 'gemini') {
     const generationConfig: Record<string, unknown> = { maxOutputTokens: req.maxTokens + THINKING_HEADROOM };
-    if (req.json) generationConfig.responseMimeType = 'application/json';
     const body: Record<string, unknown> = {
       contents: [{ role: 'user', parts: [{ text: req.user }] }],
       generationConfig,
@@ -235,7 +225,6 @@ export function buildCompletionRequest(cfg: ResolvedConfig, req: CompletionReque
   if (req.system) messages.push({ role: 'system', content: req.system });
   messages.push({ role: 'user', content: req.user });
   const body: Record<string, unknown> = { model, messages, [def.tokenParam]: req.maxTokens + THINKING_HEADROOM };
-  if (req.json && def.jsonMode) body.response_format = { type: 'json_object' };
   return { url: `${base}/chat/completions`, method: 'POST', headers, body: JSON.stringify(body) };
 }
 
@@ -410,31 +399,6 @@ export const NETWORK_HINT =
   'İnternet bağlantınızı kontrol edin. Tarayıcı isteği engelliyor da olabilir (CORS); bazı sağlayıcılar tarayıcıdan doğrudan çağrıya izin vermez.';
 
 /* ---------- Metin yardımcıları ---------- */
-
-/** Modelin metninden JSON'u çıkarır: kod çitlerini ve baştaki/sondaki açıklamaları atar. */
-export function extractJson(text: string): unknown {
-  let s = text.trim();
-  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fence) s = fence[1].trim();
-  try {
-    return JSON.parse(s);
-  } catch {
-    /* gövdeyi ayıklamayı dene */
-  }
-  const starts = [s.indexOf('{'), s.indexOf('[')].filter((i) => i >= 0);
-  if (starts.length) {
-    const start = Math.min(...starts);
-    const end = Math.max(s.lastIndexOf('}'), s.lastIndexOf(']'));
-    if (end > start) {
-      try {
-        return JSON.parse(s.slice(start, end + 1));
-      } catch {
-        /* aşağıda hata verilir */
-      }
-    }
-  }
-  throw bad('Yanıt geçerli bir JSON değil.');
-}
 
 /** Düz metin yanıtını temizler: markdown imlerini ve fazla boş satırları atar. */
 export function cleanText(text: string): string {

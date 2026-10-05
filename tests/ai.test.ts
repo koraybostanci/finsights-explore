@@ -7,7 +7,6 @@ import {
   buildModelsRequest,
   checkBaseUrl,
   cleanText,
-  extractJson,
   httpError,
   isConfigured,
   parseCompletion,
@@ -129,8 +128,8 @@ test('Claude isteği: adres, başlıklar ve gövde', () => {
   });
 });
 
-test('OpenAI isteği: Bearer başlığı, max_completion_tokens, JSON kipi', () => {
-  const r = buildCompletionRequest(cfg('openai'), { ...REQ, json: true });
+test('OpenAI isteği: Bearer başlığı, max_completion_tokens', () => {
+  const r = buildCompletionRequest(cfg('openai'), REQ);
   assert.equal(r.url, 'https://api.openai.com/v1/chat/completions');
   assert.deepEqual(r.headers, { 'content-type': 'application/json', Authorization: `Bearer ${KEY}` });
   assert.deepEqual(JSON.parse(r.body!), {
@@ -140,31 +139,27 @@ test('OpenAI isteği: Bearer başlığı, max_completion_tokens, JSON kipi', () 
       { role: 'user', content: 'KULLANICI' },
     ],
     max_completion_tokens: 500 + THINKING_HEADROOM,
-    response_format: { type: 'json_object' },
   });
-  const plain = JSON.parse(buildCompletionRequest(cfg('openai'), REQ).body!);
-  assert.equal('response_format' in plain, false);
 });
 
 test('Gemini isteği: anahtar başlıkta, adreste değil; yerel API gövdesi', () => {
-  const r = buildCompletionRequest(cfg('gemini', { model: 'models/gemini-x' }), { ...REQ, json: true });
+  const r = buildCompletionRequest(cfg('gemini', { model: 'models/gemini-x' }), REQ);
   assert.equal(r.url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-x:generateContent');
   assert.deepEqual(r.headers, { 'content-type': 'application/json', 'x-goog-api-key': KEY });
   assert.deepEqual(JSON.parse(r.body!), {
     contents: [{ role: 'user', parts: [{ text: 'KULLANICI' }] }],
-    generationConfig: { maxOutputTokens: 500 + THINKING_HEADROOM, responseMimeType: 'application/json' },
+    generationConfig: { maxOutputTokens: 500 + THINKING_HEADROOM },
     systemInstruction: { parts: [{ text: 'SİSTEM' }] },
   });
 });
 
-test('OpenCode Go isteği: OpenAI uyumlu, max_tokens, JSON kipi gönderilmez', () => {
-  const r = buildCompletionRequest(cfg('opencode'), { ...REQ, json: true });
+test('OpenCode Go isteği: OpenAI uyumlu, max_tokens', () => {
+  const r = buildCompletionRequest(cfg('opencode'), REQ);
   assert.equal(r.url, 'https://opencode.ai/zen/go/v1/chat/completions');
   assert.equal(r.headers.Authorization, `Bearer ${KEY}`);
   const body = JSON.parse(r.body!);
   assert.equal(body.max_tokens, 500 + THINKING_HEADROOM);
   assert.equal('max_completion_tokens' in body, false);
-  assert.equal('response_format' in body, false);
 });
 
 test('Özel adres isteği: taban adres düzeltilir; anahtar yoksa Authorization gönderilmez', () => {
@@ -772,16 +767,6 @@ test('aiErrorMessage: her kod için kısa Türkçe mesaj', () => {
 });
 
 /* ---------- Metin yardımcıları ---------- */
-
-test('extractJson: çitli, açıklamalı ve düz JSON', () => {
-  assert.deepEqual(extractJson('{"a":1}'), { a: 1 });
-  assert.deepEqual(extractJson('```json\n{"a":[1,2]}\n```'), { a: [1, 2] });
-  assert.deepEqual(extractJson('İşte sorular:\n{"a":{"b":"}"}}\nKolay gelsin.'), { a: { b: '}' } });
-  assert.deepEqual(extractJson('[1,2,3]'), [1, 2, 3]);
-  assert.throws(() => extractJson('JSON yok'), (e: unknown) => e instanceof AiError && e.code === 'bad_response');
-  assert.throws(() => extractJson('{"a":'), AiError);
-});
-
 test('cleanText: markdown imleri ve fazla boşluk atılır', () => {
   assert.equal(cleanText('## Başlık\r\n\r\n**Kalın** metin  \n\n\n\n* madde\n- madde 2'), 'Başlık\n\nKalın metin\n\nmadde\nmadde 2');
   assert.equal(cleanText('F/K 3,60 - düşük; PEG * yok'), 'F/K 3,60 - düşük; PEG * yok');
