@@ -7,10 +7,10 @@ public/data/prices/<MARKET>-<TICKER>.json. See docs/DATA.md.
 
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-CONFIG_DIR = REPO_ROOT / "config"
-DATA_DIR = REPO_ROOT / "public" / "data"
-REFERENCE_FILE = REPO_ROOT / "scripts" / "reference" / "fintables_2026-10-02.json"
+APP_ROOT = Path(__file__).resolve().parents[2]
+CONFIG_DIR = APP_ROOT / "config"
+DATA_DIR = APP_ROOT / "public" / "data"
+REFERENCE_FILE = APP_ROOT / "scripts" / "reference" / "fintables_2026-10-02.json"
 
 MARKETS = ("BIST", "US")
 CURRENCY = {"BIST": "TRY", "US": "USD"}

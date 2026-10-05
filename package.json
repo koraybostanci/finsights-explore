@@ -1,27 +1,14 @@
 {
-  "name": "finsights-explore",
+  "name": "fintools",
   "private": true,
   "version": "0.1.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.tests.json",
-    "test": "node --test \"tests/**/*.test.ts\"",
-    "check": "npm --prefix shared test && npm run typecheck && npm test && npm run build",
+    "check": "npm run check:screener && npm run check:learn",
+    "check:screener": "npm --prefix apps/screener run check",
     "check:learn": "npm --prefix apps/learn run check",
-    "dev:learn": "npm --prefix apps/learn run dev"
-  },
-  "dependencies": {
-    "@fintools/shared": "file:./shared"
-  },
-  "devDependencies": {
-    "@types/node": "^22.0.0",
-    "typescript": "^6.0.0",
-    "vite": "^6.0.0"
-  },
-  "engines": {
-    "node": ">=22.18"
+    "dev:screener": "npm --prefix apps/screener run dev",
+    "dev:learn": "npm --prefix apps/learn run dev",
+    "build:screener": "npm --prefix apps/screener run build",
+    "build:learn": "npm --prefix apps/learn run build"
   }
 }

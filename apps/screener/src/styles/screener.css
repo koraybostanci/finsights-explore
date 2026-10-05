@@ -1,6 +1,6 @@
-/* finsights.explore — uygulamaya özgü stiller. İlk sürümün (BIST 30 Çarpan Rehberi) stil dosyasıdır;
+/* Hisse Tarayıcı — uygulamaya özgü stiller. İlk sürümün (BIST 30 Çarpan Rehberi) stil dosyasıdır;
    görsel dil bilerek aynı tutulur. Belirteçler, sayfa düzeni ve ortak bileşenler
-   @fintools/shared/styles içindedir; yeni bileşenler shared.css ve modül stillerindedir. */
+   @fintools/shared/styles içindedir; modüllere özgü stiller modül klasörlerindedir. */
 
 /* Veri şeridi */
 .databar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:var(--ui);font-size:.84rem}
@@ -36,3 +36,20 @@ tr.detail td{white-space:normal;text-align:left;font-family:var(--body);backgrou
 .calc{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px;align-items:start}
 .calc .controls{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
 .out{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+
+/* Birden çok modülün kullandığı yeni bileşenler. Renk ve yazı tipi belirteçleri @fintools/shared/styles/tokens.css'ten gelir. */
+
+/* Sektör ortancası satırı */
+tr.med td{background:var(--accent-soft);font-weight:600}
+tr.med td:first-child{font-family:var(--ui);background:var(--accent-soft)}
+
+/* Yan yana iki sütun; dar ekranda alt alta */
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:18px;align-items:start}
+
+/* Yapay zekâ metni kutusu ve durum satırı */
+.ai-text{display:flex;flex-direction:column;gap:8px}
+.ai-text p{font-size:.95rem}
+.ai-meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spin{animation:none}}

@@ -7,8 +7,7 @@
 import '@fintools/shared/styles/tokens.css';
 import '@fintools/shared/styles/layout.css';
 import '@fintools/shared/styles/components.css';
-import './styles/app.css';
-import './styles/shared.css';
+import './styles/screener.css';
 
 import { MARKETS, MARKET_LABEL, data, dataError, loadData, marketAsOf, marketHasData, on, storage } from './data/store.ts';
 import { esc, fmtDate } from '@fintools/shared/format';
@@ -17,7 +16,7 @@ import { createApp, type TabDef } from '@fintools/shared/shell';
 
 import * as screener from './screener/index.ts';
 import * as banks from './banks/index.ts';
-import * as calc from './calc/index.ts';
+import * as calc from './calculator/index.ts';
 import * as settings from './settings/index.ts';
 
 const TABS: TabDef[] = [
