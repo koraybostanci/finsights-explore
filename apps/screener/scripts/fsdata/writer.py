@@ -13,7 +13,7 @@ from . import CONFIG_DIR, DATA_DIR
 from .config import Universe
 from .util import atomic_write, dumps_compact, dumps_pretty, read_json
 
-log = logging.getLogger("finsights.writer")
+log = logging.getLogger("fintools.writer")
 
 
 class ValidationFailed(Exception):

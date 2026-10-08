@@ -17,7 +17,7 @@ from .mapping import FIGURE_KEYS, FLAG_KEYS, TEXT_KEYS, RowError, map_tv_row, mo
 from .sources import SourceError, TradingViewClient, YahooClient
 from .util import clean_number, r2
 
-log = logging.getLogger("finsights.pipeline")
+log = logging.getLogger("fintools.pipeline")
 
 DEFAULT_FAIL_SHARE = 0.5
 DEFAULT_DAYS = 520  # trading days kept per price file

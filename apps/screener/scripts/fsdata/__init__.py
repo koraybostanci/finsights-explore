@@ -1,4 +1,4 @@
-"""finsights.explore data pipeline.
+"""Screener data pipeline.
 
 Reads config/stocks.json, fetches fundamentals (TradingView screener) and daily
 closes (Yahoo Finance), and writes public/data/market.json plus

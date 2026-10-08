@@ -160,7 +160,7 @@ def map_tv_row(spec: StockSpec, row: Mapping[str, Any]) -> dict[str, Any]:
     )
     out["ebitdaGrowth"], out["netIncomeGrowth"] = fg, ng
     if loss:
-        out["loss"] = True  # tells the app that the empty F/K is a loss, not missing data
+        out["loss"] = True  # tells the app that the empty P/E is a loss, not missing data
     if fg_text:
         out["ebitdaGrowthNote"] = fg_text
     if ng_text:
