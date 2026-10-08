@@ -25,14 +25,14 @@ export function createStorage(prefix: string): AppStorage {
       try {
         localStorage.setItem(prefix + key, JSON.stringify(value));
       } catch {
-        /* özel pencere ya da dolu depolama: ayar bu oturumla sınırlı kalır */
+        /* private window or full storage: the setting lasts only for this session */
       }
     },
     lsRemove(key: string): void {
       try {
         localStorage.removeItem(prefix + key);
       } catch {
-        /* yok say */
+        /* ignore */
       }
     },
   };

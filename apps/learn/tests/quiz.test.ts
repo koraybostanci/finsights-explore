@@ -6,7 +6,7 @@ import { ROUND_SIZE, buildRound, score, shuffleOptions } from '../src/quiz/logic
 import * as stories from '../src/stories.ts';
 import type { QuizQuestion } from '../src/quiz/types.ts';
 
-/** Tekrarlanabilir rastgele sayı üreteci */
+/** Repeatable random number generator */
 function seeded(seed: number): () => number {
   let x = seed;
   return () => {
@@ -16,40 +16,40 @@ function seeded(seed: number): () => number {
 }
 
 function assertWellFormed(q: QuizQuestion): void {
-  assert.equal(q.options.length, 4, `${q.id}: 4 seçenek`);
-  assert.equal(new Set(q.options.map((o) => o.trim().toLocaleLowerCase('tr'))).size, 4, `${q.id}: seçenekler farklı`);
-  assert.ok(Number.isInteger(q.correct) && q.correct >= 0 && q.correct < 4, `${q.id}: doğru yanıt sırası`);
-  assert.ok(q.q.trim().length > 10, `${q.id}: soru metni`);
-  assert.ok(q.why.trim().length > 10, `${q.id}: açıklama`);
-  assert.ok(q.ref.tab && q.ref.label, `${q.id}: dönüş yeri`);
+  assert.equal(q.options.length, 4, `${q.id}: 4 options`);
+  assert.equal(new Set(q.options.map((o) => o.trim().toLocaleLowerCase('tr'))).size, 4, `${q.id}: options are distinct`);
+  assert.ok(Number.isInteger(q.correct) && q.correct >= 0 && q.correct < 4, `${q.id}: index of the correct answer`);
+  assert.ok(q.q.trim().length > 10, `${q.id}: question text`);
+  assert.ok(q.why.trim().length > 10, `${q.id}: explanation`);
+  assert.ok(q.ref.tab && q.ref.label, `${q.id}: place to go back to`);
 }
 
-test('hazır soru bankası: biçim, tekil kimlikler, her konu', () => {
+test('question bank: shape, unique ids, every topic', () => {
   assert.ok(BANK.length >= 20);
   assert.equal(new Set(BANK.map((q) => q.id)).size, BANK.length);
   BANK.forEach(assertWellFormed);
   const topics = new Set(BANK.map((q) => topicOf(q.id)));
-  for (const t of Object.keys(TOPICS)) assert.ok(topics.has(t as keyof typeof TOPICS), `${t} konusunda soru var`);
+  for (const t of Object.keys(TOPICS)) assert.ok(topics.has(t as keyof typeof TOPICS), `there is a question on ${t}`);
 });
 
-test('dönüş yerleri: her sorunun sekme kimliği Learn uygulamasındaki bir sekmedir', () => {
-  // main.ts TABS ile aynı kimlikler
+test('back references: every question points to a tab of the Learn app', () => {
+  // The same ids as TABS in main.ts
   const tabs = new Set(['stories', 'multiples', 'glossary', 'steps', 'quiz']);
   const refs = [...BANK.map((q) => q.ref), ...Object.values(TOPICS).map((t) => t.ref)];
-  for (const ref of refs) assert.ok(tabs.has(ref.tab), `bilinmeyen sekme: ${ref.tab}`);
+  for (const ref of refs) assert.ok(tabs.has(ref.tab), `unknown tab: ${ref.tab}`);
 });
 
-test('dönüş yerleri: her çapa kimliği Senaryolar sekmesinde var', () => {
+test('back references: every anchor id exists in the Stories tab', () => {
   const ids = new Set([...stories.markup().matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
   const refs = [...BANK.map((q) => q.ref), ...Object.values(TOPICS).map((t) => t.ref)].filter((r) => r.anchor);
   assert.ok(refs.length > 0);
   for (const ref of refs) {
-    assert.equal(ref.tab, 'stories', `${ref.anchor}: çapalı bağlantılar yalnızca Senaryolar'a gider`);
-    assert.ok(ids.has(ref.anchor!), `çapa yok: ${ref.anchor}`);
+    assert.equal(ref.tab, 'stories', `${ref.anchor}: anchored links only go to Stories`);
+    assert.ok(ids.has(ref.anchor!), `missing anchor: ${ref.anchor}`);
   }
 });
 
-test('buildRound: boyut, tekrar yok, seçenek karışımı doğruyu korur', () => {
+test('buildRound: size, no repeats, shuffling keeps the correct answer', () => {
   for (const seed of [1, 7, 42, 2026]) {
     const round = buildRound(BANK, { rnd: seeded(seed) });
     assert.equal(round.length, ROUND_SIZE);
@@ -63,12 +63,12 @@ test('buildRound: boyut, tekrar yok, seçenek karışımı doğruyu korur', () =
   }
 });
 
-test('buildRound: farklı konulardan soru seçer', () => {
+test('buildRound: picks questions from different topics', () => {
   const round = buildRound(BANK, { rnd: seeded(3) });
   assert.ok(new Set(round.map((q) => topicOf(q.id))).size >= 6);
 });
 
-test('shuffleOptions ve score', () => {
+test('shuffleOptions and score', () => {
   const q = BANK[0];
   const s = shuffleOptions(q, seeded(9));
   assert.equal(s.options[s.correct], q.options[q.correct]);

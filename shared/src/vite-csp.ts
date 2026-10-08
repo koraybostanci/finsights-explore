@@ -35,7 +35,7 @@ export interface CspPlugin {
 export function csp(connectSrc: string): CspPlugin {
   const content = cspPolicy(connectSrc);
   return {
-    name: 'finsights-csp',
+    name: 'fintools-csp',
     apply: 'build',
     transformIndexHtml() {
       return [

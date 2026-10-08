@@ -1,5 +1,5 @@
 /**
- * Kendini sına sekmesi. Hazır soru bankasından tur kurar; anahtar, veri ya da ağ gerekmez.
+ * Quiz tab. Builds a round from the fixed question bank; needs no key, data or network.
  */
 
 import './quiz.css';
@@ -34,7 +34,7 @@ function start(): void {
   render();
 }
 
-/* ---------- Görünüm ---------- */
+/* ---------- View ---------- */
 
 function introHtml(): string {
   const best = lsGet<Best | null>('quiz.best', null);
@@ -184,5 +184,5 @@ export function mount(el: HTMLElement): void {
 }
 
 export function refresh(): void {
-  /* çizim yok */
+  /* nothing to draw */
 }

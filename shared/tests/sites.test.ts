@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { SITES, siteLink } from '../src/sites.ts';
 
-test('siteLink: adres boşken kaçırılmış düz metin, doluyken bağlantı', () => {
+test('siteLink: escaped plain text while the URL is empty, a link once it is set', () => {
   assert.deepEqual(SITES, { learn: '', screener: '' });
   assert.equal(siteLink('screener', 'Tarayıcı <yeni>'), 'Tarayıcı &lt;yeni&gt;');
   const sites = { learn: '', screener: 'https://example.org/?a=1&b="2"' };

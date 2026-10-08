@@ -1,18 +1,18 @@
 /**
- * Sözlük: ilk sürümün terim listesi ve arama kutusu, bir de yeni terimler grubu.
- * Arama Türkçe ve İngilizce metinde, büyük/küçük harf ve Türkçe harf farkı gözetmeden çalışır.
+ * Glossary tab: the term list of the first version with a search box, plus a group of new terms.
+ * Search works on Turkish and English text, ignoring letter case and Turkish diacritics.
  *
- * mount: sekme ilk kez kurulurken; refresh: sekme görünür olduğunda ve genişlik değişince (burada yapılacak bir şey yok).
+ * mount: when the tab is first built; refresh: when the tab becomes visible and when the width changes (nothing to do here).
  */
 
 import { esc } from '@fintools/shared/format';
 import { TERMS } from '@fintools/shared/terms';
 
-/** [Türkçe terim, İngilizce karşılık, açıklama, isteğe bağlı formül] */
+/** [Turkish term, English counterpart, explanation, optional formula] */
 export type GlossItem = [string, string, string, string?];
 export type GlossGroup = [string, GlossItem[]];
 
-/** Terim sözlüğündeki (terms.ts) Türkçe ve İngilizce adlarla bir madde yazar; adlar her yerde aynı kalır. */
+/** Writes an entry with the Turkish and English names from the term dictionary (terms.ts), so the names stay the same everywhere. */
 const fromTerm = (id: string, def: string, fx?: string): GlossItem => [TERMS[id].tr, TERMS[id].en, def, fx];
 
 export const GL: GlossGroup[] = [
@@ -171,9 +171,9 @@ export const GL: GlossGroup[] = [
 ];
 
 /**
- * Arama için metni sadeleştirir: Türkçe kurallarıyla küçültür (İ→i, I→ı), sonra
- * ı→i yapar ve şapka/nokta gibi işaretleri atar. Böylece "EBITDA", "ebitda",
- * "özkaynak" ve "ozkaynak" aynı sonucu verir.
+ * Simplifies text for searching: lowercases with Turkish rules (İ→i, I→ı), then maps
+ * ı→i and drops diacritics such as the circumflex and dots. So "EBITDA", "ebitda",
+ * "özkaynak" and "ozkaynak" give the same result.
  */
 export function fold(s: string): string {
   return s
@@ -183,17 +183,17 @@ export function fold(s: string): string {
     .replace(/ı/g, 'i');
 }
 
-/** Bir maddenin aranabilir metni: Türkçe terim, İngilizce karşılık, açıklama ve formül. */
+/** Searchable text of an entry: Turkish term, English counterpart, explanation and formula. */
 const haystack = (i: GlossItem): string => fold(`${i[0]} ${i[1]} ${i[2]} ${i[3] ?? ''}`);
 
 const escRe = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
- * Sorguya uyan maddeleri gruplar hâlinde verir; boş sorgu her şeyi verir.
- * Metnin herhangi bir yerinde geçen eşleşme sayılır ("kaynak" → "özkaynak").
- * Tek istisna 3 harfe kadar kısa sorgulardır: "sma", "eps", "ema" gibi kısaltmalar
- * "amortisman" ya da "finansman" gibi sözcüklerin içinde de geçtiği için önce yalnızca
- * sözcük başı eşleşmelerine bakılır; hiç yoksa metnin içine bakılır.
+ * Returns the entries that match the query, grouped; an empty query returns everything.
+ * A match anywhere in the text counts ("kaynak" → "özkaynak").
+ * The one exception is queries of up to 3 letters: abbreviations like "sma", "eps", "ema"
+ * also occur inside words such as "amortisman" or "finansman", so only matches at the
+ * start of a word are tried first; if there are none, matches inside the text are used.
  */
 export function filterGlossary(query: string, groups: GlossGroup[] = GL): GlossGroup[] {
   const q = fold(query.trim());
@@ -239,5 +239,5 @@ export function mount(root: HTMLElement): void {
 }
 
 export function refresh(): void {
-  /* Bu sekmede grafik yok. */
+  /* No chart in this tab. */
 }

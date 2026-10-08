@@ -1,12 +1,12 @@
-/** Hikâyelerin ortak çizim yardımcıları (ilk sürümdeki elle çizilen SVG grafikler). */
+/** Drawing helpers shared by the stories (hand-drawn SVG charts). */
 
 import { cw, svgText, svgWrap, tw } from '@fintools/shared/dom';
 import { esc, nf } from '@fintools/shared/format';
 
-/** Sekmenin kökü içinde kimlikle öğe bulur; kimlikler başka sekmelerle çakışsa bile doğru öğeyi verir. */
+/** Finds an element by id inside a tab's root; returns the right one even if ids clash with other tabs. */
 export function byId<T extends HTMLElement = HTMLElement>(root: ParentNode, id: string): T {
   const el = root.querySelector<T>('#' + id);
-  if (!el) throw new Error(`#${id} bulunamadı`);
+  if (!el) throw new Error(`Element #${id} not found`);
   return el;
 }
 
@@ -14,7 +14,7 @@ export interface FlowRow {
   lbl: string;
   en: string;
   v: number;
-  /** total: ara toplam · minus: gider · key: FAVÖK, net kâr */
+  /** total: subtotal · minus: expense · key: EBITDA, net income */
   t: 'total' | 'minus' | 'key';
 }
 
@@ -26,8 +26,8 @@ export interface FlowOpts {
 }
 
 /**
- * Yatay akış grafiği: gelir tablosu ve sandık için ortak.
- * Dar ekranda etiket çubuğun üstüne, genişte sola yazılır.
+ * Horizontal flow chart, shared by the income statement and the neighborhood fund.
+ * The label goes above the bar on a narrow screen and to the left on a wide one.
  */
 export function flowChart(el: HTMLElement, rows: FlowRow[], o: FlowOpts): void {
   const W = cw(el);
@@ -85,14 +85,14 @@ export function flowChart(el: HTMLElement, rows: FlowRow[], o: FlowOpts): void {
   el.innerHTML = svgWrap(W, rows.length * rh, o.aria, g);
 }
 
-export const fmtBin = (v: number): string => (v < 0 ? '−' : '') + nf(Math.abs(v) / 1000, 0) + ' bin';
-export const fmtBin1 = (v: number): string => (v < 0 ? '−' : '') + nf(Math.abs(v) / 1000, 1) + ' bin';
+export const fmtThousands = (v: number): string => (v < 0 ? '−' : '') + nf(Math.abs(v) / 1000, 0) + ' bin';
+export const fmtThousands1 = (v: number): string => (v < 0 ? '−' : '') + nf(Math.abs(v) / 1000, 1) + ' bin';
 
-/** Kutucuk başlığı: Türkçe terim, altında İngilizce karşılığı. */
+/** Tile heading: the Turkish term with its English counterpart below. */
 export const tileK = (tr: string, en: string): string =>
   `<div class="k">${esc(tr)}<span class="en">${esc(en)}</span></div>`;
 
-/** Çizgi için SVG yol verisi; null değerlerde çizgi kesilir. */
+/** SVG path data for a line; the line breaks at null values. */
 export function linePath(values: Array<number | null>, X: (i: number) => number, Y: (v: number) => number): string {
   let d = '';
   let pen = false;

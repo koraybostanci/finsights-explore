@@ -1,17 +1,17 @@
 /**
- * Terim sözlüğü: her teknik terimin Türkçesi ve İngilizce karşılığı.
- * Arayüzde bir terim ilk kez geçtiğinde term() ile yazılır; böylece
- * "F/K (P/E)" biçimi her yerde aynı olur.
+ * Term dictionary: the Turkish name and English counterpart of each technical term.
+ * The UI writes a term with term() the first time it appears, so the
+ * "F/K (P/E)" form is the same everywhere.
  */
 
 import { esc } from './format.ts';
 
 export interface Term {
-  /** Türkçe terim */
+  /** Turkish term */
   tr: string;
-  /** İngilizce karşılık */
+  /** English counterpart */
   en: string;
-  /** Tek cümlelik açıklama (isteğe bağlı) */
+  /** One-sentence explanation (optional) */
   def?: string;
 }
 
@@ -61,7 +61,7 @@ export const TERMS: Record<string, Term> = {
   apiKey: { tr: 'API anahtarı', en: 'API key' },
   aiProvider: { tr: 'Yapay zekâ sağlayıcısı', en: 'AI provider' },
 
-  /* Öğrenme sekmelerinin eklediği terimler */
+  /* Terms added by the learning tabs */
   ema: {
     tr: 'Üstel hareketli ortalama',
     en: 'Exponential moving average, EMA',
@@ -94,17 +94,17 @@ export const TERMS: Record<string, Term> = {
 
 function get(id: string): Term {
   const t = TERMS[id];
-  if (!t) throw new Error(`Bilinmeyen terim: ${id}`);
+  if (!t) throw new Error(`Unknown term: ${id}`);
   return t;
 }
 
-/** HTML: 'F/K <span class="en">(P/E)</span>'. Türkçe ve İngilizce aynıysa yalnız Türkçe. */
+/** HTML: 'F/K <span class="en">(P/E)</span>'. Turkish only when both names are the same. */
 export function term(id: string): string {
   const t = get(id);
   return t.tr === t.en ? esc(t.tr) : `${esc(t.tr)} <span class="en">(${esc(t.en)})</span>`;
 }
 
-/** Düz metin: 'F/K (P/E)' */
+/** Plain text: 'F/K (P/E)' */
 export function termText(id: string): string {
   const t = get(id);
   return t.tr === t.en ? t.tr : `${t.tr} (${t.en})`;

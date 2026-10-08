@@ -1,27 +1,27 @@
 /**
- * Karar adımları: bir hisseye hangi sırayla bakılır, bakışı genişleten başlıklar ve kapanış notu.
- * Adım 1–5 ve "Bakışı genişletmek" listesi ilk sürümden taşındı; adım 6 (eğilim) yenidir.
- * Adımlardaki BIST örnekleri 2 Ekim 2026 verisiyledir.
+ * Decision steps: the order in which to look at a stock, the headings that widen the view, and a closing note.
+ * Steps 1-5 and the "Bakışı genişletmek" (widening the view) list were carried over from the first version; step 6 (trend) is new.
+ * The BIST examples in the steps use data from 2 October 2026.
  *
- * mount: sekme ilk kez kurulurken; refresh: sekme görünür olduğunda ve genişlik değişince (burada yapılacak bir şey yok).
+ * mount: when the tab is first built; refresh: when the tab becomes visible and when the width changes (nothing to do here).
  */
 
 import { esc } from '@fintools/shared/format';
 
 export interface Step {
-  /** Adımın sorusu */
+  /** The question of the step */
   title: string;
-  /** Açıklama */
+  /** Explanation */
   body: string;
-  /** Bu adımda bakılan kavramlar */
+  /** Concepts looked at in this step */
   chips: string[];
-  /** Örnek metni */
+  /** Example text */
   ex: string;
-  /** Örneğin başlığı (varsayılan: BIST 30 örneği, tarihli) */
+  /** Heading of the example (default: the dated BIST 30 example) */
   exLbl?: string;
 }
 
-/** BIST örneklerinin başlığı: rakamlar tarihlidir, veri güncellense de değişmez. */
+/** Heading of the BIST examples: the figures are dated and do not change when the data is updated. */
 const BIST_EX = 'Örnek (BIST 30, 2 Ekim 2026):';
 
 export const STEPS: Step[] = [
@@ -64,7 +64,7 @@ export const STEPS: Step[] = [
   },
 ];
 
-/** Bakışı genişletmek: [başlık, açıklama] */
+/** Widening the view: [title, explanation] */
 export const WIDEN: Array<[string, string]> = [
   [
     'Serbest nakit akımı (free cash flow)',
@@ -113,5 +113,5 @@ export function mount(root: HTMLElement): void {
 }
 
 export function refresh(): void {
-  /* Bu sekmede grafik yok. */
+  /* No chart in this tab. */
 }

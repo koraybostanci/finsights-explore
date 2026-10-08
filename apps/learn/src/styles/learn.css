@@ -6,7 +6,7 @@
 .trap{border-left:3px solid var(--warn);padding-left:10px;font-size:.95rem}
 .ex{font-size:.92rem}
 
-/* Senaryolar */
+/* Stories */
 .case{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
 .case-head{display:flex;flex-direction:column;gap:6px}
 .story{display:flex;flex-direction:column;gap:14px;min-width:0}
@@ -24,7 +24,7 @@
 .slider output{font-family:var(--mono);font-weight:600}
 .slider input[type=range]{width:100%;accent-color:var(--accent)}
 
-/* Sözlük */
+/* Glossary */
 .gsearch{font-family:var(--ui);font-size:1rem;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);width:100%;max-width:420px}
 .ggroup{display:flex;flex-direction:column;gap:10px}
 dl.gloss{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:10px;margin:0}
@@ -34,13 +34,13 @@ dl.gloss dd{margin:4px 0 0;font-size:.93rem}
 dl.gloss .fx{font-family:var(--mono);font-size:.8rem;color:var(--accent);display:block;margin-top:4px}
 dl.gloss dt .en{display:block;margin-top:3px;font-size:.78rem}
 
-/* Adımlar */
+/* Steps */
 ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px;counter-reset:s}
 ol.steps li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
 ol.steps li::before{content:counter(s);font-family:var(--display);font-weight:800;font-size:1.6rem;color:var(--accent);line-height:1}
 ol.steps li > div{min-width:0;display:flex;flex-direction:column;gap:8px}
 
-/* Sekme çubuğu yapışkan olduğu için, bir hikâyeye atlandığında başlığı çubuğun altında kalmasın */
+/* The tab bar is sticky, so keep a story's heading from hiding under it when jumping to the story */
 article.case{scroll-margin-top:64px}
 
 /* Links inside Learn panels (e.g. siteLink to the screener app); same look as footer links */

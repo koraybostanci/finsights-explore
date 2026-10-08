@@ -1,7 +1,7 @@
 /**
- * Çarpanlar: çarpan kartları, Türkiye'ye özgü dikkat noktaları ve ayrı bir
- * bölümde hareketli ortalama (teknik gösterge).
- * Kartlar ve liste ilk sürümden aynen taşındı; örnekler 2 Ekim 2026 verisiyle yazılmıştır.
+ * Multiples tab: multiple cards, Turkey-specific points to watch, and a separate
+ * section on the moving average (a technical indicator).
+ * The cards and the list were carried over unchanged from the first version; the examples use data from 2 October 2026.
  */
 
 import { esc, nf, pct, tl } from '@fintools/shared/format';
@@ -10,22 +10,22 @@ import { TERMS } from '@fintools/shared/terms';
 import { ROADWORK_END, SMA_LONG, SMA_SHORT, smaStory } from './model.ts';
 
 export interface MultipleCard {
-  /** Kısa ad, ör. "F/K" */
+  /** Short name, e.g. "F/K" */
   n: string;
-  /** İngilizce karşılık */
+  /** English counterpart */
   en: string;
-  /** Üst başlık (açık ad) */
-  tam: string;
-  /** Kartın sorduğu soru */
+  /** Heading above the card (full name) */
+  fullName: string;
+  /** The question the card asks */
   tag: string;
-  /** Formül */
+  /** Formula */
   fx: string;
-  /** Kabaca okuma: [aralık, anlam] */
+  /** Rough reading: [range, meaning] */
   band: Array<[string, string]>;
-  /** Nasıl okunur */
-  oku: string;
-  tuzak: string;
-  /** Örnek metni ve (varsayılandan farklıysa) başlığı */
+  /** How to read it */
+  howToRead: string;
+  pitfall: string;
+  /** Example text and its heading (when different from the default) */
   ex: string;
   exLbl?: string;
 }
@@ -34,7 +34,7 @@ export const CARDS: MultipleCard[] = [
   {
     n: 'F/K',
     en: 'P/E, Price-to-Earnings',
-    tam: 'Fiyat / Kazanç',
+    fullName: 'Fiyat / Kazanç',
     tag: 'Bugünkü kârla, fiyatı kaç yılda geri öderim?',
     fx: 'Piyasa değeri ÷ Yıllık net kâr',
     band: [
@@ -42,14 +42,14 @@ export const CARDS: MultipleCard[] = [
       ['8–15', 'orta'],
       ['> 15', 'yüksek'],
     ],
-    oku: 'F/K 10 ise, kâr hiç değişmese şirket piyasa değerini 10 yılda kazanır. Tersini alırsanız kazanç verimi (earnings yield) elde edersiniz: F/K 10 = %10 kazanç verimi. Bunu faiz ve enflasyonla kıyaslamak işe yarar.',
-    tuzak: 'Düşük F/K kâr geçici olarak şişmişse (döngüsel zirve, tek seferlik gelir) yanıltır. Zarar eden şirkette F/K hesaplanamaz.',
+    howToRead: 'F/K 10 ise, kâr hiç değişmese şirket piyasa değerini 10 yılda kazanır. Tersini alırsanız kazanç verimi (earnings yield) elde edersiniz: F/K 10 = %10 kazanç verimi. Bunu faiz ve enflasyonla kıyaslamak işe yarar.',
+    pitfall: 'Düşük F/K kâr geçici olarak şişmişse (döngüsel zirve, tek seferlik gelir) yanıltır. Zarar eden şirkette F/K hesaplanamaz.',
     ex: 'THYAO 3,60 ile en düşüklerden ama kârı gerilemiş; ASELS 40,66 ile en yüksek, çünkü piyasa güçlü büyüme bekliyor.',
   },
   {
     n: 'PD/DD',
     en: 'P/B, Price-to-Book',
-    tam: 'Piyasa Değeri / Defter Değeri',
+    fullName: 'Piyasa Değeri / Defter Değeri',
     tag: 'Şirketin özkaynağına kaç kat fiyat ödüyorum?',
     fx: 'Piyasa değeri ÷ Özkaynak',
     band: [
@@ -57,14 +57,14 @@ export const CARDS: MultipleCard[] = [
       ['1–2', 'orta'],
       ['> 2', 'primli'],
     ],
-    oku: "1'in altı, piyasanın şirketi muhasebedeki özkaynağından düşük fiyatladığını gösterir. Bankalar ve varlık ağırlıklı şirketler için en önemli çarpandır.",
-    tuzak: "Özkaynağına iyi getiri sağlamayan şirket haklı olarak 1'in altında işlem görür. PD/DD her zaman özkaynak kârlılığıyla birlikte okunmalı.",
+    howToRead: "1'in altı, piyasanın şirketi muhasebedeki özkaynağından düşük fiyatladığını gösterir. Bankalar ve varlık ağırlıklı şirketler için en önemli çarpandır.",
+    pitfall: "Özkaynağına iyi getiri sağlamayan şirket haklı olarak 1'in altında işlem görür. PD/DD her zaman özkaynak kârlılığıyla birlikte okunmalı.",
     ex: 'SAHOL 0,43 ve SISE 0,42 defterin çok altında; BIMAS 2,46 primli ama özkaynağına istikrarlı getiri sağlıyor.',
   },
   {
     n: 'FD/FAVÖK',
     en: 'EV/EBITDA',
-    tam: 'Firma Değeri / FAVÖK',
+    fullName: 'Firma Değeri / FAVÖK',
     tag: 'Borç dahil şirketi, faaliyet kârının kaç katına alıyorum?',
     fx: '(Piyasa değeri + Net borç) ÷ Yıllık FAVÖK',
     band: [
@@ -72,14 +72,14 @@ export const CARDS: MultipleCard[] = [
       ['6–10', 'orta'],
       ['> 10', 'yüksek'],
     ],
-    oku: "F/K'dan farkı borcu hesaba katmasıdır. İki şirketin F/K'sı aynıysa, borçlu olanın FD/FAVÖK'ü daha yüksek çıkar. Faaliyet kârına baktığı için faiz, kur ve parasal kazanç gibi kalemlerden etkilenmez.",
-    tuzak: "Bankalarda kullanılmaz. Yatırım dönemindeki, FAVÖK'ü henüz oluşmamış şirketlerde çok yüksek görünür.",
+    howToRead: "F/K'dan farkı borcu hesaba katmasıdır. İki şirketin F/K'sı aynıysa, borçlu olanın FD/FAVÖK'ü daha yüksek çıkar. Faaliyet kârına baktığı için faiz, kur ve parasal kazanç gibi kalemlerden etkilenmez.",
+    pitfall: "Bankalarda kullanılmaz. Yatırım dönemindeki, FAVÖK'ü henüz oluşmamış şirketlerde çok yüksek görünür.",
     ex: "TCELL 2,11 ve TTKOM 2,51 en düşükler; PETKM 64,61 ile FAVÖK'ü çok zayıf.",
   },
   {
     n: 'PEG',
     en: 'PEG ratio, Price/Earnings-to-Growth',
-    tam: 'F/K / Büyüme',
+    fullName: 'F/K / Büyüme',
     tag: 'Ödediğim F/K, şirketin büyümesine göre makul mü?',
     fx: 'F/K ÷ Yıllık net kâr büyümesi (%)',
     band: [
@@ -87,14 +87,14 @@ export const CARDS: MultipleCard[] = [
       ['0–1', 'büyümeye göre ucuz'],
       ['> 1', 'pahalı'],
     ],
-    oku: "F/K 20 olan ama kârını yılda %40 büyüten şirketin PEG'i 0,5'tir; F/K 10 olup %5 büyüyenin PEG'i 2'dir. PEG, yüksek F/K'lı büyüme şirketlerini adil kıyaslamaya yarar.",
-    tuzak: "Büyüme oranı düşük bir bazdan geliyorsa (zarardan kâra, kötü bir yıldan toparlanma) PEG yapay olarak sıfıra yaklaşır. 0,1'in altındaki PEG çoğunlukla bir uyarıdır, fırsat değil.",
+    howToRead: "F/K 20 olan ama kârını yılda %40 büyüten şirketin PEG'i 0,5'tir; F/K 10 olup %5 büyüyenin PEG'i 2'dir. PEG, yüksek F/K'lı büyüme şirketlerini adil kıyaslamaya yarar.",
+    pitfall: "Büyüme oranı düşük bir bazdan geliyorsa (zarardan kâra, kötü bir yıldan toparlanma) PEG yapay olarak sıfıra yaklaşır. 0,1'in altındaki PEG çoğunlukla bir uyarıdır, fırsat değil.",
     ex: 'GUBRF 0,57 büyümesi faaliyetten geldiği için güvenilir; TOASO 0,02 ve TUPRS 0,07 baz etkisi yüzünden yanıltıcı.',
   },
   {
     n: 'ÖK kârlılığı',
     en: 'ROE, Return on Equity',
-    tam: 'Özkaynak kârlılığı',
+    fullName: 'Özkaynak kârlılığı',
     tag: "Ortakların koyduğu her 100 TL'ye yılda kaç TL kâr?",
     fx: 'Net kâr ÷ Özkaynak  ≈  PD/DD ÷ F/K',
     band: [
@@ -102,14 +102,14 @@ export const CARDS: MultipleCard[] = [
       ['%10–20', 'iyi'],
       ['> %20', 'güçlü'],
     ],
-    oku: "Şirketin sermayeyi ne kadar verimli kullandığını gösterir. Pratik bir kısayol: PD/DD'yi F/K'ya bölerseniz yaklaşık özkaynak kârlılığını bulursunuz. Yüksek ve istikrarlı kârlılık, yüksek PD/DD'yi haklı çıkarır.",
-    tuzak: 'Yüksek borçla şişirilmiş kârlılık risklidir. Enflasyon döneminde nominal kârlılığı enflasyonla kıyaslamak gerekir.',
+    howToRead: "Şirketin sermayeyi ne kadar verimli kullandığını gösterir. Pratik bir kısayol: PD/DD'yi F/K'ya bölerseniz yaklaşık özkaynak kârlılığını bulursunuz. Yüksek ve istikrarlı kârlılık, yüksek PD/DD'yi haklı çıkarır.",
+    pitfall: 'Yüksek borçla şişirilmiş kârlılık risklidir. Enflasyon döneminde nominal kârlılığı enflasyonla kıyaslamak gerekir.',
     ex: "GARAN ≈ %24,5 ile bankalar arasında en yüksek; ISCTR ≈ %13,3 ile en düşük ve PD/DD'si de en düşük.",
   },
   {
     n: 'Net borç / FAVÖK',
     en: 'Net debt/EBITDA',
-    tam: 'Borçluluk',
+    fullName: 'Borçluluk',
     tag: 'Borcunu kaç yıllık faaliyet kârıyla kapatır?',
     fx: '(Finansal borç − Nakit) ÷ Yıllık FAVÖK',
     band: [
@@ -117,13 +117,13 @@ export const CARDS: MultipleCard[] = [
       ['0–2,5', 'rahat'],
       ['> 3', 'yüksek'],
     ],
-    oku: 'Eksi değer, şirketin borcundan fazla nakdi olduğu anlamına gelir (net cash). Yüksek faiz ortamında yüksek borç, faaliyet kârının büyük kısmını faize gönderir.',
-    tuzak: 'FAVÖK geçici olarak düşükse oran aşırı büyük görünür. Holdinglerde finans iştirakleri konsolide edildiği için oran yanıltıcı olabilir.',
+    howToRead: 'Eksi değer, şirketin borcundan fazla nakdi olduğu anlamına gelir (net cash). Yüksek faiz ortamında yüksek borç, faaliyet kârının büyük kısmını faize gönderir.',
+    pitfall: 'FAVÖK geçici olarak düşükse oran aşırı büyük görünür. Holdinglerde finans iştirakleri konsolide edildiği için oran yanıltıcı olabilir.',
     ex: 'ENKAI −5,13 ile çok güçlü nakit; SASA 10,36 ve PETKM 32,41 ile borç baskısı yüksek.',
   },
 ];
 
-/** Hareketli ortalama kartları. Örnekler Hikâye 8'in kurgusal serisinden hesaplanır. */
+/** Moving average cards. The examples are computed from the fictional series of story 8. */
 export function smaCards(): MultipleCard[] {
   const s20 = smaStory(20);
   const s200 = smaStory(SMA_LONG);
@@ -134,7 +134,7 @@ export function smaCards(): MultipleCard[] {
     {
       n: TERMS.sma.tr,
       en: TERMS.sma.en,
-      tam: 'Basit hareketli ortalama',
+      fullName: 'Basit hareketli ortalama',
       tag: 'Fiyat, son N günün ortalamasına göre nerede?',
       fx: 'SMA(N) = son N kapanışın toplamı ÷ N',
       band: [
@@ -142,8 +142,8 @@ export function smaCards(): MultipleCard[] {
         ['SMA 50', 'orta vade'],
         ['SMA 200', 'uzun vade'],
       ],
-      oku: 'Her gün en eski kapanış hesaptan çıkar, yenisi girer; günlük dalgalanma yumuşar. Fiyat ortalamanın üstündeyse son N günün genelinden yüksektir. Fiyat 200 günlük ortalamasının üstündeyse eğilim (trend) bir süredir yukarı, altındaysa aşağı demektir.',
-      tuzak:
+      howToRead: 'Her gün en eski kapanış hesaptan çıkar, yenisi girer; günlük dalgalanma yumuşar. Fiyat ortalamanın üstündeyse son N günün genelinden yüksektir. Fiyat 200 günlük ortalamasının üstündeyse eğilim (trend) bir süredir yukarı, altındaysa aşağı demektir.',
+      pitfall:
         'Ortalama geçmişe bakar ve hep geriden gelir. Eğilimi gösterir, değeri değil: fiyatın ortalamanın üstünde olması hissenin ucuz olduğunu söylemez. Türkiye\'de fiyatlar enflasyonla birlikte yükseldiği için TL fiyatın 200 günlük ortalamanın üstünde olması tek başına zayıf bir kanıttır.',
       ex: `Hikâye 8'de Ayşe'nin bugünkü hasılatı ${tl(s20.today)}: 20 günlük ortalamanın (${tl(s20.avgToday)}) ${side(
         s20.dist,
@@ -153,15 +153,15 @@ export function smaCards(): MultipleCard[] {
     {
       n: 'Altın kesişim ve ölüm kesişimi',
       en: 'Golden cross, death cross',
-      tam: 'İki ortalamanın kesişmesi',
+      fullName: 'İki ortalamanın kesişmesi',
       tag: 'Yakın dönem, uzun dönemden güçlü mü?',
       fx: `Altın kesişim: SMA ${SMA_SHORT}, SMA ${SMA_LONG}'ü yukarı keser\nÖlüm kesişimi: SMA ${SMA_SHORT}, SMA ${SMA_LONG}'ü aşağı keser`,
       band: [
         [`SMA ${SMA_SHORT} > SMA ${SMA_LONG}`, 'eğilim yukarı'],
         [`SMA ${SMA_SHORT} < SMA ${SMA_LONG}`, 'eğilim aşağı'],
       ],
-      oku: `${SMA_SHORT} günlük ortalama ${SMA_LONG} günlüğün üstüne çıkmışsa, son ${SMA_SHORT} gün son ${SMA_LONG} günün genelinden güçlü geçmiştir. Altın kesişim yükselen, ölüm kesişimi düşen eğilimin işareti sayılır.`,
-      tuzak:
+      howToRead: `${SMA_SHORT} günlük ortalama ${SMA_LONG} günlüğün üstüne çıkmışsa, son ${SMA_SHORT} gün son ${SMA_LONG} günün genelinden güçlü geçmiştir. Altın kesişim yükselen, ölüm kesişimi düşen eğilimin işareti sayılır.`,
+      pitfall:
         'İki ortalama da geriden geldiği için kesişim, dönüşten epey sonra oluşur. Fiyat yatay giderken ortalamalar birbirine dolanır ve art arda yanlış sinyal verir. Kesişim tek başına al ya da sat nedeni değildir.',
       ex:
         death && golden
@@ -172,7 +172,7 @@ export function smaCards(): MultipleCard[] {
   ];
 }
 
-/** Türkiye'ye özgü dikkat noktaları: [başlık, açıklama] */
+/** Turkey-specific points to watch: [title, explanation] */
 export const TR: Array<[string, string]> = [
   [
     'Enflasyon muhasebesi (TMS 29 / IAS 29, hyperinflation accounting)',
@@ -202,13 +202,13 @@ export const TR: Array<[string, string]> = [
 
 const card = (c: MultipleCard): string => `
 <article class="card">
-  <div><span class="eyebrow">${esc(c.tam)}</span><h3>${esc(c.n)} <span class="en">(${esc(c.en)})</span></h3><p class="tag">${esc(c.tag)}</p></div>
+  <div><span class="eyebrow">${esc(c.fullName)}</span><h3>${esc(c.n)} <span class="en">(${esc(c.en)})</span></h3><p class="tag">${esc(c.tag)}</p></div>
   <div class="formula">${esc(c.fx).replace(/\n/g, '<br>')}</div>
   <div><div class="lbl">Kabaca okuma</div><div class="band">${c.band
     .map((b) => `<span><b class="mono">${esc(b[0])}</b> ${esc(b[1])}</span>`)
     .join('')}</div></div>
-  <div><div class="lbl">Nasıl okunur</div><p>${esc(c.oku)}</p></div>
-  <p class="trap"><b>Tuzak:</b> ${esc(c.tuzak)}</p>
+  <div><div class="lbl">Nasıl okunur</div><p>${esc(c.howToRead)}</p></div>
+  <p class="trap"><b>Tuzak:</b> ${esc(c.pitfall)}</p>
   <div class="ex"><div class="lbl">${esc(c.exLbl ?? "BIST 30'dan örnek (2 Ekim 2026)")}</div><p>${esc(c.ex)}</p></div>
 </article>`;
 
@@ -235,10 +235,10 @@ export function mount(root: HTMLElement): void {
 }
 
 export function refresh(): void {
-  /* Bu sekmede grafik yok. */
+  /* No chart in this tab. */
 }
 
-/** Testler için: kartların düz metni (örneklerin tutarlılığını sınamak üzere). */
+/** For tests: the figures behind the card examples (to check that the examples stay consistent). */
 export const smaExampleNumbers = (): { today: number; dist20: string; dist200: string } => {
   const s20 = smaStory(20);
   const s200 = smaStory(SMA_LONG);
