@@ -19,8 +19,6 @@ const CUR_LABEL: Record<Currency, string> = { TRY: 'TL', USD: 'USD' };
 export const money = (v: number | null | undefined, cur: Currency, d = 2): string =>
   v == null ? '–' : `${nf(v, d)} ${CUR_LABEL[cur]}`;
 
-export const curLabel = (cur: Currency): string => CUR_LABEL[cur];
-
 const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
 /** Every piece of external text written into HTML goes through this. */

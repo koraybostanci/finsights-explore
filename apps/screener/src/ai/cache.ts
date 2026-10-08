@@ -14,7 +14,7 @@ export interface CacheEntry {
   text: string;
   providerLabel: string;
   model: string;
-  /** ISO tarih-saat */
+  /** ISO date-time */
   createdAt: string;
 }
 
@@ -67,10 +67,6 @@ export function cachePut(entry: CacheEntry): void {
   const rest = readAll().filter((e) => e.key !== entry.key);
   rest.push(entry);
   lsSet(K_CACHE, rest.slice(Math.max(0, rest.length - CACHE_MAX)));
-}
-
-export function cacheClear(): void {
-  lsSet(K_CACHE, []);
 }
 
 export const cacheSize = (): number => readAll().length;
