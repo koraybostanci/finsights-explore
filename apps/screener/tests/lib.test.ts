@@ -12,17 +12,17 @@ const DATA = JSON.parse(readFileSync(new URL('./fixtures/market.json', import.me
 const views: StockView[] = DATA.stocks.map((s) => toView(s, DATA.industries));
 const view = (k: string): StockView => {
   const v = views.find((s) => s.symbol === k);
-  assert.ok(v, `${k} veride yok`);
+  assert.ok(v, `${k} is not in the data`);
   return v;
 };
 
-test('median boş değerleri atar', () => {
+test('median skips empty values', () => {
   assert.equal(median([3, 1, 2]), 2);
   assert.equal(median([4, 1, null, 3, 2]), 2.5);
   assert.equal(median([null, undefined]), null);
 });
 
-test('toView türetilmiş alanları hesaplar', () => {
+test('toView computes the derived fields', () => {
   const t = view('THYAO');
   assert.equal(t.industryTr, 'Havayolu');
   assert.equal(t.industryEn, 'Airlines');
@@ -33,7 +33,7 @@ test('toView türetilmiş alanları hesaplar', () => {
   assert.equal(view('VZ').hasData, false);
 });
 
-test('evaluate ilk sürümle aynı sonuçları verir (2 Ekim 2026 verisi)', () => {
+test('evaluate gives the same results as the first release (data of 2 October 2026)', () => {
   const bist = views.filter((s) => s.market === 'BIST' && !s.bank);
   assert.equal(bist.length, 25);
   const cnt = { good: 0, warn: 0, bad: 0, na: 0 };
@@ -58,7 +58,7 @@ test('evaluate ilk sürümle aynı sonuçları verir (2 Ekim 2026 verisi)', () =
   assert.equal(ttk.warns, 1);
 });
 
-test('evaluate: verisi olmayan hisse ve banka', () => {
+test('evaluate: a stock with no data, and a bank', () => {
   const vz = evaluate(view('VZ'), DEF);
   assert.equal(vz.verdict, 'na');
   assert.equal(vz.checks[0].short, 'Veri bekliyor');
@@ -78,7 +78,7 @@ test('cellColor', () => {
   assert.equal(cellColor('netDebtEbitda', null, DEF), '');
 });
 
-test('industryMedian ve groupByIndustry', () => {
+test('industryMedian and groupByIndustry', () => {
   const air = views.filter((s) => s.market === 'BIST' && s.industry === 'airlines');
   const m = industryMedian(air);
   assert.equal(m.n, 2);
@@ -89,22 +89,22 @@ test('industryMedian ve groupByIndustry', () => {
   assert.ok(groups.every((g) => g.stocks.every((s) => s.industry === g.industry)));
 });
 
-test('evaluate: boş F/K zarar mı, eksik veri mi ayrılır', () => {
+test('evaluate: an empty P/E is told apart as loss or missing data', () => {
   const pg = view('PGSUS');
   assert.equal(pg.loss, true);
   assert.equal(evaluate(pg, DEF).checks[0].short, 'Zarar ediyor (son 12 ay)');
   assert.equal(evaluate(pg, DEF).checks[0].status, 'bad');
-  // Aynı hisse, zarar bilgisi olmadan: kaynak F/K vermemiş olabilir, zarar denmez
+  // The same stock without the loss flag: the source may simply have given no P/E, so it is not called a loss
   const unknown = evaluate({ ...pg, loss: undefined }, DEF);
   assert.equal(unknown.checks[0].short, 'F/K verisi yok');
   assert.equal(unknown.checks[0].status, 'warn');
-  // Seed verisinde F/K'sı boş olan her banka dışı BIST hissesi zarar olarak işaretlidir
+  // In the seed data every non-bank BIST stock with an empty P/E is flagged as a loss
   const blank = views.filter((s) => s.market === 'BIST' && !s.bank && s.hasData && s.pe == null);
   assert.deepEqual(blank.map((s) => s.symbol).sort(), ['EKGYO', 'PETKM', 'PGSUS', 'SASA']);
   assert.ok(blank.every((s) => s.loss === true));
 });
 
-test('noteIsCurrent: veri yorumdan yeniyse yorum geçersizdir', () => {
+test('noteIsCurrent: a comment is stale when the data is newer than it', () => {
   assert.equal(noteIsCurrent('2026-10-02', '2026-10-02T15:00:00+03:00'), true);
   assert.equal(noteIsCurrent('2026-10-02', '2026-10-05T18:45:00+03:00'), false);
   assert.equal(noteIsCurrent('2026-10-02', '2026-09-30T18:45:00+03:00'), true);
@@ -112,7 +112,7 @@ test('noteIsCurrent: veri yorumdan yeniyse yorum geçersizdir', () => {
   assert.equal(noteIsCurrent('2026-10-02', undefined), true);
 });
 
-test('marketAsOf: piyasa başına tarih, yoksa genel tarih', () => {
+test('marketAsOf: per-market date, falling back to the overall date', () => {
   setData(DATA);
   assert.equal(marketAsOf('BIST'), '2026-10-02T15:00:00+03:00');
   assert.equal(marketAsOf('US'), DATA.asOf);

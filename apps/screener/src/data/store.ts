@@ -1,8 +1,8 @@
 /**
- * Uygulamanın ortak durumu: piyasa verisi, Hisselerim (watchlist) ve olaylar.
+ * Shared app state: market data, the watchlist and change events.
  *
- * Veri public/data/market.json dosyasından gelir (GitHub Actions üretir).
- * Hisselerim tarayıcıda saklanır; BIST ve ABD listeleri ayrıdır.
+ * Data comes from public/data/market.json (written by the scheduled data job).
+ * The watchlist is stored in the browser, with a separate list for BIST and US.
  */
 
 import { createStorage } from '@fintools/shared/storage';
@@ -11,17 +11,17 @@ import type { Industry, MarketData, MarketId, PriceSeries, Stock, StockView } fr
 export const MARKETS: MarketId[] = ['BIST', 'US'];
 export const MARKET_LABEL: Record<MarketId, string> = { BIST: 'BIST', US: 'ABD' };
 
-/* ---------- Kalıcı küçük ayarlar ---------- */
+/* ---------- Persistent small settings ---------- */
 
 export const storage = createStorage('fintools.screener.');
 export const { lsGet, lsSet, lsRemove } = storage;
 
-/* ---------- Olaylar ---------- */
+/* ---------- Events ---------- */
 
 export type StoreEvent = 'data' | 'watchlist' | 'ai';
 const listeners: Record<StoreEvent, Set<() => void>> = { data: new Set(), watchlist: new Set(), ai: new Set() };
 
-/** Abone ol; dönen işlev aboneliği kaldırır. */
+/** Subscribe; the returned function unsubscribes. */
 export function on(ev: StoreEvent, fn: () => void): () => void {
   listeners[ev].add(fn);
   return () => listeners[ev].delete(fn);
@@ -37,7 +37,7 @@ export function emit(ev: StoreEvent): void {
   });
 }
 
-/* ---------- Piyasa verisi ---------- */
+/* ---------- Market data ---------- */
 
 const EMPTY: MarketData = { schema: 2, asOf: '', source: '', period: {}, industries: {}, stocks: [] };
 let DATA: MarketData = EMPTY;
@@ -53,14 +53,14 @@ export function toView(s: Stock, industries: Record<string, Industry>): StockVie
   return { ...s, roe, industryTr: ind.nameTr, industryEn: ind.nameEn, cyclical: s.cyc ?? ind.cyclical, hasData };
 }
 
-/** Testler ve veri yükleme için: veriyi doğrudan yerleştirir. */
+/** For tests and data loading: installs the data directly. */
 export function setData(d: MarketData): void {
   DATA = d;
   VIEWS = d.stocks.map((s) => toView(s, d.industries));
   emit('data');
 }
 
-/** market.json dosyasını yükler. Hata olursa veri boş kalır ve dataError() mesaj döner. */
+/** Loads market.json. On failure the data stays empty and dataError() returns the message. */
 export async function loadData(url = './data/market.json'): Promise<void> {
   try {
     const res = await fetch(url, { cache: 'no-cache' });
@@ -77,25 +77,25 @@ export async function loadData(url = './data/market.json'): Promise<void> {
 
 export const data = (): MarketData => DATA;
 
-/** Bir piyasanın verisinin tarihi; piyasa başına tarih yoksa dosyanın genel tarihi. */
+/** Data date of one market; falls back to the file-wide date when there is no per-market date. */
 export const marketAsOf = (m: MarketId): string => DATA.asOfBy?.[m] ?? DATA.asOf;
 
-/** Bu piyasada verisi olan en az bir hisse var mı */
+/** Whether at least one stock in this market has data */
 export const marketHasData = (m: MarketId): boolean => VIEWS.some((s) => s.market === m && s.hasData);
 export const dataError = (): string | null => loadError;
 export const industry = (id: string): Industry => DATA.industries[id] ?? UNKNOWN_INDUSTRY;
 
-/** Piyasa içinde tekil kimlik, ör. "BIST-THYAO" */
+/** Id unique across markets, e.g. "BIST-THYAO" */
 export const sid = (s: { market: MarketId; symbol: string }): string => `${s.market}-${s.symbol}`;
 
 export interface StockFilter {
-  /** only: yalnız bankalar · exclude: bankasız (varsayılan) · include: hepsi */
+  /** only: banks only · exclude: no banks (default) · include: everything */
   banks?: 'only' | 'exclude' | 'include';
-  /** Yalnızca Hisselerim'dekiler (varsayılan: true) */
+  /** Only stocks on the watchlist (default: true) */
   watchlistOnly?: boolean;
 }
 
-/** Bir piyasanın hisseleri. BIST ve ABD hiçbir zaman aynı listede dönmez. */
+/** The stocks of one market. BIST and US are never returned in the same list. */
 export function stocks(market: MarketId, f: StockFilter = {}): StockView[] {
   const banks = f.banks ?? 'exclude';
   const wlOnly = f.watchlistOnly ?? true;
@@ -112,17 +112,17 @@ export function findStock(market: MarketId, symbol: string): StockView | undefin
   return VIEWS.find((s) => s.market === market && s.symbol === symbol);
 }
 
-/* ---------- Hisselerim (watchlist) ---------- */
+/* ---------- Watchlist ---------- */
 
 const wlKey = (m: MarketId) => `watchlist.${m}`;
 
-/** Kayıt yoksa evrendeki tüm (banka dışı) hisseler seçili sayılır. */
+/** With nothing saved, every (non-bank) stock in the universe counts as selected. */
 export function watchlist(market: MarketId): string[] {
   const universe = VIEWS.filter((s) => s.market === market && !s.bank).map((s) => s.symbol);
   const saved = lsGet<string[] | null>(wlKey(market), null);
   if (!saved) return universe;
   const known = new Set(universe);
-  return saved.filter((k) => known.has(k));
+  return saved.filter((sym) => known.has(sym));
 }
 
 export function setWatchlist(market: MarketId, tickers: string[]): void {
@@ -130,22 +130,22 @@ export function setWatchlist(market: MarketId, tickers: string[]): void {
   emit('watchlist');
 }
 
-/** Kaydı siler; liste yeniden "evrendeki tüm hisseler" olur. */
+/** Deletes the saved list; the watchlist becomes "every stock in the universe" again. */
 export function resetWatchlist(market: MarketId): void {
   lsRemove(wlKey(market));
   emit('watchlist');
 }
 
-/** Evrendeki tüm banka dışı hisseler (Hisselerim'de olsun olmasın). */
+/** Every non-bank stock in the universe, on the watchlist or not. */
 export function universe(market: MarketId): StockView[] {
   return VIEWS.filter((s) => s.market === market && !s.bank);
 }
 
-/* ---------- Fiyat serileri (hareketli ortalama grafiği için) ---------- */
+/* ---------- Price series (for the moving-average chart) ---------- */
 
 const priceCache = new Map<string, Promise<PriceSeries | null>>();
 
-/** Günlük kapanış serisi; dosya yoksa null (veri henüz çekilmemiş). */
+/** Daily close series; null when the file is missing (not fetched yet). */
 export function loadPrices(s: { market: MarketId; symbol: string }): Promise<PriceSeries | null> {
   const id = sid(s);
   let p = priceCache.get(id);

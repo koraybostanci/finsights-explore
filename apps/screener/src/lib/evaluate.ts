@@ -1,8 +1,8 @@
 /**
- * Tarama mantığı: bir hisseyi eşiklere göre ölçüt ölçüt değerlendirir.
- * Kurallar ve metinler ilk sürümle (BIST 30 Çarpan Rehberi) aynıdır;
- * eklenenler: verisi olmayan hisse, eksik borç verisi ve F/K'nın zarar yüzünden mi
- * yoksa veri eksikliğinden mi boş olduğunun ayrılması (Stock.loss).
+ * Screening logic: evaluates a stock check by check against the thresholds.
+ * The rules and texts match the first release (the BIST 30 multiples guide).
+ * Additions: stocks with no data, missing debt data, and telling apart a P/E that is
+ * empty because of a loss from one that is empty for lack of data (Stock.loss).
  */
 
 import type { Check, CheckId, Evaluation, StockView, Thresholds, Verdict } from '../types.ts';
@@ -17,7 +17,7 @@ export const DEF: Thresholds = {
   showBanks: false,
 };
 
-/** Ölçüt kimliğinin ekranda görünen adı */
+/** On-screen name of a check id */
 export const CHECK_LABEL: Record<CheckId, string> = {
   data: 'Veri',
   bank: 'Banka',
@@ -39,7 +39,7 @@ export const VLABEL: Record<Verdict, string> = {
 
 export const ICON: Record<Verdict, string> = { good: '✓', warn: '!', bad: '✕', na: '–' };
 
-/** Sıralamada kullanılan sonuç sırası */
+/** Verdict order used for sorting */
 export const VORD: Record<Verdict, number> = { good: 0, warn: 1, bad: 2, na: 3 };
 
 export function evaluate(s: StockView, th: Thresholds): Evaluation {
@@ -245,7 +245,7 @@ export function evaluate(s: StockView, th: Thresholds): Evaluation {
   return { checks: C, verdict: bad ? 'bad' : warn ? 'warn' : 'good', warns: warn };
 }
 
-/** Tablo hücresi rengi: "v-good" | "v-warn" | "v-bad" | "" */
+/** Table cell colour class: "v-good" | "v-warn" | "v-bad" | "" */
 export function cellColor(
   key: 'pe' | 'peg' | 'netDebtEbitda' | 'ebitdaGrowth' | 'pb',
   val: number | null,

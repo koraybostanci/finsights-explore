@@ -11,14 +11,14 @@ const views: StockView[] = DATA.stocks.map((s) => toView(s, DATA.industries));
 const bist = views.filter((s) => s.market === 'BIST' && !s.bank);
 const us = views.filter((s) => s.market === 'US');
 
-test('fold: Türkçe harfler ve büyük/küçük harf', () => {
+test('fold: Turkish letters and letter case', () => {
   assert.equal(fold('TÜRK HAVA YOLLARI'), 'turk hava yollari');
   assert.equal(fold('ISCTR'), 'isctr');
   assert.equal(fold('  Şişecam  '), 'sisecam');
   assert.equal(fold('İş Bankası'), 'is bankasi');
 });
 
-test('searchUniverse: sembol ve ad, en iyi eşleşme başta', () => {
+test('searchUniverse: symbol and name, best match first', () => {
   assert.equal(searchUniverse(bist, 'thy')[0].symbol, 'THYAO');
   assert.equal(searchUniverse(bist, 'turk hava')[0].symbol, 'THYAO');
   assert.equal(searchUniverse(bist, 'şişe')[0].symbol, 'SISE');
@@ -28,18 +28,18 @@ test('searchUniverse: sembol ve ad, en iyi eşleşme başta', () => {
   assert.equal(searchUniverse(us, 'apple')[0].symbol, 'AAPL');
   assert.equal(searchUniverse(us, 't')[0].symbol, 'T');
   assert.ok(searchUniverse(us, 'a', 5).length <= 5);
-  // piyasalar karışmaz: BIST evreninde ABD hissesi çıkmaz
+  // markets do not mix: the BIST universe never returns a US stock
   assert.deepEqual(searchUniverse(bist, 'apple'), []);
 });
 
-test('matchRank sıralaması', () => {
+test('matchRank ordering', () => {
   assert.equal(matchRank({ symbol: 'T', name: 'AT&T' }, 't'), 0);
   assert.equal(matchRank({ symbol: 'TSLA', name: 'Tesla' }, 't'), 1);
   assert.equal(matchRank({ symbol: 'KO', name: 'Coca-Cola' }, 'coca'), 2);
   assert.equal(matchRank({ symbol: 'KO', name: 'Coca-Cola' }, 'pepsi'), -1);
 });
 
-test('liste işlemleri', () => {
+test('list operations', () => {
   assert.deepEqual(addTicker(['A'], 'B'), ['A', 'B']);
   assert.deepEqual(addTicker(['A', 'B'], 'B'), ['A', 'B']);
   assert.deepEqual(removeTicker(['A', 'B'], 'A'), ['B']);

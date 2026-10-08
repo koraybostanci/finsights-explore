@@ -1,12 +1,12 @@
-/** Elle yazılmış hisse yorumlarının (Stock.note) güncelliği. */
+/** Freshness of the hand-written stock comments (Stock.note). */
 
-/** ISO tarih ya da tarih-saatin gün kısmı (YYYY-AA-GG) */
+/** Day part of an ISO date or datetime (YYYY-MM-DD) */
 const day = (iso: string): string => iso.slice(0, 10);
 
 /**
- * Yorum, yazıldığı günün verisiyle hâlâ geçerli mi? Veri yorumdan sonraki bir
- * güne aitse rakamlar değişmiştir ve yorum onlarla çelişebilir; o zaman gösterilmez.
- * Yorumun tarihi yoksa geçerli sayılır.
+ * Is the comment still valid against the data of the day it was written? If the
+ * data belongs to a later day the figures have moved and the comment may contradict
+ * them, so it is not shown. A comment with no date counts as current.
  */
 export function noteIsCurrent(noteAsOf: string | undefined, dataAsOf: string | undefined): boolean {
   if (!noteAsOf || !dataAsOf) return true;

@@ -1,7 +1,8 @@
 /**
- * Uygulama: sekme listesi ve veri şeridi. Kabuk (sekmeler, adres, son sekme) @fintools/shared/shell'dedir.
- * Her sekme bir modüldür: mount(root) bir kez, refresh() sekme görünür olunca
- * ve sayfa genişliği değişince çağrılır.
+ * App entry: the tab list and the data bar. The shell (tabs, URL hash, last-tab memory)
+ * lives in @fintools/shared/shell.
+ * Each tab is a module: mount(root) is called once, refresh() whenever the tab becomes
+ * visible or the page width changes.
  */
 
 import '@fintools/shared/styles/tokens.css';
@@ -39,7 +40,7 @@ function renderDataBar(): void {
     must('footsrc').textContent = '';
     return;
   }
-  // BIST ve ABD ayrı zamanlarda güncellenir; her piyasanın tarihi ve bilanço dönemi ayrı yazılır.
+  // BIST and US data are refreshed at different times, so each market shows its own date and reporting period.
   const live = MARKETS.filter(marketHasData);
   const one = live.length <= 1;
   const dates = live.length
