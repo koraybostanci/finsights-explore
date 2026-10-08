@@ -152,19 +152,19 @@ def map_tv_row(spec: StockSpec, row: Mapping[str, Any]) -> dict[str, Any]:
     if mc is not None and mc > 0:
         out["marketCap"] = r1(mc / 1e9)
 
-    fg, fg_text = growth_pair(
+    ebitda_growth, ebitda_growth_text = growth_pair(
         row.get("ebitda_yoy_growth_ttm"), ebitda, from_negative=EBITDA_FROM_NEGATIVE, to_negative=EBITDA_TO_NEGATIVE
     )
-    ng, ng_text = growth_pair(
+    net_income_growth, net_income_growth_text = growth_pair(
         row.get("net_income_yoy_growth_ttm"), eps, from_negative=NET_FROM_LOSS, to_negative=NET_TO_LOSS
     )
-    out["ebitdaGrowth"], out["netIncomeGrowth"] = fg, ng
+    out["ebitdaGrowth"], out["netIncomeGrowth"] = ebitda_growth, net_income_growth
     if loss:
-        out["loss"] = True  # tells the app that the empty F/K is a loss, not missing data
-    if fg_text:
-        out["ebitdaGrowthNote"] = fg_text
-    if ng_text:
-        out["netIncomeGrowthNote"] = ng_text
+        out["loss"] = True  # tells the app that the empty P/E is a loss, not missing data
+    if ebitda_growth_text:
+        out["ebitdaGrowthNote"] = ebitda_growth_text
+    if net_income_growth_text:
+        out["netIncomeGrowthNote"] = net_income_growth_text
 
     if spec.bank:
         # EBITDA, EV and net debt do not describe a bank (its debt is its raw material)

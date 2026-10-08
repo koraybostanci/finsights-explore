@@ -1,10 +1,10 @@
 /**
- * Tarayıcı sekmesi: bir piyasanın (BIST ya da ABD) Hisselerim listesini altı
- * ölçütle sınar. İki görünüm vardır:
- *   - Sektör kıyası: seçilen sektörün hisseleri, sektör ortancası, şerit grafik
- *     ve isteğe bağlı yapay zekâ karşılaştırması.
- *   - Tüm liste: ilk sürümdeki tablo (gerekçe sütunuyla).
- * BIST ve ABD hisseleri hiçbir zaman aynı tabloda, grafikte ya da ortancada buluşmaz.
+ * Screener tab: tests the watchlist of one market (BIST or US) against six checks.
+ * There are two views:
+ *   - Industry comparison: the stocks of the selected industry, the industry median,
+ *     a strip chart and an optional AI comparison.
+ *   - Full list: the table from the first release (with the reasons column).
+ * BIST and US stocks never meet in the same table, chart or median.
  */
 
 import './screener.css';
@@ -54,7 +54,7 @@ import {
 
 type ViewId = 'peers' | 'list';
 
-/* ---------- Durum ---------- */
+/* ---------- State ---------- */
 
 const isMarket = (v: unknown): v is MarketId => v === 'BIST' || v === 'US';
 const isView = (v: unknown): v is ViewId => v === 'peers' || v === 'list';
@@ -66,34 +66,34 @@ const savedInd = lsGet<unknown>('screener.industry', {});
 const state = {
   market: (isMarket(savedMarket) ? savedMarket : 'BIST') as MarketId,
   view: (isView(savedView) ? savedView : 'peers') as ViewId,
-  /** Piyasa başına son seçilen sektör */
+  /** Last selected industry per market */
   industry: (savedInd && typeof savedInd === 'object' ? { ...savedInd } : {}) as Partial<Record<MarketId, string>>,
-  /** Yalnız fiyatı 200 günlük ortalamanın üstünde olanlar */
+  /** Only stocks priced above the 200-day average */
   aboveSma: lsGet<unknown>('screener.aboveSma', false) === true,
   sort: { peers: { key: 'verdict', dir: 1 }, list: { key: 'verdict', dir: 1 } } as Record<ViewId, SortState>,
-  /** Açık satırın hisse kimliği, ör. "BIST-THYAO" */
+  /** Stock id of the open row, e.g. "BIST-THYAO" */
   open: null as string | null,
 };
 
-/** Yüklenmiş fiyat serileri: null → dosya yok; kayıt yok → henüz istenmedi ya da yolda */
+/** Loaded price series: null means no file; no entry means not requested yet or still loading */
 const prices = new Map<string, PriceSeries | null>();
 const pricesPending = new Set<string>();
 
-/** Yapay zekâ kutularının oturum içi durumu */
+/** In-session state of the AI boxes */
 const comments = new Map<string, AiSlot>();
 const compares = new Map<string, AiSlot>();
-/** Bu oturumda kullanıcının yorumunu istediği hisseler */
+/** Stocks whose comment the user asked for in this session */
 const requested = new Set<string>();
 let tokenSeq = 0;
 
-/** Ekrandaki tablonun satırları (açık satırı ve yapay zekâ girdisini bulmak için) */
+/** Rows of the table on screen (to find the open row and the AI input) */
 let shown: Row[] = [];
 
 let root: HTMLElement | null = null;
 let ctl: HTMLElement | null = null;
 let body: HTMLElement | null = null;
 
-/* ---------- Küçük yardımcılar ---------- */
+/* ---------- Small helpers ---------- */
 
 const q = <T extends HTMLElement = HTMLElement>(sel: string): T | null => (root ? root.querySelector<T>(sel) : null);
 
@@ -110,12 +110,12 @@ const showBanks = (th: Thresholds): boolean => th.showBanks && state.market === 
 
 const compareKey = (ind: string): string => `${state.market}:${ind}`;
 
-/** Bir hissenin kendi piyasasındaki sektör arkadaşları (kendisi dahil) */
+/** A stock's industry peers in its own market (itself included) */
 function peersOf(s: StockView): StockView[] {
   return stocks(s.market, { banks: s.bank ? 'only' : 'exclude' }).filter((x) => x.industry === s.industry);
 }
 
-/* ---------- Sabit iskelet ---------- */
+/* ---------- Static skeleton ---------- */
 
 const INTRO: Record<ViewId, string> = {
   peers:
@@ -151,7 +151,7 @@ ${seg('data-view', [['peers', 'Sektör kıyası'], ['list', 'Tüm liste']], 'Gö
 <div class="stack-lg" id="sc-body"></div>`;
 }
 
-/** Düğmelerin basılı durumu, giriş metni ve "Bankaları göster" kutusunun görünürlüğü */
+/** Pressed state of the buttons, the intro text and the visibility of the "show banks" box */
 function syncChrome(): void {
   if (!root) return;
   root.querySelectorAll<HTMLElement>('[data-market]').forEach((b) =>
@@ -170,9 +170,9 @@ function syncChrome(): void {
 }
 
 /**
- * Eşikler başka yerden değiştiyse kutuları eşitler; yazılmakta olan metne dokunmaz
- * (boş kutu varsayılan eşik sayılır ve boş kalır). force: "Varsayılan eşikler"de
- * kutular, boş bırakılmış olanlar dahil, değerleriyle yeniden yazılır.
+ * Syncs the inputs when the thresholds changed elsewhere; leaves text being typed alone
+ * (an empty input counts as the default threshold and stays empty). force: on "reset to
+ * default thresholds" every input is rewritten with its value, empty ones included.
  */
 function syncControls(force = false): void {
   const th = getThresholds();
@@ -193,16 +193,16 @@ function syncControls(force = false): void {
   chk('sc-sma', state.aboveSma);
 }
 
-/* ---------- Görünüm modelleri ---------- */
+/* ---------- View models ---------- */
 
 interface PeersModel {
   groups: IndustryGroup[];
   sel: IndustryGroup | null;
-  /** Seçili sektörün bütün satırları (süzgeçten önce) */
+  /** All rows of the selected industry (before filtering) */
   all: Row[];
-  /** Süzgeçten geçen ve sıralanmış satırlar */
+  /** Rows that passed the filter, sorted */
   rows: Row[];
-  /** Sektör ortancası: süzgeçten bağımsız, sektörün verisi olan bütün hisseleri */
+  /** Industry median: independent of the filter, covers every stock of the industry that has data */
   med: IndustryMedian;
 }
 
@@ -259,13 +259,13 @@ function bodyRows(rows: Row[], th: Thresholds, colspan: number, rowHtml: (r: Row
     .join('');
 }
 
-/** Renk ve biçimler hisse koduna göre sabittir; tablo sıralaması değişince değişmez. */
+/** Colours and shapes are fixed per ticker; they do not change when the table order changes. */
 function markersFor(rows: Row[]): Map<string, Marker> {
-  const ks = rows
+  const symbols = rows
     .filter((r) => r.s.hasData)
     .map((r) => r.s.symbol)
     .sort((a, b) => a.localeCompare(b, 'tr'));
-  return new Map(ks.map((k, i) => [k, markerFor(i)]));
+  return new Map(symbols.map((symbol, i) => [symbol, markerFor(i)]));
 }
 
 function compareHtml(m: PeersModel): string {
@@ -292,7 +292,7 @@ function peersHtml(th: Thresholds, m: PeersModel): string {
     medianRowHtml(m.med);
   const other = state.market === 'BIST' ? MARKET_LABEL.US : MARKET_LABEL.BIST;
   const markers = markersFor(m.rows);
-  const legend = [...markers].map(([k, mk]) => `<span>${markerIcon(mk)}${esc(k)}</span>`).join('');
+  const legend = [...markers].map(([symbol, mk]) => `<span>${markerIcon(mk)}${esc(symbol)}</span>`).join('');
   const notes: string[] = [];
   if (hidden > 0)
     notes.push(
@@ -328,9 +328,9 @@ function listHtml(th: Thresholds, m: ListModel): string {
 </div>`;
 }
 
-/* ---------- Çizim ---------- */
+/* ---------- Rendering ---------- */
 
-/** Odaktaki öğeyi yeniden çizimden sonra bulabilmek için seçici */
+/** Selector to find the focused element again after a re-render */
 function focusSelector(): string | null {
   const el = document.activeElement as HTMLElement | null;
   if (!el || !body || !body.contains(el)) return null;
@@ -363,7 +363,7 @@ function renderBody(): void {
   const open = shown.find((r) => sid(r.s) === state.open);
   if (open && open.s.hasData) {
     ensurePrices(open.s);
-    // Yalnızca kullanıcı bu hissenin yorumunu bu oturumda daha önce istediyse kendiliğinden yenilenir.
+    // Refreshes on its own only if the user already asked for this stock's comment in this session.
     const id = sid(open.s);
     if (requested.has(id) && !comments.has(id) && aiStatus().configured) void runComment(id, false);
   }
@@ -413,7 +413,7 @@ function drawCharts(): void {
   drawSma();
 }
 
-/* ---------- Fiyat serisi ---------- */
+/* ---------- Price series ---------- */
 
 function ensurePrices(s: StockView): void {
   const id = sid(s);
@@ -435,9 +435,9 @@ function patchSma(id: string): void {
   drawSma();
 }
 
-/* ---------- Yapay zekâ ---------- */
+/* ---------- AI ---------- */
 
-/** Kutuyu yerinde yeniler; odak düğmedeyse düğmede kalır. */
+/** Refreshes the box in place; focus stays on the button if it was there. */
 function patch(el: HTMLElement | null, html: string): void {
   if (!el) return;
   const keep = focusSelector();
@@ -466,7 +466,7 @@ async function runSlot(
   const prev = map.get(key);
   if (prev?.status === 'loading') return;
   const token = ++tokenSeq;
-  // Beklerken düğme devre dışı kalır ve odağı bırakır; iş bitince odak düğmeye geri verilir.
+  // While waiting the button is disabled and drops focus; focus is handed back when the work finishes.
   const hadFocus = focusSelector();
   map.set(key, { status: 'loading', result: prev?.result, token });
   repaint(key);
@@ -516,10 +516,10 @@ function runCompare(key: string, force: boolean): Promise<void> {
   return runSlot(compares, key, () => compareIndustry(input, { force }), patchCompare);
 }
 
-/* ---------- Olaylar ---------- */
+/* ---------- Events ---------- */
 
-function toggleRow(k: string): void {
-  const id = `${state.market}-${k}`;
+function toggleRow(symbol: string): void {
+  const id = `${state.market}-${symbol}`;
   state.open = state.open === id ? null : id;
   renderBody();
 }
@@ -615,11 +615,11 @@ function onControlInput(e: Event): void {
 function onReset(): void {
   state.aboveSma = false;
   lsSet('screener.aboveSma', false);
-  resetThresholds(); // aboneler (bu sekme ve hesaplayıcı) yeniden çizer
+  resetThresholds(); // subscribers (this tab and the calculator) re-render
   syncControls(true);
 }
 
-/* ---------- Dışa açık ---------- */
+/* ---------- Public API ---------- */
 
 export function mount(el: HTMLElement): void {
   root = el;
@@ -638,7 +638,7 @@ export function mount(el: HTMLElement): void {
     renderBody();
   });
   on('data', () => {
-    // Yeni veriyle eski yorumlar ve seriler geçersizdir.
+    // With new data, old comments and series are stale.
     comments.clear();
     compares.clear();
     prices.clear();
@@ -650,7 +650,7 @@ export function mount(el: HTMLElement): void {
   renderBody();
 }
 
-/** Sekme görünür olunca ve genişlik değişince: grafikler yeni genişlikle çizilir. */
+/** When the tab becomes visible or the width changes: charts are redrawn at the new width. */
 export function refresh(): void {
   drawCharts();
 }

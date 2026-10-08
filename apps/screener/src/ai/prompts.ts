@@ -1,9 +1,9 @@
 /**
- * İstemler (prompts): Hisse yorumu ve Sektör karşılaştırması.
+ * Prompts for the stock comment and the industry comparison.
  *
- * Saf işlevlerdir. Modele yalnızca uygulamadaki rakamlar ve kural sonuçları
- * verilir; model rakam üretmez, yalnızca açıklar. İstem metni değişirse
- * PROMPT_VERSION artırılır, böylece eski önbellek kayıtları kullanılmaz.
+ * Pure functions. The model is given only the app's figures and rule results; it
+ * produces no numbers, it only explains. When the prompt text changes,
+ * PROMPT_VERSION is bumped so old cache entries are not reused.
  */
 
 import { VLABEL } from '../lib/evaluate.ts';
@@ -21,22 +21,22 @@ export interface Prompt {
   maxTokens: number;
 }
 
-/** Hikâyeler: modelin bağ kurabileceği adlar ve her birinin öğrettiği şey. */
+/** The stories: the names the model may refer to and what each one teaches. The model sees only the text before the colon (the name). */
 export const STORIES = {
-  ayse: "Ayşe'nin Kahvesi: bilanço (balance sheet), gelir tablosu (income statement) ve fiyat. Çarpanlar şirketi değil fiyatı ölçer; kâr ve özkaynak aynı kalsa bile fiyat değişince bütün çarpanlar değişir.",
-  kose: 'Köşe Kahvecisi: borçsuz ama yılda %5 büyüyen dükkân; F/K düşük görünse de PEG yüksek çıkar.',
-  zincir: 'Zincir Kahve: büyümesi faaliyetten gelen ama şubeleri krediyle açan dükkân; PEG cazip, borç yüksek.',
-  filmSeti:
+  aysesCoffee: "Ayşe'nin Kahvesi: bilanço (balance sheet), gelir tablosu (income statement) ve fiyat. Çarpanlar şirketi değil fiyatı ölçer; kâr ve özkaynak aynı kalsa bile fiyat değişince bütün çarpanlar değişir.",
+  cornerCafe: 'Köşe Kahvecisi: borçsuz ama yılda %5 büyüyen dükkân; F/K düşük görünse de PEG yüksek çıkar.',
+  chainCafe: 'Zincir Kahve: büyümesi faaliyetten gelen ama şubeleri krediyle açan dükkân; PEG cazip, borç yüksek.',
+  filmSetCafe:
     'Film Seti Kahvesi: kârı tek seferlik bir kira geliriyle sıçrayan dükkân; PEG çok düşük görünür ama büyüme kalıcı değildir (baz etkisi, tek seferlik kalem).',
-  enflasyon:
+  inflationProfit:
     'Kahve satmadan gelen kâr: enflasyon muhasebesinde (IAS 29) borcun reel erimesi net parasal pozisyon kazancı olarak kâra yazılır. Net kâr sıçradıysa ilk soru: FAVÖK de büyüdü mü? Yalnızca BIST hisseleri için geçerlidir.',
-  dondurmaci:
+  beachIcecream:
     'Sahil dondurmacısı: döngüsel işte kârın zirvede olduğu dönem F/K ve PEG yapay olarak düşük görünür; değer tuzağı (value trap).',
-  sandik:
+  neighborhoodFund:
     'Mahalle sandığı: banka borçla çalışır; FAVÖK ve net borç anlamsızdır. Özkaynak kârlılığına, takipteki kredilere ve PD/DD ≈ ÖK kârlılığı × F/K ilişkisine bakılır.',
-  hasilat:
+  dailyRevenue:
     "Günlük hasılat ve hareketli ortalama: Ayşe'nin Kahvesi'nin günlük hasılatı inişli çıkışlıdır; ortalama gürültüyü süzer ama değişimi gecikmeyle gösterir. Ortalama, şirketin ucuz ya da pahalı olduğunu söylemez.",
-  ikiUlke:
+  twoCountries:
     'İki ülke, iki kahveci: aynı F/K, faizi ve enflasyonu farklı iki ülkede aynı şeyi söylemez; bu yüzden BIST ve ABD hisseleri ayrı okunur.',
 } as const;
 
@@ -62,7 +62,7 @@ function systemPrompt(minWords: number, maxWords: number): string {
   ].join('\n');
 }
 
-/** Terim sözlüğü, modele tek satır hâlinde: "F/K = P/E; PD/DD = P/B; …" */
+/** The term dictionary as a single line for the model: "F/K = P/E; PD/DD = P/B; …" */
 export function termLine(ids: string[]): string {
   return ids
     .map((id) => TERMS[id])
@@ -74,7 +74,7 @@ export function termLine(ids: string[]): string {
 export const STOCK_TERMS = ['pe', 'pb', 'evEbitda', 'netDebtEbitda', 'ebitdaGrowth', 'netIncomeGrowth', 'roe', 'marketCap', 'target', 'median', 'industry', 'cyclical', 'sma', 'goldenCross', 'deathCross', 'trend'];
 const BANK_TERMS = ['npl', 'car', 'nim'];
 
-/** Sayıyı JSON için yuvarlar; boş ya da geçersiz değer null olur. */
+/** Rounds a number for JSON; an empty or invalid value becomes null. */
 const r = (v: number | null | undefined, d = 2): number | null =>
   v == null || Number.isNaN(v) ? null : Math.round(v * 10 ** d) / 10 ** d;
 
@@ -124,7 +124,7 @@ function medianFigures(m: IndustryMedian): Record<string, unknown> {
 
 const TREND_TR = { up: 'yukarı (fiyat > SMA 50 > SMA 200)', down: 'aşağı (fiyat < SMA 50 < SMA 200)', mixed: 'karışık' } as const;
 
-/** Hareketli ortalamalar: önce verideki değerler, yoksa fiyat serisinden hesap. Hiçbiri yoksa null. */
+/** Moving averages: stored values first, otherwise computed from the price series. Null when there are none. */
 export function smaFigures(input: StockCommentInput): Record<string, unknown> | null {
   const s = input.stock;
   const closes = input.prices && input.prices.closes.length ? input.prices.closes : null;
@@ -148,31 +148,31 @@ export function smaFigures(input: StockCommentInput): Record<string, unknown> | 
   return out;
 }
 
-/** Veriye göre hangi hikâyelerin gerçekten uyduğu; model bunların dışına çıkmasın diye verilir. */
+/** Which stories really fit the data; passed in so the model does not stray outside them. */
 export function matchingStories(s: StockView, e: Evaluation): StoryId[] {
   const out: StoryId[] = [];
   if (!s.hasData) return out;
-  if (s.bank) return ['sandik'];
-  if (s.cyclical) out.push('dondurmaci');
+  if (s.bank) return ['neighborhoodFund'];
+  if (s.cyclical) out.push('beachIcecream');
   const baseEffect = (s.peg != null && s.peg > 0 && s.peg <= 0.15) || (s.ebitdaGrowth != null && s.netIncomeGrowth == null && !!s.netIncomeGrowthNote);
   const gap = s.ebitdaGrowth != null && s.netIncomeGrowth != null && s.netIncomeGrowth > s.ebitdaGrowth + 50;
-  if (baseEffect || gap) out.push('filmSeti');
-  if (gap && s.market === 'BIST') out.push('enflasyon');
+  if (baseEffect || gap) out.push('filmSetCafe');
+  if (gap && s.market === 'BIST') out.push('inflationProfit');
   const debtHigh = e.checks.some((c) => c.id === 'debt' && c.status === 'bad');
   const growthOk = e.checks.some((c) => c.id === 'growthQuality' && c.status === 'good');
-  if (debtHigh && growthOk && s.peg != null && s.peg > 0.15 && s.peg <= 1) out.push('zincir');
-  if (s.pe != null && s.peg != null && s.peg > 1 && s.netDebtEbitda != null && s.netDebtEbitda <= 0) out.push('kose');
+  if (debtHigh && growthOk && s.peg != null && s.peg > 0.15 && s.peg <= 1) out.push('chainCafe');
+  if (s.pe != null && s.peg != null && s.peg > 1 && s.netDebtEbitda != null && s.netDebtEbitda <= 0) out.push('cornerCafe');
   return out;
 }
 
 const storyName = (id: StoryId): string => STORIES[id].split(':')[0];
 
 export interface PromptContext {
-  /** Hissenin piyasasındaki verinin tarihi (marketAsOf) */
+  /** Date of the data in the stock's market (marketAsOf) */
   asOf: string;
 }
 
-/** Hisse yorumu istemi */
+/** Stock comment prompt */
 export function stockPrompt(input: StockCommentInput, ctx: PromptContext): Prompt {
   const s = input.stock;
   const sma = smaFigures(input);
@@ -191,7 +191,7 @@ export function stockPrompt(input: StockCommentInput, ctx: PromptContext): Promp
     stock.carPct = r(s.car);
     stock.nimPct = r(s.nim);
   }
-  // Elle yazılmış yorum yalnızca yazıldığı günün verisiyle birlikte verilir; veri yenilendiyse çelişebilir.
+  // The hand-written comment is passed only together with the data of the day it was written; once the data is refreshed it may contradict it.
   if (s.note && noteIsCurrent(s.noteAsOf, ctx.asOf)) {
     stock.handwrittenNote = s.note;
     if (s.noteAsOf) stock.noteDate = s.noteAsOf;
@@ -220,7 +220,7 @@ export function stockPrompt(input: StockCommentInput, ctx: PromptContext): Promp
   return { system: systemPrompt(110, 170), user, maxTokens: 1000 };
 }
 
-/** Sektör karşılaştırması istemi. Başka piyasadan satır gelirse dışarıda bırakılır. */
+/** Industry comparison prompt. Rows from another market are left out. */
 export function industryPrompt(input: IndustryCompareInput, ctx: PromptContext): Prompt {
   const rows = input.rows.filter((row) => row.stock.market === input.market);
   const withData = rows.filter((row) => row.stock.hasData);

@@ -19,7 +19,7 @@ from typing import Any, Callable, Mapping, Sequence
 from .mapping import REQUIRED_COLUMNS, TV_COLUMNS
 from .util import clean_number
 
-log = logging.getLogger("finsights.sources")
+log = logging.getLogger("fintools.sources")
 
 TV_URL = "https://scanner.tradingview.com/{scope}/scan"
 TV_SCOPE = {"BIST": "turkey", "US": "america"}

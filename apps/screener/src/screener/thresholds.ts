@@ -1,6 +1,6 @@
 /**
- * Tarama eşikleri. Tarayıcı ve "Kendi hesabın" aynı eşikleri kullanır
- * (ilk sürümdeki gibi); bu yüzden tek bir yerde durur ve tarayıcıda saklanır.
+ * Screening thresholds. The screener and the calculator tab use the same thresholds
+ * (as in the first release), so they live in one place and are stored in the browser.
  */
 
 import type { Thresholds } from '../types.ts';
@@ -13,7 +13,7 @@ const num = (v: unknown, fallback: number): number =>
   typeof v === 'number' && Number.isFinite(v) ? v : fallback;
 const bool = (v: unknown, fallback: boolean): boolean => (typeof v === 'boolean' ? v : fallback);
 
-/** Saklanan (ya da dışarıdan gelen) değeri geçerli eşiklere çevirir; eksik ya da bozuk alan varsayılana döner. */
+/** Turns a stored (or external) value into valid thresholds; a missing or malformed field falls back to the default. */
 export function sanitizeThresholds(raw: unknown): Thresholds {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   return {
@@ -26,7 +26,7 @@ export function sanitizeThresholds(raw: unknown): Thresholds {
   };
 }
 
-/** Sayı kutusundaki metni eşiğe çevirir; boş ya da geçersizse varsayılan (ilk sürümdeki davranış). */
+/** Turns the text of a number input into a threshold; empty or invalid input gives the default (as in the first release). */
 export function parseThreshold(text: string, fallback: number): number {
   const v = parseFloat(text);
   return Number.isFinite(v) ? v : fallback;
@@ -62,7 +62,7 @@ export function resetThresholds(): void {
   notify();
 }
 
-/** Eşik değişince çağrılır; dönen işlev aboneliği kaldırır. */
+/** Called when a threshold changes; the returned function unsubscribes. */
 export function subscribeThresholds(fn: () => void): () => void {
   subs.add(fn);
   return () => subs.delete(fn);

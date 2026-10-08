@@ -1,9 +1,9 @@
 /**
- * Yapay zekâ ayarları: seçili sağlayıcı, sağlayıcı başına anahtar ve model,
- * özel adres. Hepsi yalnızca bu tarayıcıda (localStorage, "fintools.screener." öneki)
- * durur; anahtar hiçbir yere yazdırılmaz ve hiçbir adrese eklenmez.
+ * AI settings: the selected provider, the key and model per provider, and the custom
+ * URL. All of it stays only in this browser (localStorage, "fintools.screener." prefix);
+ * the key is never printed anywhere or added to any URL.
  *
- * Her değişiklikte store 'ai' olayı yayılır.
+ * Every change makes the store emit an 'ai' event.
  */
 
 import { emit, lsGet, lsRemove, lsSet } from '../data/store.ts';
@@ -38,14 +38,14 @@ export function setKey(p: ProviderId, key: string): void {
   emit('ai');
 }
 
-/** Anahtarı ve o anahtarla alınmış model listesini siler; seçili model adı kalır. */
+/** Deletes the key and the model list fetched with it; the selected model name stays. */
 export function clearKey(p: ProviderId): void {
   lsRemove(kKey(p));
   lsRemove(kModels(p));
   emit('ai');
 }
 
-/** Sağlayıcı başına son seçilen model */
+/** The last model selected per provider */
 export const getModel = (p: ProviderId): string => text(lsGet<unknown>(kModel(p), ''));
 
 export function setModel(p: ProviderId, model: string): void {
@@ -55,7 +55,7 @@ export function setModel(p: ProviderId, model: string): void {
   emit('ai');
 }
 
-/** Özel adresin taban adresi (yalnızca "custom" sağlayıcısında kullanılır) */
+/** Base URL of the custom endpoint (used only by the "custom" provider) */
 export const getBaseUrl = (): string => text(lsGet<unknown>(K_BASE, ''));
 
 export function setBaseUrl(url: string): void {
@@ -66,7 +66,7 @@ export function setBaseUrl(url: string): void {
   emit('ai');
 }
 
-/** Sağlayıcıdan en son alınan model listesi (sayfa yenilenince açılır liste dolu gelsin diye saklanır) */
+/** The model list most recently fetched from the provider (stored so the dropdown is already filled after a page reload) */
 export function getModelList(p: ProviderId): string[] {
   const v = lsGet<unknown>(kModels(p), []);
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
@@ -76,7 +76,7 @@ export function setModelList(p: ProviderId, models: string[]): void {
   lsSet(kModels(p), models);
 }
 
-/** Bir sağlayıcı için çağrıya hazır ayar */
+/** Call-ready configuration for one provider */
 export function resolveConfig(p: ProviderId = getProvider()): ResolvedConfig {
   return { provider: p, key: getKey(p), model: getModel(p), baseUrl: p === 'custom' ? getBaseUrl() : '' };
 }

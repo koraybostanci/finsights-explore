@@ -27,7 +27,7 @@ import { DEF, evaluate } from '../src/lib/evaluate.ts';
 import { industryMedian } from '../src/lib/stats.ts';
 import type { MarketData, StockView } from '../src/types.ts';
 
-/* ---------- Ortak düzenek ---------- */
+/* ---------- Shared setup ---------- */
 
 const store = new Map<string, string>();
 (globalThis as { localStorage?: unknown }).localStorage = {
@@ -40,7 +40,7 @@ const DATA = JSON.parse(readFileSync(new URL('./fixtures/market.json', import.me
 const views: StockView[] = DATA.stocks.map((s) => toView(s, DATA.industries));
 const view = (k: string): StockView => {
   const v = views.find((s) => s.symbol === k);
-  assert.ok(v, `${k} veride yok`);
+  assert.ok(v, `${k} is not in the data`);
   return v;
 };
 
@@ -108,9 +108,9 @@ beforeEach(() => {
   setData(DATA);
 });
 
-/* ---------- İstek kurma ---------- */
+/* ---------- Building requests ---------- */
 
-test('Claude isteği: adres, başlıklar ve gövde', () => {
+test('Claude request: URL, headers and body', () => {
   const r = buildCompletionRequest(cfg('anthropic'), REQ);
   assert.equal(r.url, 'https://api.anthropic.com/v1/messages');
   assert.equal(r.method, 'POST');
@@ -128,7 +128,7 @@ test('Claude isteği: adres, başlıklar ve gövde', () => {
   });
 });
 
-test('OpenAI isteği: Bearer başlığı, max_completion_tokens', () => {
+test('OpenAI request: Bearer header, max_completion_tokens', () => {
   const r = buildCompletionRequest(cfg('openai'), REQ);
   assert.equal(r.url, 'https://api.openai.com/v1/chat/completions');
   assert.deepEqual(r.headers, { 'content-type': 'application/json', Authorization: `Bearer ${KEY}` });
@@ -142,7 +142,7 @@ test('OpenAI isteği: Bearer başlığı, max_completion_tokens', () => {
   });
 });
 
-test('Gemini isteği: anahtar başlıkta, adreste değil; yerel API gövdesi', () => {
+test('Gemini request: key in the header, not the URL; native API body', () => {
   const r = buildCompletionRequest(cfg('gemini', { model: 'models/gemini-x' }), REQ);
   assert.equal(r.url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-x:generateContent');
   assert.deepEqual(r.headers, { 'content-type': 'application/json', 'x-goog-api-key': KEY });
@@ -153,7 +153,7 @@ test('Gemini isteği: anahtar başlıkta, adreste değil; yerel API gövdesi', (
   });
 });
 
-test('OpenCode Go isteği: OpenAI uyumlu, max_tokens', () => {
+test('OpenCode Go request: OpenAI-compatible, max_tokens', () => {
   const r = buildCompletionRequest(cfg('opencode'), REQ);
   assert.equal(r.url, 'https://opencode.ai/zen/go/v1/chat/completions');
   assert.equal(r.headers.Authorization, `Bearer ${KEY}`);
@@ -162,7 +162,7 @@ test('OpenCode Go isteği: OpenAI uyumlu, max_tokens', () => {
   assert.equal('max_completion_tokens' in body, false);
 });
 
-test('Özel adres isteği: taban adres düzeltilir; anahtar yoksa Authorization gönderilmez', () => {
+test('Custom endpoint request: the base URL is normalized; without a key no Authorization is sent', () => {
   const r = buildCompletionRequest(cfg('custom', { baseUrl: 'http://localhost:11434/v1/', key: '' }), REQ);
   assert.equal(r.url, 'http://localhost:11434/v1/chat/completions');
   assert.deepEqual(r.headers, { 'content-type': 'application/json' });
@@ -175,14 +175,14 @@ test('Özel adres isteği: taban adres düzeltilir; anahtar yoksa Authorization 
   );
 });
 
-test('sistem istemi boşsa gövdeye yazılmaz', () => {
+test('an empty system prompt is not written to the body', () => {
   const empty = { system: '', user: 'u', maxTokens: 10 };
   assert.equal('system' in JSON.parse(buildCompletionRequest(cfg('anthropic'), empty).body!), false);
   assert.equal('systemInstruction' in JSON.parse(buildCompletionRequest(cfg('gemini'), empty).body!), false);
   assert.deepEqual(JSON.parse(buildCompletionRequest(cfg('openai'), empty).body!).messages, [{ role: 'user', content: 'u' }]);
 });
 
-test('model listesi istekleri', () => {
+test('model list requests', () => {
   const a = buildModelsRequest(cfg('anthropic'));
   assert.equal(a.url, 'https://api.anthropic.com/v1/models?limit=1000');
   assert.equal(a.method, 'GET');
@@ -200,18 +200,18 @@ test('model listesi istekleri', () => {
   assert.equal(buildModelsRequest(cfg('custom', { baseUrl: 'https://llm.ornek.com/v1' })).url, 'https://llm.ornek.com/v1/models');
 });
 
-test('anahtar hiçbir sağlayıcıda adrese ya da gövdeye yazılmaz', () => {
+test('the key is never written to the URL or the body for any provider', () => {
   for (const p of PROVIDERS) {
     const c = cfg(p.id, { baseUrl: 'https://llm.ornek.com/v1' });
     for (const r of [buildCompletionRequest(c, REQ), buildModelsRequest(c)]) {
-      assert.equal(r.url.includes(KEY), false, `${p.id}: anahtar adreste`);
-      assert.equal((r.body ?? '').includes(KEY), false, `${p.id}: anahtar gövdede`);
-      assert.ok(Object.values(r.headers).some((v) => v.includes(KEY)), `${p.id}: anahtar başlıkta olmalı`);
+      assert.equal(r.url.includes(KEY), false, `${p.id}: key in the URL`);
+      assert.equal((r.body ?? '').includes(KEY), false, `${p.id}: key in the body`);
+      assert.ok(Object.values(r.headers).some((v) => v.includes(KEY)), `${p.id}: key should be in a header`);
     }
   }
 });
 
-test('checkBaseUrl: https zorunlu, http yalnızca yerel adreste', () => {
+test('checkBaseUrl: https is required, http only for local addresses', () => {
   assert.deepEqual(checkBaseUrl(' https://a.b/v1/ '), { ok: true, url: 'https://a.b/v1' });
   assert.deepEqual(checkBaseUrl('http://localhost:1234/v1'), { ok: true, url: 'http://localhost:1234/v1' });
   assert.deepEqual(checkBaseUrl('http://127.0.0.1:8080'), { ok: true, url: 'http://127.0.0.1:8080' });
@@ -223,7 +223,7 @@ test('checkBaseUrl: https zorunlu, http yalnızca yerel adreste', () => {
   assert.equal(checkBaseUrl('').ok, false);
 });
 
-test('isConfigured: anahtar ve model; özel adreste geçerli adres', () => {
+test('isConfigured: key and model; a valid URL for the custom endpoint', () => {
   assert.equal(isConfigured(cfg('anthropic')), true);
   assert.equal(isConfigured(cfg('anthropic', { key: '' })), false);
   assert.equal(isConfigured(cfg('anthropic', { model: ' ' })), false);
@@ -231,9 +231,9 @@ test('isConfigured: anahtar ve model; özel adreste geçerli adres', () => {
   assert.equal(isConfigured(cfg('custom', { key: '', baseUrl: '' })), false);
 });
 
-/* ---------- Yanıt çözme ---------- */
+/* ---------- Parsing responses ---------- */
 
-test('parseCompletion: Claude yalnızca metin bloklarını birleştirir', () => {
+test('parseCompletion: Claude joins only the text blocks', () => {
   assert.deepEqual(parseCompletion('anthropic', ANTHROPIC_OK), {
     text: 'Birinci paragraf.\n\nİkinci paragraf.',
     truncated: false,
@@ -246,7 +246,7 @@ test('parseCompletion: Claude yalnızca metin bloklarını birleştirir', () => 
   assert.throws(() => parseCompletion('anthropic', { type: 'message' }), AiError);
 });
 
-test('parseCompletion: OpenAI biçimi (düz metin ve parça dizisi)', () => {
+test('parseCompletion: OpenAI shape (plain text and an array of parts)', () => {
   assert.deepEqual(parseCompletion('openai', OPENAI_OK), { text: 'Merhaba dünya', truncated: false });
   const parts = {
     choices: [{ message: { content: [{ type: 'text', text: 'a' }, { type: 'text', text: 'b' }] }, finish_reason: 'length' }],
@@ -259,7 +259,7 @@ test('parseCompletion: OpenAI biçimi (düz metin ve parça dizisi)', () => {
   assert.throws(() => parseCompletion('openai', { choices: [] }), AiError);
 });
 
-test('parseCompletion: Gemini düşünce parçalarını atar, engeli bildirir', () => {
+test('parseCompletion: Gemini drops thought parts and reports a block', () => {
   assert.deepEqual(parseCompletion('gemini', GEMINI_OK), { text: 'Merhaba Gemini', truncated: false });
   assert.throws(
     () => parseCompletion('gemini', { promptFeedback: { blockReason: 'SAFETY' } }),
@@ -272,7 +272,7 @@ test('parseCompletion: Gemini düşünce parçalarını atar, engeli bildirir', 
   assert.equal(parseCompletion('gemini', { candidates: [{ content: { parts: [] }, finishReason: 'MAX_TOKENS' }] }).truncated, true);
 });
 
-test('parseModels: her sağlayıcının liste biçimi', () => {
+test('parseModels: each provider\'s list shape', () => {
   const anthropic = {
     data: [
       { type: 'model', id: 'claude-b', display_name: 'B', created_at: '2026-07-24T00:00:00Z' },
@@ -295,7 +295,7 @@ test('parseModels: her sağlayıcının liste biçimi', () => {
     ],
   };
   assert.deepEqual(parseModels('openai', openai), ['gpt-new', 'gpt-old']);
-  // OpenAI uyumlu diğer adreslerde eleme yapılmaz
+  // No filtering for other OpenAI-compatible endpoints
   assert.deepEqual(parseModels('custom', openai), ['gpt-old', 'text-embedding-3-small', 'gpt-new', 'whisper-1']);
 
   const gemini = {
@@ -311,9 +311,9 @@ test('parseModels: her sağlayıcının liste biçimi', () => {
   assert.throws(() => parseModels('openai', 'x'), AiError);
 });
 
-/* ---------- Hata eşleme ---------- */
+/* ---------- Error mapping ---------- */
 
-test('httpError: durum kodları AiError kodlarına çevrilir', () => {
+test('httpError: status codes map to AiError codes', () => {
   const anth401 = JSON.stringify({ type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } });
   const e401 = httpError('anthropic', 401, anth401);
   assert.equal(e401.code, 'auth');
@@ -346,7 +346,7 @@ test('httpError: durum kodları AiError kodlarına çevrilir', () => {
   assert.equal(httpError('anthropic', 529, '{"type":"error","error":{"type":"overloaded_error","message":"Overloaded"}}').code, 'provider');
 });
 
-test('hata mesajında anahtar ve HTML imleri kalmaz, uzun mesaj kısalır', () => {
+test('an error message keeps no key or HTML marks, and a long message is truncated', () => {
   const body = JSON.stringify({ error: { message: `Incorrect API key provided: ${KEY}. <script>alert(1)</script>` } });
   const e = httpError('openai', 401, body, KEY);
   assert.equal(e.message.includes(KEY), false);
@@ -354,9 +354,9 @@ test('hata mesajında anahtar ve HTML imleri kalmaz, uzun mesaj kısalır', () =
   assert.ok(tidyMessage('x'.repeat(500)).length <= 220);
 });
 
-/* ---------- complete(): sahte fetch ile ---------- */
+/* ---------- complete(): with a fake fetch ---------- */
 
-test('complete: Claude başarılı yanıtı ve gönderilen istek', async () => {
+test('complete: Claude success response and the request sent', async () => {
   const m = mockFetch(() => json(ANTHROPIC_OK));
   const text = await complete(REQ, { fetch: m.fetch, config: cfg('anthropic') });
   assert.equal(text, 'Birinci paragraf.\n\nİkinci paragraf.');
@@ -368,22 +368,22 @@ test('complete: Claude başarılı yanıtı ve gönderilen istek', async () => {
   assert.ok(m.calls[0].init.signal instanceof AbortSignal);
 });
 
-test('complete: OpenAI ve Gemini başarılı yanıtları', async () => {
+test('complete: OpenAI and Gemini success responses', async () => {
   assert.equal(await complete(REQ, { fetch: mockFetch(() => json(OPENAI_OK)).fetch, config: cfg('openai') }), 'Merhaba dünya');
   assert.equal(await complete(REQ, { fetch: mockFetch(() => json(GEMINI_OK)).fetch, config: cfg('gemini') }), 'Merhaba Gemini');
 });
 
 const rejects = async (p: Promise<unknown>, code: string, pattern?: RegExp): Promise<void> => {
   await assert.rejects(p, (e: unknown) => {
-    assert.ok(e instanceof AiError, 'AiError bekleniyordu');
+    assert.ok(e instanceof AiError, 'AiError expected');
     assert.equal(e.code, code);
     if (pattern) assert.match(aiErrorMessage(e), pattern);
-    assert.equal(aiErrorMessage(e).includes(KEY), false, 'mesajda anahtar olmamalı');
+    assert.equal(aiErrorMessage(e).includes(KEY), false, 'the message must not contain the key');
     return true;
   });
 };
 
-test('complete: 401 → auth, 429 → rate_limit, 500 → provider', async () => {
+test('complete: 401 maps to auth, 429 to rate_limit, 500 to provider', async () => {
   const body = { type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } };
   await rejects(complete(REQ, { fetch: mockFetch(() => json(body, 401)).fetch, config: cfg('anthropic') }), 'auth', /anahtarı kabul etmedi/);
   await rejects(
@@ -398,7 +398,7 @@ test('complete: 401 → auth, 429 → rate_limit, 500 → provider', async () =>
   );
 });
 
-test('complete: fetch TypeError → network; mesaj CORS olasılığını söyler', async () => {
+test('complete: fetch TypeError maps to network; the message mentions the CORS possibility', async () => {
   const failing: FetchLike = async () => {
     throw new TypeError('Failed to fetch');
   };
@@ -411,7 +411,7 @@ test('complete: fetch TypeError → network; mesaj CORS olasılığını söyler
   );
 });
 
-test('complete: zaman aşımı AbortController ile keser → network', async () => {
+test('complete: a timeout aborts through AbortController and maps to network', async () => {
   const hanging: FetchLike = (_url, init) =>
     new Promise((_resolve, reject) => {
       init.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')));
@@ -419,7 +419,7 @@ test('complete: zaman aşımı AbortController ile keser → network', async () 
   await rejects(complete(REQ, { fetch: hanging, config: cfg('openai'), timeoutMs: 20 }), 'network', /zaman aşımı/);
 });
 
-test('complete: çözülemeyen ya da boş yanıt → bad_response', async () => {
+test('complete: an unparseable or empty response maps to bad_response', async () => {
   const html = mockFetch(() => new Response('<html>ok</html>', { status: 200 }));
   await rejects(complete(REQ, { fetch: html.fetch, config: cfg('openai') }), 'bad_response');
   const empty = mockFetch(() => json({ choices: [{ message: { content: '' }, finish_reason: 'length' }] }));
@@ -428,21 +428,21 @@ test('complete: çözülemeyen ya da boş yanıt → bad_response', async () => 
   await rejects(complete(REQ, { fetch: shape.fetch, config: cfg('anthropic') }), 'bad_response');
 });
 
-test('complete: ayar eksikse istek gönderilmez → not_configured', async () => {
+test('complete: without configuration no request is sent and not_configured is thrown', async () => {
   const m = mockFetch(() => json(OPENAI_OK));
   await rejects(complete(REQ, { fetch: m.fetch, config: cfg('openai', { key: '' }) }), 'not_configured', /Ayarlar sekmesinden/);
   await rejects(complete(REQ, { fetch: m.fetch, config: cfg('openai', { model: '' }) }), 'not_configured');
   assert.equal(m.calls.length, 0);
 });
 
-test('testConnection: boş metinli 2xx yanıt da başarıdır; 401 hata verir', async () => {
+test('testConnection: a 2xx response with empty text also succeeds; 401 fails', async () => {
   const empty = mockFetch(() => json({ choices: [{ message: { content: '' }, finish_reason: 'length' }] }));
   await testConnection({ fetch: empty.fetch, config: cfg('openai') });
   assert.equal(JSON.parse(String(empty.calls[0].init.body)).max_completion_tokens, 16 + THINKING_HEADROOM);
   await rejects(testConnection({ fetch: mockFetch(() => json({ error: { message: 'no' } }, 401)).fetch, config: cfg('openai') }), 'auth');
 });
 
-test('listModels: listeyi alır; anahtar yoksa istek göndermez', async () => {
+test('listModels: fetches the list; without a key it sends no request', async () => {
   const m = mockFetch(() => json({ data: [{ id: 'claude-b' }, { id: 'claude-a' }], has_more: false }));
   assert.deepEqual(await listModels({ fetch: m.fetch, config: cfg('anthropic', { model: '' }) }), ['claude-b', 'claude-a']);
   assert.equal(m.calls[0].url, 'https://api.anthropic.com/v1/models?limit=1000');
@@ -452,9 +452,9 @@ test('listModels: listeyi alır; anahtar yoksa istek göndermez', async () => {
   assert.equal(m.calls.length, 1);
 });
 
-/* ---------- Ayar depolama ---------- */
+/* ---------- Settings storage ---------- */
 
-test('ayarlar sağlayıcı başına saklanır ve her değişiklik "ai" olayı yayar', () => {
+test('settings are stored per provider and every change emits an "ai" event', () => {
   let events = 0;
   const off = on('ai', () => events++);
   assert.deepEqual(aiStatus(), { configured: false, provider: 'anthropic', providerLabel: 'Claude', model: '' });
@@ -481,24 +481,24 @@ test('ayarlar sağlayıcı başına saklanır ve her değişiklik "ai" olayı ya
   config.clearKey('openai');
   assert.equal(config.getKey('openai'), '');
   assert.deepEqual(config.getModelList('openai'), []);
-  assert.equal(config.getModel('openai'), 'gpt-x', 'model adı hatırlanır');
+  assert.equal(config.getModel('openai'), 'gpt-x', 'the model name is remembered');
   assert.equal(aiStatus().configured, false);
   off();
 
-  // Depoda yalnızca "fintools.screener." önekli anahtarlar var
+  // The store holds only keys with the "fintools.screener." prefix
   assert.ok([...store.keys()].every((k) => k.startsWith('fintools.screener.ai.')));
 });
 
-test('bozuk depo değeri varsayılana düşer', () => {
+test('a corrupt stored value falls back to the default', () => {
   store.set('fintools.screener.ai.provider', '"yok-boyle-saglayici"');
   store.set('fintools.screener.ai.key.anthropic', '{"a":1}');
   assert.equal(config.getProvider(), 'anthropic');
   assert.equal(config.getKey('anthropic'), '');
 });
 
-/* ---------- Önbellek ---------- */
+/* ---------- Cache ---------- */
 
-test('cacheKey: tür, piyasa, kimlik, veri tarihi, sağlayıcı, model, sürüm ve istem özeti', () => {
+test('cacheKey: kind, market, id, data date, provider, model, version and prompt digest', () => {
   const parts = { kind: 'stock', id: 'THYAO', market: 'BIST', asOf: '2026-10-02', provider: 'anthropic', model: 'm', version: 1 };
   assert.equal(cacheKey(parts), 'stock|BIST|THYAO|2026-10-02|anthropic|m|v1');
   const a = cacheKey({ ...parts, prompt: 'eşik 30' });
@@ -512,7 +512,7 @@ test('cacheKey: tür, piyasa, kimlik, veri tarihi, sağlayıcı, model, sürüm 
   assert.equal(hash('abc'), hash('abc'));
 });
 
-test('önbellek en çok CACHE_MAX kayıt tutar, en eskisini atar', () => {
+test('the cache keeps at most CACHE_MAX entries and drops the oldest', () => {
   for (let i = 0; i < CACHE_MAX + 5; i++)
     cachePut({ key: `k${i}`, text: `t${i}`, providerLabel: 'P', model: 'm', createdAt: '2026-10-02T00:00:00Z' });
   assert.equal(cacheSize(), CACHE_MAX);
@@ -520,13 +520,13 @@ test('önbellek en çok CACHE_MAX kayıt tutar, en eskisini atar', () => {
   assert.equal(cacheGet('k4'), null);
   assert.equal(cacheGet('k5')?.text, 't5');
   assert.equal(cacheGet(`k${CACHE_MAX + 4}`)?.text, `t${CACHE_MAX + 4}`);
-  // Aynı anahtar yeniden yazılınca kayıt yinelenmez ve en yeni olur
+  // Writing the same key again does not duplicate the entry and makes it the newest
   cachePut({ key: 'k5', text: 'yeni', providerLabel: 'P', model: 'm', createdAt: '2026-10-02T00:00:00Z' });
   assert.equal(cacheSize(), CACHE_MAX);
   assert.equal(cacheGet('k5')?.text, 'yeni');
 });
 
-/* ---------- İstemler ---------- */
+/* ---------- Prompts ---------- */
 
 const stockInput = (k: string) => {
   const stock = view(k);
@@ -534,7 +534,7 @@ const stockInput = (k: string) => {
   return { stock, evaluation: evaluate(stock, DEF), median: industryMedian(peers), prices: null };
 };
 
-test('stockPrompt: verideki rakamlar, kural sonuçları, ortanca, terimler ve kurallar', () => {
+test('stockPrompt: the data figures, rule results, median, terms and rules', () => {
   const p = stockPrompt(stockInput('THYAO'), { asOf: DATA.asOf });
   assert.match(p.system, /Yalnızca sana verilen verideki sayıları kullan/);
   assert.match(p.system, /Al, sat, tut/);
@@ -561,21 +561,21 @@ test('stockPrompt: verideki rakamlar, kural sonuçları, ortanca, terimler ve ku
   assert.equal(payload.industryMedian.stocksInMedian, 2);
   assert.equal(payload.movingAverages, null);
   assert.deepEqual(payload.matchingStories, ['Sahil dondurmacısı']);
-  // İstem metni, verideki anahtarlara adıyla başvurur
+  // The prompt text refers to the keys in the data by name
   assert.match(p.system, /"matchingStories"/);
   assert.match(p.user, /industryMedian ya da movingAverages null ise/);
 });
 
-test('matchingStories: döngüsel, tek seferlik sıçrama, banka', () => {
+test('matchingStories: cyclical, one-off jump, bank', () => {
   const st = (k: string) => matchingStories(view(k), evaluate(view(k), DEF));
-  assert.deepEqual(st('TUPRS'), ['dondurmaci', 'filmSeti', 'enflasyon']);
-  assert.deepEqual(st('TOASO'), ['filmSeti', 'enflasyon']);
-  assert.deepEqual(st('GARAN'), ['sandik']);
+  assert.deepEqual(st('TUPRS'), ['beachIcecream', 'filmSetCafe', 'inflationProfit']);
+  assert.deepEqual(st('TOASO'), ['filmSetCafe', 'inflationProfit']);
+  assert.deepEqual(st('GARAN'), ['neighborhoodFund']);
   assert.deepEqual(st('VZ'), []);
   assert.deepEqual(st('GUBRF'), []);
 });
 
-test('smaFigures: verideki ortalamalar ya da fiyat serisinden hesap', () => {
+test('smaFigures: averages from the data or computed from the price series', () => {
   const base = stockInput('BIMAS');
   assert.equal(smaFigures(base), null);
   const stored = smaFigures({ ...base, stock: { ...base.stock, price: 120, sma20: 118, sma50: 110, sma200: 100 } });
@@ -598,11 +598,11 @@ test('smaFigures: verideki ortalamalar ya da fiyat serisinden hesap', () => {
   assert.equal(fromPrices?.crossLast60Days, 'yok');
 });
 
-test('industryPrompt: tek piyasa, verisi olmayanlar ayrı listede', () => {
+test('industryPrompt: a single market, stocks with no data in a separate list', () => {
   const rowsOf = (market: 'BIST' | 'US') =>
     views.filter((s) => s.market === market && s.industry === 'airlines').map((stock) => ({ stock, evaluation: evaluate(stock, DEF) }));
   const bist = rowsOf('BIST');
-  // ABD satırları yanlışlıkla karışsa bile isteme girmez
+  // Even if US rows get mixed in by mistake, they do not enter the prompt
   const p = industryPrompt(
     { market: 'BIST', industry: DATA.industries.airlines, rows: [...bist, ...rowsOf('US')], median: industryMedian(bist.map((r) => r.stock)) },
     { asOf: DATA.asOf },
@@ -627,7 +627,7 @@ test('industryPrompt: tek piyasa, verisi olmayanlar ayrı listede', () => {
   assert.equal(pUs.currency, 'USD');
 });
 
-/* ---------- Dışa açık işlevler ---------- */
+/* ---------- Public functions ---------- */
 
 function configureAnthropic(): void {
   config.setProvider('anthropic');
@@ -635,7 +635,7 @@ function configureAnthropic(): void {
   config.setModel('anthropic', 'claude-x');
 }
 
-test('commentStock: sağlayıcıya gider, önbelleğe yazar, force ile yeniler', async () => {
+test('commentStock: goes to the provider, writes to the cache, refreshes with force', async () => {
   configureAnthropic();
   let n = 0;
   const calls: Call[] = [];
@@ -666,20 +666,20 @@ test('commentStock: sağlayıcıya gider, önbelleğe yazar, force ile yeniler',
     assert.equal(calls.length, 2);
     assert.equal((await commentStock(input)).text, forced.text);
 
-    // Başka hisse, başka model ya da başka veri tarihi: önbellek tutmaz
+    // Another stock, another model or another data date: the cache does not apply
     await commentStock(stockInput('BIMAS'));
     assert.equal(calls.length, 3);
     config.setModel('anthropic', 'claude-y');
     await commentStock(input);
     assert.equal(calls.length, 4);
-    // Yalnızca ABD verisi yenilendi: BIST hissesinin yorumu önbellekte kalır
+    // Only the US data was refreshed: the BIST stock's comment stays cached
     setData({ ...DATA, asOf: '2026-10-05T23:45:00+03:00', asOfBy: { ...DATA.asOfBy, US: '2026-10-05T23:45:00+03:00' } });
     assert.equal((await commentStock(input)).cached, true);
     assert.equal(calls.length, 4);
     setData({ ...DATA, asOf: '2026-10-05T18:45:00+03:00', asOfBy: { ...DATA.asOfBy, BIST: '2026-10-05T18:45:00+03:00' } });
     await commentStock(input);
     assert.equal(calls.length, 5);
-    // Eşik değişince değerlendirme, dolayısıyla istem ve önbellek anahtarı değişir
+    // When a threshold changes, the evaluation changes, and with it the prompt and the cache key
     await commentStock({ ...input, evaluation: evaluate(input.stock, { ...DEF, maxNetDebtEbitda: 5 }) });
     assert.equal(calls.length, 6);
 
@@ -687,14 +687,14 @@ test('commentStock: sağlayıcıya gider, önbelleğe yazar, force ile yeniler',
     assert.equal(body.model, 'claude-x');
     assert.match(body.messages[0].content, /THYAO/);
     assert.equal(calls[0].url, 'https://api.anthropic.com/v1/messages');
-    // Anahtar önbelleğe girmez
+    // The key does not enter the cache
     assert.equal((store.get('fintools.screener.ai.cache') ?? '').includes(KEY), false);
   } finally {
     globalThis.fetch = realFetch;
   }
 });
 
-test('commentStock: aynı anda iki çağrı tek istek gönderir', async () => {
+test('commentStock: two simultaneous calls send a single request', async () => {
   configureAnthropic();
   let n = 0;
   const realFetch = globalThis.fetch;
@@ -713,7 +713,7 @@ test('commentStock: aynı anda iki çağrı tek istek gönderir', async () => {
   }
 });
 
-test('compareIndustry: önbellek sektör ve piyasa başınadır', async () => {
+test('compareIndustry: the cache is per industry and market', async () => {
   configureAnthropic();
   let n = 0;
   const realFetch = globalThis.fetch;
@@ -737,7 +737,7 @@ test('compareIndustry: önbellek sektör ve piyasa başınadır', async () => {
   }
 });
 
-test('commentStock ve compareIndustry: ayar yoksa not_configured', async () => {
+test('commentStock and compareIndustry: not_configured without configuration', async () => {
   await rejects(commentStock(stockInput('THYAO')), 'not_configured', /Ayarlar sekmesinden/);
   const rows = [{ stock: view('THYAO'), evaluation: evaluate(view('THYAO'), DEF) }];
   await rejects(
@@ -746,7 +746,7 @@ test('commentStock ve compareIndustry: ayar yoksa not_configured', async () => {
   );
 });
 
-test('aiTextHtml her şeyi kaçırır ve paragraflara böler', () => {
+test('aiTextHtml escapes everything and splits into paragraphs', () => {
   assert.equal(
     aiTextHtml('Bir <b>iki</b>\nüç\n\n\n<img src=x onerror="alert(1)"> & \'son\''),
     '<p>Bir &lt;b&gt;iki&lt;/b&gt;<br>üç</p><p>&lt;img src=x onerror=&quot;alert(1)&quot;&gt; &amp; &#39;son&#39;</p>',
@@ -754,7 +754,7 @@ test('aiTextHtml her şeyi kaçırır ve paragraflara böler', () => {
   assert.equal(aiTextHtml('  \n\n '), '');
 });
 
-test('aiErrorMessage: her kod için kısa Türkçe mesaj', () => {
+test('aiErrorMessage: a short Turkish message for every code', () => {
   assert.match(aiErrorMessage(new AiError('not_configured', '')), /ayarlanmadı/);
   assert.match(aiErrorMessage(new AiError('auth', 'invalid x-api-key (HTTP 401)')), /anahtarı kabul etmedi.*invalid x-api-key/);
   assert.match(aiErrorMessage(new AiError('rate_limit', '')), /kota ya da hız sınırı/);
@@ -766,12 +766,12 @@ test('aiErrorMessage: her kod için kısa Türkçe mesaj', () => {
   assert.match(aiErrorMessage('x'), /Beklenmeyen bir hata/);
 });
 
-/* ---------- Metin yardımcıları ---------- */
-test('cleanText: markdown imleri ve fazla boşluk atılır', () => {
+/* ---------- Text helpers ---------- */
+test('cleanText: markdown marks and extra whitespace are removed', () => {
   assert.equal(cleanText('## Başlık\r\n\r\n**Kalın** metin  \n\n\n\n* madde\n- madde 2'), 'Başlık\n\nKalın metin\n\nmadde\nmadde 2');
   assert.equal(cleanText('F/K 3,60 - düşük; PEG * yok'), 'F/K 3,60 - düşük; PEG * yok');
 });
 
-test('istem sürümü tanımlı', () => {
+test('the prompt version is defined', () => {
   assert.equal(typeof PROMPT_VERSION, 'number');
 });

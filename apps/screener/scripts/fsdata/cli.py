@@ -26,7 +26,7 @@ from .writer import (
     write_prices,
 )
 
-log = logging.getLogger("finsights")
+log = logging.getLogger("fintools")
 
 TURKEY = timezone(timedelta(hours=3), "TRT")  # Turkey has been on UTC+3 all year since 2016
 

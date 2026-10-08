@@ -1,9 +1,9 @@
 /**
- * Yapay zekâ katmanının dışa açık yüzü.
+ * Public face of the AI layer.
  *
- * Ekranlar yalnızca buradaki işlevleri kullanır; sağlayıcı ayrıntısını bilmez.
- * Rakamlar her zaman uygulamadan gelir; yapay zekâ yalnızca açıklar. Anahtar
- * kullanıcınındır, bu tarayıcıda saklanır ve istekler doğrudan sağlayıcıya gider.
+ * Screens use only the functions here and know nothing about provider details.
+ * The numbers always come from the app; the AI only explains them. The key belongs
+ * to the user, is stored in this browser, and requests go straight to the provider.
  */
 
 import { marketAsOf } from '../data/store.ts';
@@ -21,12 +21,12 @@ import type { AiCallOptions, AiErrorCode, AiStatus, AiText, IndustryCompareInput
 export { AiError } from './types.ts';
 export type { AiCallOptions, AiStatus, AiText, IndustryCompareInput, StockCommentInput } from './types.ts';
 
-/** Seçili sağlayıcı ve hazır olup olmadığı. Değişince store 'ai' olayı yayılır. */
+/** The selected provider and whether it is ready. The store emits an 'ai' event when it changes. */
 export function aiStatus(): AiStatus {
   return status();
 }
 
-/** Aynı anda aynı istek iki kez gönderilmesin (çift tıklama) */
+/** Keeps the same request from being sent twice at once (double click) */
 const inflight = new Map<string, Promise<AiText>>();
 
 async function explain(kind: string, id: string, market: MarketId, build: (asOf: string) => Prompt, opts: AiCallOptions): Promise<AiText> {
@@ -35,7 +35,7 @@ async function explain(kind: string, id: string, market: MarketId, build: (asOf:
   const def = providerDef(cfg.provider);
   const asOf = marketAsOf(market);
   const prompt = build(asOf);
-  // Özel adreste aynı model adı başka bir sunucuda başka bir model olabilir.
+  // With a custom URL the same model name can be a different model on another server.
   const base = def.id === 'custom' ? checkBaseUrl(cfg.baseUrl) : null;
   const provider = base && base.ok ? `${def.id}@${base.url}` : def.id;
   const key = cacheKey({ kind, id, market, asOf, provider, model: cfg.model, version: PROMPT_VERSION, prompt: prompt.system + '\n' + prompt.user });
@@ -63,19 +63,19 @@ async function explain(kind: string, id: string, market: MarketId, build: (asOf:
   }
 }
 
-/** Hisse yorumu: bir hissenin çarpanlarını ve ortalamalarını hikâyelerin diliyle açıklar. */
+/** Stock comment: explains a stock's multiples and averages in the language of the stories. */
 export async function commentStock(input: StockCommentInput, opts: AiCallOptions = {}): Promise<AiText> {
   const s = input.stock;
   return explain('stock', s.symbol, s.market, (asOf) => stockPrompt(input, { asOf }), opts);
 }
 
-/** Sektör karşılaştırması: aynı piyasadaki bir sektörün hisselerini yan yana okur. */
+/** Industry comparison: reads the stocks of one industry in the same market side by side. */
 export async function compareIndustry(input: IndustryCompareInput, opts: AiCallOptions = {}): Promise<AiText> {
-  // Sektör kimliği girdide yok; İngilizce ad piyasa içinde tekildir.
+  // The input has no industry id; the English name is unique within a market.
   return explain('industry', input.industry.nameEn, input.market, (asOf) => industryPrompt(input, { asOf }), opts);
 }
 
-/** AiText.text'i güvenli HTML paragraflarına çevirir. */
+/** Turns AiText.text into safe HTML paragraphs. */
 export function aiTextHtml(text: string): string {
   return text
     .split(/\n{2,}/)
@@ -95,8 +95,8 @@ const BASE: Record<AiErrorCode, string> = {
 };
 
 /**
- * Hata kodunu kullanıcıya gösterilecek kısa Türkçe mesaja çevirir.
- * Dönen metin düz metindir (HTML değil) ve anahtarı içermez.
+ * Turns an error code into a short Turkish message for the user.
+ * The returned text is plain text (not HTML) and never contains the key.
  */
 export function aiErrorMessage(e: unknown): string {
   if (!(e instanceof AiError)) return 'Beklenmeyen bir hata oluştu. Yeniden deneyin.';
