@@ -16,7 +16,7 @@ shared/          @fintools/shared: code and styles used by both apps
 docs/            ARCHITECTURE.md
 ```
 
-Each app is an independent npm project with its own lockfile. There are no npm workspaces and no runtime dependencies.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how the apps and the shared package fit together.
 
 ## Run and check
 
@@ -33,7 +33,7 @@ npm run check              # shared tests, typecheck, tests and build of both ap
 
 ## Data
 
-The Screener's numbers come from a scheduled GitHub Actions job (`.github/workflows/data.yml`) that commits `apps/screener/public/data`. Sources, schema, adding a stock and the failure rules are in [apps/screener/docs/DATA.md](apps/screener/docs/DATA.md). Code structure and conventions are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The Screener's numbers come from a scheduled GitHub Actions job (`.github/workflows/data.yml`) that commits `apps/screener/public/data`. Sources, schema, adding a stock and the failure rules are in [apps/screener/docs/DATA.md](apps/screener/docs/DATA.md). 
 
 ## Deploy
 
@@ -53,9 +53,10 @@ Also:
 
 - Make sure the `workers.dev` subdomain is enabled for each Worker.
 - Leave the preview settings at their defaults.
+- Wrangler is not a dev dependency; `npx` fetches the current version at deploy time.
+- Not yet confirmed: whether Workers Builds clones the whole repo when a root directory is set, and how the watch-path wildcards are matched. Check both on the first build. If the root directory does not work, set it to the repo root and use build command `npm --prefix apps/<app> ci && npm --prefix apps/<app> run check && npm --prefix apps/<app> run build` and deploy command `npx wrangler deploy --config apps/<app>/wrangler.jsonc`.
 - After the first deploy, put both URLs into `shared/src/sites.ts`. Until then the apps do not link to each other.
 
 ## Notes
 
 - Each app has its own origin, so `localStorage` is separate: watchlist, thresholds and the API key live only in the Screener. Learn keeps just its last tab and quiz score.
-- Fundamentals come from the unofficial TradingView screener and daily closes from Yahoo Finance. Both are delayed.

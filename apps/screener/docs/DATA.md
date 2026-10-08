@@ -30,7 +30,7 @@ There is no free official API for BIST fundamentals. If a source stops working, 
 | `industries` | id to `nameTr`, `nameEn`, `cyclical` |
 | `stocks` | array of stock records |
 
-Stock record. Multiples and prices are rounded to two decimals; growth to whole numbers. `null` means no value.
+Stock record. Multiples and prices are rounded to two decimals, market cap to one, growth to whole numbers. `null` means no value.
 
 | Field | Meaning | TradingView column or rule |
 |---|---|---|
@@ -53,11 +53,11 @@ Stock record. Multiples and prices are rounded to two decimals; growth to whole 
 | `note`, `noteAsOf` | hand-written comment and its day | copied from the config |
 | `npl`, `car`, `nim` | banks only: NPL ratio, capital adequacy, net interest margin, % | `config/banks_manual.json` |
 
-Multiples, `price` and the SMAs must be positive, otherwise they are `null`. Growth notes: `"zarardan kâra"` or `"eksiden artıya"` when the source gives no growth although the current amount is positive (the base was zero or negative); `"kârdan zarara"` or `"artıdan eksiye"` when the current amount is negative after a drop of more than 100%.
+`price`, `pe`, `pb`, `evEbitda`, `targetPrice` and the SMAs must be positive, otherwise they are `null`; `peg` and `netDebtEbitda` can be negative. `marketCap` is rounded to one decimal. Growth notes: `"zarardan kâra"` or `"eksiden artıya"` when the source gives no growth although the current amount is positive (the base was zero or negative); `"kârdan zarara"` or `"artıdan eksiye"` when the current amount is negative after a drop of more than 100%.
 
 Price file: `symbol`, `market`, `currency`, `dates` (ISO days, oldest first) and `closes` (same length as `dates`).
 
-Differences from the old Fintables figures: growth compares trailing twelve months, not the latest period with the same period a year earlier; PEG uses each provider's own growth; Turkish inflation accounting (TMS 29 / IAS 29) is restated differently by each provider, so P/E and EV/EBITDA can differ noticeably. `python scripts/fetch_data.py --compare` prints, per BIST stock, P/E, P/B and EV/EBITDA next to `scripts/reference/fintables_2026-10-02.json` with the percentage gap. Small gaps in P/B and larger ones in P/E and EV/EBITDA are expected; several hundred percent on one stock usually means a wrong symbol or currency.
+Differences from the Fintables figures (the previous data source; the reference snapshot is from 2 October 2026): growth compares trailing twelve months, not the latest period with the same period a year earlier; PEG uses each provider's own growth; Turkish inflation accounting (TMS 29 / IAS 29) is restated differently by each provider, so P/E and EV/EBITDA can differ noticeably. `python scripts/fetch_data.py --compare` prints, per BIST stock, P/E, P/B and EV/EBITDA next to `scripts/reference/fintables_2026-10-02.json` with the percentage gap. Small gaps in P/B and larger ones in P/E and EV/EBITDA are expected; several hundred percent on one stock usually means a wrong symbol or currency.
 
 ## The stock universe
 
@@ -66,7 +66,7 @@ Differences from the old Fintables figures: growth compares trailing twelve mont
 To add a stock, add one object to `stocks`:
 
 ```json
-{ "symbol": "AAPL", "name": "Apple", "market": "US", "industry": "consumer_electronics", "tv": "NASDAQ:AAPL", "yf": "AAPL" }
+{ "symbol": "ADBE", "name": "Adobe", "market": "US", "industry": "software", "tv": "NASDAQ:ADBE" }
 ```
 
 - `symbol` and `name`: ticker and company name as shown in the app. `market`: `"BIST"` or `"US"`.
@@ -77,7 +77,7 @@ To add a stock, add one object to `stocks`:
 
 The app shows a `note` only while the market's data is from the `noteAsOf` day or earlier; newer data hides it because it could contradict the new figures. To keep a note visible, rewrite it and set `noteAsOf` to the date of the data it describes.
 
-To remove a stock, delete its object. A full run (no `--market`) also deletes its price file. A new stock appears after the next run, or run the job by hand. People then pick which stocks they follow under Ayarlar in the app.
+To remove a stock, delete its object. Its price file is deleted only by a manual run of the workflow with market `all` (scheduled runs pass `--market`, and `--seed` deletes nothing). A new stock appears after the next run, or run the job by hand. People then pick which stocks they follow under Ayarlar in the app.
 
 ## How the job runs
 
