@@ -296,13 +296,13 @@ test('layoutStrips: the median tick sticks out past the markers stacked on it; v
   const far = { symbol: 'Z', pe: null, pb: 9, evEbitda: null, netDebtEbitda: null };
   const defs = buildStripDefs([...same, far], { pe: null, pb: 2.5, evEbitda: null, netDebtEbitda: null }, DEF.maxNetDebtEbitda);
   const lay = layoutStrips(defs, 560, new Map());
-  const pd = lay.strips[0];
-  const offs = pd.dots.filter((d) => d.symbol !== 'Z').map((d) => d.y - pd.y);
+  const pbStrip = lay.strips[0];
+  const offs = pbStrip.dots.filter((d) => d.symbol !== 'Z').map((d) => d.y - pbStrip.y);
   assert.equal(new Set(offs).size, 5);
-  assert.ok(pd.medianTick.up > Math.max(...offs.map((o) => -o)) + 6, 'the tick sticks out above the markers');
-  assert.ok(pd.medianTick.down > Math.max(...offs) + 6, 'the tick sticks out below the markers');
-  for (const v of pd.values.filter((x) => x.shown)) assert.ok(v.y <= pd.y - pd.medianTick.up, 'the value label is above the tick');
-  for (const b of pd.below.filter((x) => x.shown)) assert.ok(b.y - 11.5 >= pd.y + pd.medianTick.down, 'the median label is below the tick');
+  assert.ok(pbStrip.medianTick.up > Math.max(...offs.map((o) => -o)) + 6, 'the tick sticks out above the markers');
+  assert.ok(pbStrip.medianTick.down > Math.max(...offs) + 6, 'the tick sticks out below the markers');
+  for (const v of pbStrip.values.filter((x) => x.shown)) assert.ok(v.y <= pbStrip.y - pbStrip.medianTick.up, 'the value label is above the tick');
+  for (const b of pbStrip.below.filter((x) => x.shown)) assert.ok(b.y - 11.5 >= pbStrip.y + pbStrip.medianTick.down, 'the median label is below the tick');
 
   // Without a stack the tick keeps its old size.
   const two = buildStripDefs([{ symbol: 'A', pe: null, pb: 1, evEbitda: null, netDebtEbitda: null }, far], { pe: null, pb: 5, evEbitda: null, netDebtEbitda: null }, DEF.maxNetDebtEbitda);
@@ -372,12 +372,12 @@ test('layoutStrips: with close values the value labels are shifted or dropped; w
   const defs = buildStripDefs(list, industryMedian(list), DEF.maxNetDebtEbitda);
   const markers = new Map(list.map((s, i) => [s.symbol, markerFor(i)]));
   const lay = layoutStrips(defs, 560, markers);
-  const pd = lay.strips.find((s) => s.def.key === 'pb');
-  assert.ok(pd);
-  assert.equal(pd.dots.length, 7);
-  assert.ok(pd.values.some((v) => !v.shown), 'not all seven close values are written');
-  assert.ok(new Set(pd.values.filter((v) => v.shown).map((v) => v.y)).size >= 2, 'labels spread over two rows');
-  assert.equal(new Set(pd.dots.map((d) => d.marker.color + d.marker.shape)).size, 7);
+  const pbStrip = lay.strips.find((s) => s.def.key === 'pb');
+  assert.ok(pbStrip);
+  assert.equal(pbStrip.dots.length, 7);
+  assert.ok(pbStrip.values.some((v) => !v.shown), 'not all seven close values are written');
+  assert.ok(new Set(pbStrip.values.filter((v) => v.shown).map((v) => v.y)).size >= 2, 'labels spread over two rows');
+  assert.equal(new Set(pbStrip.dots.map((d) => d.marker.color + d.marker.shape)).size, 7);
   const svg = stripSvg(lay, 'deneme <etiket>');
   assert.match(svg, /^<svg /);
   assert.ok(svg.includes('aria-label="deneme &lt;etiket&gt;"'));
