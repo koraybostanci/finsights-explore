@@ -24,6 +24,8 @@ p{margin:0}
 
 header.top{display:flex;flex-direction:column;gap:12px;padding-block:8px 18px}
 header.top .lede{font-size:1.08rem;max-width:62ch}
+header.top .sibling{font-family:var(--ui);font-size:.82rem}
+header.top .sibling a{color:var(--accent)}
 
 nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin-inline:-16px;padding-inline:16px;margin-top:16px}
 .tabrow{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;max-width:1320px;margin:0 auto}

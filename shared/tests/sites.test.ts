@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { SITES, siteLink } from '../src/sites.ts';
+import { SITES, siteLink, siblingLinkHtml } from '../src/sites.ts';
 
 test('siteLink: escaped plain text while the URL is empty, a link once it is set', () => {
   assert.deepEqual(SITES, { learn: '', screener: '' });
@@ -12,4 +12,14 @@ test('siteLink: escaped plain text while the URL is empty, a link once it is set
     '<a href="https://example.org/?a=1&amp;b=&quot;2&quot;">Tarayıcı &amp; co</a>',
   );
   assert.equal(siteLink('learn', 'Rehber', sites), 'Rehber');
+});
+
+test('siblingLinkHtml: nothing while the URL is empty, an escaped noopener link with an arrow once it is set', () => {
+  assert.equal(siblingLinkHtml('screener', 'Hisse Tarayıcı'), '');
+  const sites = { learn: '', screener: 'https://example.org/?a=1&b="2"' };
+  assert.equal(
+    siblingLinkHtml('screener', 'Tarayıcı <x>', sites),
+    '<a href="https://example.org/?a=1&amp;b=&quot;2&quot;" rel="noopener">Tarayıcı &lt;x&gt; →</a>',
+  );
+  assert.equal(siblingLinkHtml('learn', 'Rehber', sites), '');
 });
