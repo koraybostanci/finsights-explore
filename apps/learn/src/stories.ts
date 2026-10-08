@@ -10,6 +10,7 @@
 import { cw, svgText, svgWrap, tw } from '@fintools/shared/dom';
 import { esc, nf, pct, tl } from '@fintools/shared/format';
 import { siteLink } from '@fintools/shared/sites';
+import { termText } from '@fintools/shared/terms';
 import { byId, flowChart, fmtThousands, fmtThousands1, tileK } from './charts.ts';
 import {
   ICE_CREAM_MONTHLY,
@@ -44,7 +45,7 @@ export function markup(): string {
   return `
     <div class="stack read">
       <h2>Bir kahveciyi satın almak</h2>
-      <p>Borsadaki her hisse, bir şirketin küçük bir parçasıdır. Dev şirketlerin rakamları gözü korkutur, ama mantık mahalledeki bir kahvecininkiyle aynıdır. Aşağıdaki dokuz hikâye her kavramı tek tek tanıtır; ilk yedisinin sonunda BIST 30'da aynı durumun nerede görüldüğü yazıyor (${CALLOUT_DATE} verisiyle). Son iki hikâye hareketli ortalamayı ve BIST ile ABD hisselerinin neden ayrı tablolarda durduğunu anlatır.</p>
+      <p>Borsadaki her hisse, bir şirketin küçük bir parçasıdır. Dev şirketlerin rakamları gözü korkutur, ama mantık mahalledeki bir kahvecininkiyle aynıdır. Aşağıdaki dokuz hikâye her kavramı tek tek tanıtır; ilk yedisinin sonunda BIST 30'da aynı durumun nerede görüldüğü yazıyor (${CALLOUT_DATE} verisiyle). Son iki hikâye hareketli ortalamayı (moving average) ve BIST ile ABD hisselerinin neden ayrı tablolarda durduğunu anlatır.</p>
     </div>
     <div class="howto">
       <div><b>Senaryolar</b>Kavramları hikâyeyle öğrenin. Kaydırıcıları oynatın.</div>
@@ -69,14 +70,14 @@ export function markup(): string {
       </div>
       <div class="learn"><b>Ne öğrendik?</b>
         <span>Bilanço (balance sheet) iki taraftan oluşur ve iki taraf hep eşittir: <b>varlıklar = borçlar + özkaynak</b>. Özkaynak (shareholders' equity), şirket bugün kapansa borçlar ödendikten sonra ortaklara kalan paradır; buna defter değeri (book value) da denir. Ayşe'nin Kahvesi'nin defter değeri 600.000 TL, pay başına 6 TL.</span>
-        ${bist("THYAO'nun özkaynağı 1 trilyon TL'yi aşıyor ama piyasa değeri bunun yarısından az. PD/DD 0,40 bundan çıkıyor.")}
+        ${bist("THYAO'nun özkaynağı 1 trilyon TL'yi aşıyor ama piyasa değeri (market cap) bunun yarısından az. PD/DD (P/B) 0,40 bundan çıkıyor.")}
       </div>
     </article>
 
     <article class="case" id="case2">
       <div class="case-head"><span class="eyebrow">Hikâye 2 · Gelir tablosu</span><h3>Bir yılda ne kazandı?</h3></div>
       <div class="story">
-        <p>Kahveci yılda 2 milyon TL'lik kahve satıyor. Bu paranın nasıl erimeye başladığını yukarıdan aşağı izleyin: önce kahvenin maliyeti, sonra kira ve maaşlar, sonra makinenin yıpranması, faiz ve vergi. En altta kalan net kârdır. Bu döküme gelir tablosu (income statement) denir.</p>
+        <p>Kahveci yılda 2 milyon TL'lik kahve satıyor. Bu paranın nasıl erimeye başladığını yukarıdan aşağı izleyin: önce kahvenin maliyeti, sonra kira ve maaşlar, sonra makinenin yıpranması, faiz ve vergi. En altta kalan net kârdır (net income). Bu döküme gelir tablosu (income statement) denir.</p>
         <p>Mavi çubuklar ara toplamlar, kırmızılar giderler. Her kırmızı çubuk bir önceki toplamdan düşülür.</p>
       </div>
       <div class="viz"><div id="v-income"></div><div class="legend"><span><i style="background:var(--c3)"></i>Ara toplam</span><span><i style="background:var(--c1)"></i>FAVÖK ve net kâr</span><span><i style="background:var(--bad);opacity:.55"></i>Gider</span></div></div>
@@ -91,7 +92,7 @@ export function markup(): string {
       <div class="story">
         <p>Bir yatırımcı Ayşe'nin Kahvesi'nin paylarını almak istiyor. Fiyatı kaydırıcıyla siz belirleyin. Fiyat değiştikçe şirketin piyasa değeri (market cap) ve tüm çarpanlar (multiples) nasıl değişiyor, izleyin. Kahveci önümüzdeki yıl ikinci şubesini açacak; kâr büyümesini de kendiniz tahmin edin.</p>
         <div class="slider"><label for="s-price">Pay fiyatı <output id="o-price">30 TL</output></label><input type="range" id="s-price" min="6" max="60" step="1" value="30"></div>
-        <div class="slider"><label for="s-growth">Beklenen net kâr büyümesi <output id="o-growth">+%25</output></label><input type="range" id="s-growth" min="-20" max="80" step="5" value="25"></div>
+        <div class="slider"><label for="s-growth"><span>Beklenen net kâr büyümesi <span class="en">(net income growth)</span></span> <output id="o-growth">+%25</output></label><input type="range" id="s-growth" min="-20" max="80" step="5" value="25"></div>
         <div id="v-price"></div>
       </div>
       <div class="viz"><div class="tiles" id="tiles-price"></div></div>
@@ -287,7 +288,7 @@ function renderGauge(): void {
   const x1 = W - 8;
   const mx = 60;
   const X = (v: number): number => x0 + (Math.min(v, mx) / mx) * (x1 - x0);
-  let g = svgText(x0, 12, 'F/K ölçeği', { fs: 11.5, fill: 'var(--muted)', fw: 600 });
+  let g = svgText(x0, 12, `${termText('pe')} ölçeği`, { fs: 11.5, fill: 'var(--muted)', fw: 600 });
   g += `<rect x="${x0}" y="22" width="${X(8) - x0}" height="10" fill="var(--good)" opacity=".35" rx="3"/><rect x="${X(8)}" y="22" width="${
     X(15) - X(8)
   }" height="10" fill="var(--warn)" opacity=".35"/><rect x="${X(15)}" y="22" width="${x1 - X(15)}" height="10" fill="var(--bad)" opacity=".3" rx="3"/>`;

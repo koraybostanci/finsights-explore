@@ -42,8 +42,8 @@ const BT: Array<[string, string, string]> = [
 function shellHtml(): string {
   return `<div class="stack read">
 <h2>Bankalar neden ayrı?</h2>
-<p>Bir sanayi şirketi için borç bir yüktür; banka için ise hammaddedir. Mevduat <span class="en">(deposits)</span> toplayıp kredi <span class="en">(loans)</span> verir. Bu yüzden bankalarda FAVÖK, FD/FAVÖK ve net borç anlamsızdır. Temel soru şudur: <em>Özkaynağına ne kadar getiri sağlıyor ve piyasa bu özkaynağa kaç kat değer biçiyor?</em></p>
-<p>Kural basittir: özkaynak kârlılığı yüksek bir bankanın PD/DD'si de yüksek olmayı hak eder. Getirisi yüksek ama PD/DD'si düşük kalan banka görece ucuz, getirisi düşük ama PD/DD'si yüksek olan banka görece pahalı sayılır.</p>
+<p>Bir sanayi şirketi için borç bir yüktür; banka için ise hammaddedir. Mevduat <span class="en">(deposits)</span> toplayıp kredi <span class="en">(loans)</span> verir. Bu yüzden bankalarda FAVÖK <span class="en">(EBITDA)</span>, FD/FAVÖK <span class="en">(EV/EBITDA)</span> ve net borç <span class="en">(net debt)</span> anlamsızdır. Temel soru şudur: <em>Özkaynağına ne kadar getiri sağlıyor ve piyasa bu özkaynağa kaç kat değer biçiyor?</em></p>
+<p>Kural basittir: özkaynak kârlılığı <span class="en">(ROE)</span> yüksek bir bankanın PD/DD'si <span class="en">(P/B)</span> de yüksek olmayı hak eder. Getirisi yüksek ama PD/DD'si düşük kalan banka görece ucuz, getirisi düşük ama PD/DD'si yüksek olan banka görece pahalı sayılır.</p>
 </div>
 <div class="chartbox" id="bankchart"></div>
 <div class="tablebox" id="bk-tablebox"><table id="banktbl"></table></div>

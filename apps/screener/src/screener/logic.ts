@@ -7,6 +7,7 @@ import type { Evaluation, MarketId, StockView, Thresholds } from '../types.ts';
 import { VLABEL, VORD, evaluate } from '../lib/evaluate.ts';
 import { distancePct } from '@fintools/shared/sma';
 import { nf, pct } from '@fintools/shared/format';
+import { TERMS } from '@fintools/shared/terms';
 
 export interface Row {
   s: StockView;
@@ -54,15 +55,15 @@ export function listCols(market: MarketId): Col[] {
     { key: 'symbol', lbl: 'Hisse' },
     { key: 'verdict', lbl: 'Sonuç' },
     { key: 'why', lbl: 'Gerekçe', en: 'Why', nosort: true, left: true },
-    { key: 'pe', lbl: 'F/K', en: 'P/E' },
-    { key: 'pb', lbl: 'PD/DD', en: 'P/B' },
-    { key: 'evEbitda', lbl: 'FD/FAVÖK', en: 'EV/EBITDA' },
-    { key: 'peg', lbl: 'PEG', en: 'PEG' },
-    { key: 'netDebtEbitda', lbl: 'Net borç/FAVÖK', en: 'Net debt/EBITDA' },
-    { key: 'd200', lbl: '200g ort.', en: 'SMA 200' },
-    { key: 'ebitdaGrowth', lbl: 'FAVÖK büy.', en: 'EBITDA growth' },
-    { key: 'netIncomeGrowth', lbl: 'Net kâr büy.', en: 'Net income growth' },
-    { key: 'roe', lbl: 'ÖK kârl.≈', en: 'ROE' },
+    { key: 'pe', lbl: TERMS.pe.tr, en: TERMS.pe.en },
+    { key: 'pb', lbl: TERMS.pb.tr, en: TERMS.pb.en },
+    { key: 'evEbitda', lbl: TERMS.evEbitda.tr, en: TERMS.evEbitda.en },
+    { key: 'peg', lbl: TERMS.peg.tr, en: TERMS.peg.en },
+    { key: 'netDebtEbitda', lbl: TERMS.netDebtEbitda.tr, en: TERMS.netDebtEbitda.en },
+    { key: 'd200', lbl: '200g ort.', en: TERMS.sma200.en },
+    { key: 'ebitdaGrowth', lbl: 'FAVÖK büy.', en: TERMS.ebitdaGrowth.en },
+    { key: 'netIncomeGrowth', lbl: 'Net kâr büy.', en: TERMS.netIncomeGrowth.en },
+    { key: 'roe', lbl: 'ÖK kârl.≈', en: TERMS.roe.en },
     { key: 'marketCap', lbl: 'Piy. değ.', en: `Market cap, bn ${CUR_OF[market]}` },
   ];
 }
@@ -71,15 +72,15 @@ export function listCols(market: MarketId): Col[] {
 export const PEER_COLS: Col[] = [
   { key: 'symbol', lbl: 'Hisse' },
   { key: 'verdict', lbl: 'Sonuç', left: true },
-  { key: 'pe', lbl: 'F/K', en: 'P/E' },
-  { key: 'pb', lbl: 'PD/DD', en: 'P/B' },
-  { key: 'evEbitda', lbl: 'FD/FAVÖK', en: 'EV/EBITDA' },
-  { key: 'peg', lbl: 'PEG', en: 'PEG' },
-  { key: 'netDebtEbitda', lbl: 'Net borç/FAVÖK', en: 'Net debt/EBITDA' },
-  { key: 'ebitdaGrowth', lbl: 'FAVÖK büy.', en: 'EBITDA growth' },
-  { key: 'roe', lbl: 'ÖK kârl.≈', en: 'ROE' },
-  { key: 'd50', lbl: '50g ort.', en: 'SMA 50' },
-  { key: 'd200', lbl: '200g ort.', en: 'SMA 200' },
+  { key: 'pe', lbl: TERMS.pe.tr, en: TERMS.pe.en },
+  { key: 'pb', lbl: TERMS.pb.tr, en: TERMS.pb.en },
+  { key: 'evEbitda', lbl: TERMS.evEbitda.tr, en: TERMS.evEbitda.en },
+  { key: 'peg', lbl: TERMS.peg.tr, en: TERMS.peg.en },
+  { key: 'netDebtEbitda', lbl: TERMS.netDebtEbitda.tr, en: TERMS.netDebtEbitda.en },
+  { key: 'ebitdaGrowth', lbl: 'FAVÖK büy.', en: TERMS.ebitdaGrowth.en },
+  { key: 'roe', lbl: 'ÖK kârl.≈', en: TERMS.roe.en },
+  { key: 'd50', lbl: '50g ort.', en: TERMS.sma50.en },
+  { key: 'd200', lbl: '200g ort.', en: TERMS.sma200.en },
 ];
 
 export function buildRows(list: StockView[], th: Thresholds): Row[] {

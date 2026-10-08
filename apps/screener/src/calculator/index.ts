@@ -19,7 +19,7 @@ const E = BIM_EXAMPLE;
 function shellHtml(): string {
   return `<div class="stack read">
 <h2>Kendi hesabın</h2>
-<p>Herhangi bir hissenin bilanço ve gelir tablosundan birkaç rakam girin; çarpanlar ve tarayıcıdaki ölçütler anında hesaplanır. Rakamları KAP'taki finansal tablolardan ya da bir veri sitesinden alabilirsiniz. Tüm tutarları aynı birimde girin (örneğin milyar TL).</p>
+<p>Herhangi bir hissenin bilanço <span class="en">(balance sheet)</span> ve gelir tablosundan <span class="en">(income statement)</span> birkaç rakam girin; çarpanlar <span class="en">(multiples)</span> ve tarayıcıdaki ölçütler anında hesaplanır. Rakamları KAP'taki finansal tablolardan ya da bir veri sitesinden alabilirsiniz. Tüm tutarları aynı birimde girin (örneğin milyar TL).</p>
 <p class="note">Örnek olarak BİM'in yaklaşık rakamları dolu geliyor. Kendi hissenizin rakamlarıyla değiştirin.</p>
 </div>
 <div class="calc">
