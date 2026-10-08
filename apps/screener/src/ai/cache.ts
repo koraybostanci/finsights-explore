@@ -1,7 +1,7 @@
 /**
- * Yapay zekâ metinlerinin önbelleği (localStorage). Aynı hisse, aynı veri
- * tarihi, aynı sağlayıcı ve model için istek yinelenmez; böylece kullanıcının
- * anahtarı boşuna harcanmaz. En çok CACHE_MAX kayıt tutulur, en eskisi atılır.
+ * Cache of the AI texts (localStorage). A request is not repeated for the same stock,
+ * data date, provider and model, so the user's key is not spent for nothing.
+ * At most CACHE_MAX entries are kept; the oldest is dropped.
  */
 
 import { lsGet, lsSet } from '../data/store.ts';
@@ -21,20 +21,20 @@ export interface CacheEntry {
 export interface CacheKeyParts {
   /** "stock" | "industry" */
   kind: string;
-  /** Piyasa içinde tekil kimlik: hisse sembolü ya da sektör kimliği */
+  /** Id unique within a market: a stock symbol or an industry id */
   id: string;
   market: string;
   /** data().asOf */
   asOf: string;
   provider: string;
   model: string;
-  /** İstem sürümü (PROMPT_VERSION) */
+  /** Prompt version (PROMPT_VERSION) */
   version: number;
-  /** İstem metni: eşikler ya da Hisselerim değişince anahtar da değişsin diye özetlenir */
+  /** The prompt text: hashed into the key so the key changes when thresholds or the watchlist change */
   prompt?: string;
 }
 
-/** Kısa ve kararlı metin özeti (FNV-1a, 32 bit). Güvenlik amacı taşımaz. */
+/** Short, stable text digest (FNV-1a, 32 bit). Not meant for security. */
 export function hash(text: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < text.length; i++) {
@@ -62,7 +62,7 @@ export function cacheGet(key: string): CacheEntry | null {
   return readAll().find((e) => e.key === key) ?? null;
 }
 
-/** Kaydı sona ekler (en yeni sonda); sınır aşılırsa baştan (en eskiden) atar. */
+/** Appends the entry (newest last); when the limit is exceeded, drops from the front (the oldest). */
 export function cachePut(entry: CacheEntry): void {
   const rest = readAll().filter((e) => e.key !== entry.key);
   rest.push(entry);

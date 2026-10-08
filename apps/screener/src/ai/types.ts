@@ -1,17 +1,17 @@
 /**
- * Yapay zekâ katmanının dış sözleşmesi. Ekranlar yalnızca bu türleri ve
- * ai/index.ts'in dışa açtığı işlevleri kullanır; sağlayıcı ayrıntısını bilmez.
+ * External contract of the AI layer. Screens use only these types and the functions
+ * ai/index.ts exports, and know nothing about provider details.
  */
 
 import type { Evaluation, Industry, IndustryMedian, MarketId, PriceSeries, StockView } from '../types.ts';
 
 export type AiErrorCode =
-  | 'not_configured' // anahtar ya da model seçilmemiş
-  | 'auth' // anahtar geçersiz ya da yetkisiz
-  | 'rate_limit' // kota ya da hız sınırı
-  | 'network' // ağ ya da CORS engeli
-  | 'provider' // sağlayıcı hata döndürdü
-  | 'bad_response'; // yanıt beklenen biçimde değil
+  | 'not_configured' // no key or model selected
+  | 'auth' // invalid or unauthorized key
+  | 'rate_limit' // quota or rate limit
+  | 'network' // network or CORS block
+  | 'provider' // the provider returned an error
+  | 'bad_response'; // the response is not in the expected format
 
 export class AiError extends Error {
   code: AiErrorCode;
@@ -23,32 +23,32 @@ export class AiError extends Error {
 }
 
 export interface AiStatus {
-  /** Anahtar ve model hazır mı */
+  /** Whether the key and model are ready */
   configured: boolean;
-  /** Sağlayıcı kimliği, ör. "anthropic" */
+  /** Provider id, e.g. "anthropic" */
   provider: string;
-  /** Ekranda gösterilecek ad, ör. "Claude" */
+  /** Name shown on screen, e.g. "Claude" */
   providerLabel: string;
   model: string;
 }
 
 export interface AiText {
-  /** Düz metin; paragraflar boş satırla ayrılır. HTML değildir. */
+  /** Plain text; paragraphs are separated by a blank line. Not HTML. */
   text: string;
   providerLabel: string;
   model: string;
-  /** Önbellekten mi geldi */
+  /** Whether it came from the cache */
   cached: boolean;
-  /** ISO tarih-saat */
+  /** ISO datetime */
   createdAt: string;
 }
 
 export interface StockCommentInput {
   stock: StockView;
   evaluation: Evaluation;
-  /** Hissenin kendi piyasasındaki sektör ortancası */
+  /** The industry median in the stock's own market */
   median: IndustryMedian | null;
-  /** Varsa günlük kapanışlar (hareketli ortalama yorumu için) */
+  /** Daily closes, if available (for the moving-average comment) */
   prices?: PriceSeries | null;
 }
 
@@ -60,6 +60,6 @@ export interface IndustryCompareInput {
 }
 
 export interface AiCallOptions {
-  /** Önbelleği yok say ve yeniden üret */
+  /** Ignore the cache and generate again */
   force?: boolean;
 }

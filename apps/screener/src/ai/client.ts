@@ -1,8 +1,8 @@
 /**
- * Sağlayıcıya giden tek kapı: complete() bir istem gönderir ve düz metin döndürür.
- * Hatalar AiError kodlarına çevrilir; anahtar hiçbir hata metnine ya da kayda girmez.
+ * The single gateway to the provider: complete() sends a prompt and returns plain text.
+ * Errors are mapped to AiError codes; the key never enters any error text or record.
  *
- * fetch ve ayar dışarıdan verilebilir (testlerde sahte fetch kullanılır).
+ * fetch and the configuration can be injected (tests use a fake fetch).
  */
 
 import { resolveConfig, setModelList } from './config.ts';
@@ -28,14 +28,14 @@ export interface ClientDeps {
 }
 
 export interface CompleteOptions extends ClientDeps {
-  /** Bağlantı sınaması: boş metin de başarı sayılır */
+  /** Connection test: an empty text also counts as success */
   allowEmpty?: boolean;
 }
 
 const COMPLETE_TIMEOUT = 90_000;
 const MODELS_TIMEOUT = 20_000;
 
-/** İsteği gönderir; ağ hatası, zaman aşımı ve 2xx dışı yanıtları AiError'a çevirir. Gövdeyi metin olarak döndürür. */
+/** Sends the request; maps network errors, timeouts and non-2xx responses to AiError. Returns the body as text. */
 async function send(req: HttpRequest, cfg: ResolvedConfig, deps: ClientDeps, timeoutMs: number): Promise<string> {
   const doFetch: FetchLike = deps.fetch ?? ((url, init) => fetch(url, init));
   const ctl = new AbortController();
@@ -52,7 +52,7 @@ async function send(req: HttpRequest, cfg: ResolvedConfig, deps: ClientDeps, tim
         headers: req.headers,
         body: req.body,
         signal: ctl.signal,
-        // Çerez ve yönlendiren adres gönderilmez; istek yalnızca sağlayıcıya gider.
+        // No cookies and no referrer are sent; the request goes to the provider only.
         credentials: 'omit',
         referrerPolicy: 'no-referrer',
       });
@@ -84,7 +84,7 @@ function requireConfigured(cfg: ResolvedConfig): void {
   if (!isConfigured(cfg)) throw new AiError('not_configured', '');
 }
 
-/** Seçili sağlayıcıya bir istem gönderir, düz metin yanıtı döndürür. */
+/** Sends a prompt to the selected provider and returns the plain-text response. */
 export async function complete(req: CompletionRequest, opts: CompleteOptions = {}): Promise<string> {
   const cfg = opts.config ?? resolveConfig();
   requireConfigured(cfg);
@@ -100,8 +100,8 @@ export async function complete(req: CompletionRequest, opts: CompleteOptions = {
 }
 
 /**
- * Sağlayıcının model listesini alır ve saklar. Model seçili olmasa da çalışır;
- * anahtar (özel adreste adres) yeterlidir.
+ * Fetches and stores the provider's model list. Works even with no model selected;
+ * the key (and, for a custom endpoint, the URL) is enough.
  */
 export async function listModels(deps: ClientDeps = {}): Promise<string[]> {
   const cfg = deps.config ?? resolveConfig();
@@ -114,7 +114,7 @@ export async function listModels(deps: ClientDeps = {}): Promise<string[]> {
   return models;
 }
 
-/** Bağlantı sınaması: çok kısa bir istek gönderir. Başarısızsa AiError atar. */
+/** Connection test: sends a very short request. Throws AiError on failure. */
 export async function testConnection(deps: ClientDeps = {}): Promise<void> {
   await complete(
     { system: '', user: 'Bağlantı sınaması. Yalnızca "tamam" yaz.', maxTokens: 16 },

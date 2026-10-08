@@ -1,12 +1,12 @@
 /**
- * Sağlayıcı uyarlayıcıları (provider adapters): istek kurma, yanıt çözme, hata eşleme.
+ * Provider adapters: building requests, parsing responses, mapping errors.
  *
- * Buradaki her şey saf işlevdir; fetch ya da depolama kullanmaz. Böylece her
- * sağlayıcının adresi, başlıkları ve gövdesi tests/ai.test.ts içinde sınanır.
- * Üç API biçimi vardır: Anthropic (messages), Gemini (generateContent) ve
- * OpenAI uyumlu (chat/completions; OpenAI, OpenCode Go ve özel adres).
+ * Everything here is a pure function; nothing uses fetch or storage. That way each
+ * provider's URL, headers and body are tested in tests/ai.test.ts.
+ * There are three API shapes: Anthropic (messages), Gemini (generateContent) and
+ * OpenAI-compatible (chat/completions; OpenAI, OpenCode Go and the custom endpoint).
  *
- * Anahtar yalnızca istek başlığına yazılır; adrese (URL) hiçbir zaman girmez.
+ * The key is written only into a request header; it never enters a URL.
  */
 
 import { AiError } from './types.ts';
@@ -17,18 +17,18 @@ export type ApiShape = 'anthropic' | 'gemini' | 'openai';
 
 export interface ProviderDef {
   id: ProviderId;
-  /** Ekranda görünen ad */
+  /** Name shown on screen */
   label: string;
-  /** Adın altındaki küçük yazı */
+  /** Small text under the name */
   vendor: string;
   shape: ApiShape;
-  /** Sabit taban adres; özel adreste boştur (kullanıcı girer) */
+  /** Fixed base URL; empty for the custom endpoint (the user enters it) */
   baseUrl: string;
-  /** Anahtar zorunlu mu (yerel modellerde gerekmez) */
+  /** Whether a key is required (local models do not need one) */
   keyRequired: boolean;
-  /** OpenAI biçiminde çıktı sınırının alan adı */
+  /** Name of the output-limit field in the OpenAI shape */
   tokenParam: 'max_tokens' | 'max_completion_tokens';
-  /** Tarayıcıdan doğrudan çağrıya izin verdiği (CORS) doğrulandı mı */
+  /** Whether it is verified to allow direct calls from the browser (CORS) */
   corsVerified: boolean;
 }
 
@@ -96,19 +96,19 @@ export function providerDef(id: ProviderId): ProviderDef {
   return def;
 }
 
-/** Bir çağrı için gereken her şey; depolamadan okunup buraya verilir. */
+/** Everything a call needs; read from storage and handed in here. */
 export interface ResolvedConfig {
   provider: ProviderId;
   key: string;
   model: string;
-  /** Yalnızca özel adreste kullanılır */
+  /** Used only by the custom endpoint */
   baseUrl: string;
 }
 
 export interface CompletionRequest {
   system: string;
   user: string;
-  /** Görünen yanıt için bütçe; düşünen modeller için uyarlayıcı pay ekler */
+  /** Budget for the visible response; the adapter adds headroom for reasoning models */
   maxTokens: number;
 }
 
@@ -120,18 +120,18 @@ export interface HttpRequest {
 }
 
 /**
- * Düşünen (reasoning) modellerde düşünme de çıktı sınırından düşer; sınır dar
- * olursa yanıt boş gelir. Sınır bir tavandır, kullanılmayan kısım ücretlenmez.
+ * With reasoning models the thinking also counts against the output limit; if the limit
+ * is tight the response comes back empty. The limit is a ceiling; the unused part is not billed.
  */
 export const THINKING_HEADROOM = 3000;
 
-/* ---------- Özel adres ---------- */
+/* ---------- Custom endpoint ---------- */
 
 export type BaseUrlCheck = { ok: true; url: string } | { ok: false; reason: string };
 
 /**
- * Özel adres denetimi: https olmalı; http yalnızca bu bilgisayardaki modeller
- * (localhost, 127.0.0.1) için kabul edilir. Sondaki "/" ve "/chat/completions" atılır.
+ * Custom URL check: must be https; http is accepted only for models on this computer
+ * (localhost, 127.0.0.1). A trailing "/" and "/chat/completions" are stripped.
  */
 export function checkBaseUrl(raw: string): BaseUrlCheck {
   const text = raw.trim();
@@ -153,7 +153,7 @@ export function checkBaseUrl(raw: string): BaseUrlCheck {
   return { ok: true, url: `${u.protocol}//${u.host}${path}` };
 }
 
-/** Sağlayıcının taban adresi; özel adres geçersizse not_configured hatası verir. */
+/** The provider's base URL; throws a not_configured error when the custom URL is invalid. */
 export function baseUrlOf(cfg: ResolvedConfig): string {
   const def = providerDef(cfg.provider);
   if (def.id !== 'custom') return def.baseUrl;
@@ -162,7 +162,7 @@ export function baseUrlOf(cfg: ResolvedConfig): string {
   return check.url;
 }
 
-/** Anahtar ve model (özel adreste adres) hazır mı */
+/** Whether the key and model (and, for a custom endpoint, the URL) are ready */
 export function isConfigured(cfg: ResolvedConfig): boolean {
   const def = providerDef(cfg.provider);
   if (!cfg.model.trim()) return false;
@@ -171,21 +171,21 @@ export function isConfigured(cfg: ResolvedConfig): boolean {
   return true;
 }
 
-/* ---------- İstek kurma ---------- */
+/* ---------- Building requests ---------- */
 
 function authHeaders(def: ProviderDef, key: string): Record<string, string> {
   if (def.shape === 'anthropic')
     return {
       'x-api-key': key,
       'anthropic-version': '2023-06-01',
-      // Tarayıcıdan doğrudan çağrı (CORS) için Anthropic bu başlığı ister.
+      // Anthropic requires this header for direct calls from the browser (CORS).
       'anthropic-dangerous-direct-browser-access': 'true',
     };
   if (def.shape === 'gemini') return { 'x-goog-api-key': key };
   return key ? { Authorization: `Bearer ${key}` } : {};
 }
 
-/** Gemini model adları listede "models/…" önekiyle gelir; istek adresinde önek bir kez yazılır. */
+/** Gemini model names come with a "models/…" prefix in the list; the request URL carries the prefix only once. */
 const geminiModel = (model: string): string => model.trim().replace(/^models\//, '');
 
 export function buildCompletionRequest(cfg: ResolvedConfig, req: CompletionRequest): HttpRequest {
@@ -196,7 +196,7 @@ export function buildCompletionRequest(cfg: ResolvedConfig, req: CompletionReque
   const headers = { 'content-type': 'application/json', ...authHeaders(def, key) };
 
   if (def.shape === 'anthropic') {
-    // max_tokens düşünme ile yanıtın toplam tavanıdır; düşünen bir model seçilirse yanıt kesilmesin diye pay eklenir.
+    // max_tokens is the combined ceiling for thinking and the response; headroom is added so the response is not cut off if a reasoning model is chosen.
     const body: Record<string, unknown> = {
       model,
       max_tokens: req.maxTokens + THINKING_HEADROOM,
@@ -236,7 +236,7 @@ export function buildModelsRequest(cfg: ResolvedConfig): HttpRequest {
   return { url: `${base}/models${query}`, method: 'GET', headers };
 }
 
-/* ---------- Yanıt çözme ---------- */
+/* ---------- Parsing responses ---------- */
 
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -244,7 +244,7 @@ const str = (v: unknown): string => (typeof v === 'string' ? v : '');
 
 export interface Completion {
   text: string;
-  /** Yanıt çıktı sınırına takılıp kesildi mi */
+  /** Whether the response was cut off at the output limit */
   truncated: boolean;
 }
 
@@ -252,7 +252,7 @@ function bad(detail: string): AiError {
   return new AiError('bad_response', detail);
 }
 
-/** Sağlayıcının başarılı (2xx) yanıtından düz metni çıkarır. */
+/** Extracts the plain text from a successful (2xx) provider response. */
 export function parseCompletion(shape: ApiShape, json: unknown): Completion {
   if (!isObj(json)) throw bad('Yanıt bir JSON nesnesi değil.');
 
@@ -300,10 +300,10 @@ export function parseCompletion(shape: ApiShape, json: unknown): Completion {
   return { text, truncated: choice.finish_reason === 'length' };
 }
 
-/** Sohbet için uygun olmayan OpenAI modelleri (ses, görsel, gömme vb.); kaba bir elemedir. */
+/** OpenAI models unsuitable for chat (audio, image, embeddings, etc.); a rough filter. */
 const NOT_CHAT = /embed|whisper|tts|dall-e|image|audio|realtime|moderation|transcribe|sora|babbage|davinci|search|computer-use/i;
 
-/** Model listesi yanıtından model kimliklerini çıkarır (yinelenenler atılır). */
+/** Extracts model ids from the model-list response (duplicates are dropped). */
 export function parseModels(provider: ProviderId, json: unknown): string[] {
   const def = providerDef(provider);
   if (!isObj(json)) throw bad('Model listesi bir JSON nesnesi değil.');
@@ -328,9 +328,9 @@ export function parseModels(provider: ProviderId, json: unknown): string[] {
   return [...new Set(ids.map((s) => s.trim()).filter(Boolean))];
 }
 
-/* ---------- Hata eşleme ---------- */
+/* ---------- Error mapping ---------- */
 
-/** Sağlayıcı mesajını gösterilebilir hâle getirir: anahtar geçiyorsa siler, imleri atar, kısaltır. */
+/** Makes a provider message displayable: masks the key if present, strips angle brackets, truncates. */
 export function tidyMessage(raw: string, key = ''): string {
   let s = raw;
   const k = key.trim();
@@ -343,7 +343,7 @@ export function tidyMessage(raw: string, key = ''): string {
   return s.length > 220 ? s.slice(0, 217).trimEnd() + '…' : s;
 }
 
-/** Hata gövdesinden sağlayıcının mesajını bulur; Anthropic, OpenAI ve Gemini biçimlerini tanır. */
+/** Finds the provider's message in an error body; recognizes the Anthropic, OpenAI and Gemini shapes. */
 export function providerMessage(bodyText: string): { message: string; marker: string } {
   let json: unknown;
   try {
@@ -364,14 +364,14 @@ export function providerMessage(bodyText: string): { message: string; marker: st
   return { message: str(json.message) || str(json.detail), marker: '' };
 }
 
-/** 2xx olmayan bir HTTP yanıtını AiError'a çevirir. */
+/** Turns a non-2xx HTTP response into an AiError. */
 export function httpError(provider: ProviderId, status: number, bodyText: string, key = ''): AiError {
   const { message, marker } = providerMessage(bodyText);
   const detail = tidyMessage(message, key);
   let code: AiErrorCode = 'provider';
   if (status === 401 || status === 403) code = 'auth';
   else if (status === 429) code = 'rate_limit';
-  // Gemini geçersiz anahtarı 400 ile bildirir (API_KEY_INVALID).
+  // Gemini reports an invalid key with a 400 (API_KEY_INVALID).
   else if (status === 400 && /API_KEY_INVALID|API key not valid/i.test(`${marker} ${message}`)) code = 'auth';
   const withStatus = detail ? `${detail} (HTTP ${status})` : `HTTP ${status}`;
   const hint =
@@ -382,7 +382,7 @@ export function httpError(provider: ProviderId, status: number, bodyText: string
   return new AiError(code, withStatus + hint);
 }
 
-/** fetch'in attığı hatayı (ağ, CORS, zaman aşımı) AiError'a çevirir. Tarayıcının hata metni mesaja yazılmaz. */
+/** Turns an error thrown by fetch (network, CORS, timeout) into an AiError. The browser's error text is not put in the message. */
 export function networkError(provider: ProviderId, timedOut: boolean): AiError {
   if (timedOut) return new AiError('network', 'İstek zaman aşımına uğradı; biraz sonra yeniden deneyin.');
   const def = providerDef(provider);
@@ -394,13 +394,13 @@ export function networkError(provider: ProviderId, timedOut: boolean): AiError {
   return new AiError('network', NETWORK_HINT + extra);
 }
 
-/** Ağ hatasının genel açıklaması */
+/** General explanation of a network error */
 export const NETWORK_HINT =
   'İnternet bağlantınızı kontrol edin. Tarayıcı isteği engelliyor da olabilir (CORS); bazı sağlayıcılar tarayıcıdan doğrudan çağrıya izin vermez.';
 
-/* ---------- Metin yardımcıları ---------- */
+/* ---------- Text helpers ---------- */
 
-/** Düz metin yanıtını temizler: markdown imlerini ve fazla boş satırları atar. */
+/** Cleans a plain-text response: strips markdown marks and extra blank lines. */
 export function cleanText(text: string): string {
   return text
     .replace(/\r\n?/g, '\n')
