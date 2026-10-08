@@ -2,7 +2,7 @@
 
 Reads config/stocks.json, fetches fundamentals (TradingView screener) and daily
 closes (Yahoo Finance), and writes public/data/market.json plus
-public/data/prices/<MARKET>-<TICKER>.json. See docs/DATA.md.
+public/data/prices/<MARKET>-<TICKER>.json. See apps/screener/docs/DATA.md.
 """
 
 from pathlib import Path

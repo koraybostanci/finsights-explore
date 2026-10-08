@@ -1,4 +1,4 @@
-# Data job dependencies (GitHub Actions installs these; see docs/DATA.md)
+# Data job dependencies (GitHub Actions installs these; see apps/screener/docs/DATA.md)
 requests>=2.31,<3
 jsonschema>=4.20,<5
 yfinance>=0.2.58

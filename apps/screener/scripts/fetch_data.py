@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Data job entry point. See docs/DATA.md.
+"""Data job entry point. See apps/screener/docs/DATA.md.
 
     python scripts/fetch_data.py              fetch both markets, write public/data
     python scripts/fetch_data.py --market US  one market
