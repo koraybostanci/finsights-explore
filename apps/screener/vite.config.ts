@@ -7,8 +7,7 @@ import { csp } from '../../shared/src/vite-csp.ts';
  */
 const CONNECT_SRC = "'self' https: http://localhost:* http://127.0.0.1:*";
 
-// base './' keeps every asset URL relative, so the build works under
-// https://<user>.github.io/<repo>/ without knowing the repo name.
+// base './' keeps every asset URL relative, so the build works from any host or path.
 export default defineConfig({
   base: './',
   build: { target: 'es2022', sourcemap: true },

@@ -44,7 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--fail-share",
         type=float,
-        default=float(os.environ.get("FINSIGHTS_FAIL_SHARE", DEFAULT_FAIL_SHARE)),
+        default=float(os.environ.get("FINTOOLS_FAIL_SHARE", DEFAULT_FAIL_SHARE)),
         help="a market with more than this share of stocks missing keeps its previous data (default 0.5)",
     )
     p.add_argument("--days", type=int, default=DEFAULT_DAYS, help="trading days kept per price file (default 520)")

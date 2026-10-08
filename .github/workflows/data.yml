@@ -1,7 +1,7 @@
 name: data
 
 # Fetches fundamentals and daily closes and commits apps/screener/public/data.
-# The "pages" workflow redeploys the site when this one completes.
+# The Cloudflare build for the Screener runs on the data commit.
 on:
   workflow_dispatch:
     inputs:
@@ -79,7 +79,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No data changes."
           else
-            git commit -m "Veri güncellemesi $(date -u +%Y-%m-%d)"
+            git commit -m "Update data $(date -u +%Y-%m-%d)"
             # main may have moved while the job ran: rebase the data commit on top and try again
             for attempt in 1 2 3; do
               if git push; then exit 0; fi
