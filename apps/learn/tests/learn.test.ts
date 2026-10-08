@@ -5,26 +5,26 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { nf, pct } from '@fintools/shared/format';
 import { lastSma, smaSeries } from '@fintools/shared/sma';
 import {
-  BAYRAM_DAYS,
+  HOLIDAY_DAYS,
   PEG_C,
-  PEG_FK,
+  PEG_PE,
   ROADWORK_END,
   ROADWORK_START,
   SMA_WINDOWS,
   TAKINGS_SHOWN,
   TAKINGS_TOTAL,
-  ULKE,
+  COUNTRY,
   crossings,
-  dondurmaState,
-  enfState,
+  iceCreamState,
+  inflationState,
   evOf,
-  fiyatState,
+  priceState,
   pegOf,
   realGrowth,
-  sandikState,
+  fundState,
   smaStory,
   takings,
-  ulkeState,
+  countryState,
 } from '../src/model.ts';
 import { GL, filterGlossary, fold, render as renderGlossary } from '../src/glossary.ts';
 import * as glossary from '../src/glossary.ts';
@@ -34,38 +34,38 @@ import * as stories from '../src/stories.ts';
 import * as smaHtml from '../src/story-sma.ts';
 import * as marketsHtml from '../src/story-markets.ts';
 
-/** mount() yalnızca innerHTML yazar; DOM olmadan sınamak için sahte kök. */
+/** mount() only writes innerHTML; a fake root lets it run without a DOM. */
 const fakeRoot = (): HTMLElement & { innerHTML: string } =>
   ({ innerHTML: '', querySelector: () => null }) as unknown as HTMLElement & { innerHTML: string };
 
 const near = (a: number, b: number, eps = 1e-9): void => assert.ok(Math.abs(a - b) <= eps, `${a} ≈ ${b}`);
 
-/* ---------- Hikâye 3: fiyat kaydırıcısı (ilk sürümün rakamları) ---------- */
+/* ---------- Story 3: price slider (figures of the first version) ---------- */
 
-test('Hikâye 3: 30 TL ve %25 büyümede F/K 14,3 ve PD/DD 5,0', () => {
-  const s = fiyatState(30, 25);
-  assert.equal(s.pd, 3_000_000);
-  assert.equal(nf(s.fk, 1), '14,3');
-  assert.equal(nf(s.pddd, 1), '5,0');
-  assert.equal(nf(s.fd / 1e6, 2), '3,05');
-  assert.equal(nf(s.fdf, 1), '7,6');
+test('Story 3: at 30 TL and 25% growth, P/E is 14.3 and P/B is 5.0', () => {
+  const s = priceState(30, 25);
+  assert.equal(s.marketCap, 3_000_000);
+  assert.equal(nf(s.pe, 1), '14,3');
+  assert.equal(nf(s.pb, 1), '5,0');
+  assert.equal(nf(s.ev / 1e6, 2), '3,05');
+  assert.equal(nf(s.evEbitda, 1), '7,6');
   assert.equal(nf(s.peg, 2), '0,57');
   assert.equal(nf(s.ey, 1), '7,0');
   assert.equal(nf(s.roe, 0), '35');
   assert.equal(nf(s.eps, 2), '2,10');
 });
 
-test('Hikâye 3: pay başına 6 TL defter değeridir; büyüme sıfır ya da eksiyse PEG yoktur', () => {
-  near(fiyatState(6, 25).pddd, 1);
-  assert.equal(fiyatState(30, 0).peg, null);
-  assert.equal(fiyatState(30, -20).peg, null);
-  assert.equal(nf(fiyatState(30, 0).peg, 2), '–');
+test('Story 3: 6 TL per share is book value; there is no PEG when growth is zero or negative', () => {
+  near(priceState(6, 25).pb, 1);
+  assert.equal(priceState(30, 0).peg, null);
+  assert.equal(priceState(30, -20).peg, null);
+  assert.equal(nf(priceState(30, 0).peg, 2), '–');
 });
 
-/* ---------- Hikâye 4: PEG ---------- */
+/* ---------- Story 4: PEG ---------- */
 
-test('Hikâye 4: üç kahvecinin PEG ve firma değeri', () => {
-  near(PEG_FK, 3_000_000 / 210_000);
+test('Story 4: PEG and enterprise value of the three coffee shops', () => {
+  near(PEG_PE, 3_000_000 / 210_000);
   assert.deepEqual(
     PEG_C.map((c) => nf(pegOf(c), 2)),
     ['2,86', '0,41', '0,07'],
@@ -76,72 +76,72 @@ test('Hikâye 4: üç kahvecinin PEG ve firma değeri', () => {
   );
 });
 
-/* ---------- Hikâye 5: enflasyon ---------- */
+/* ---------- Story 5: inflation ---------- */
 
-test('Hikâye 5: %35 enflasyonda parasal kazanç 70 bin TL', () => {
-  const s = enfState(35);
+test('Story 5: at 35% inflation the monetary gain is 70 thousand TL', () => {
+  const s = inflationState(35);
   assert.equal(s.gain, 70_000);
   assert.equal(s.rep, 280_000);
   assert.equal(pct((s.gain / s.op) * 100), '+%33');
   assert.equal(nf(s.real / 1000, 0), '148');
-  assert.equal(enfState(0).gain, 0);
+  assert.equal(inflationState(0).gain, 0);
 });
 
-/* ---------- Hikâye 6: dondurmacı ---------- */
+/* ---------- Story 6: ice cream shop ---------- */
 
-test('Hikâye 6: yıllık kâr 535 bin, gerçek F/K 9,3, yanıltıcı F/K 2,9', () => {
-  const s = dondurmaState();
+test('Story 6: annual net income 535 thousand, true P/E 9.3, misleading P/E 2.9', () => {
+  const s = iceCreamState();
   assert.equal(s.yr, 535);
   assert.equal(s.summer, 430);
   assert.equal(s.peakYr, 1720);
-  assert.equal(nf(s.fk, 1), '9,3');
-  assert.equal(nf(s.peakFk, 1), '2,9');
+  assert.equal(nf(s.pe, 1), '9,3');
+  assert.equal(nf(s.peakPe, 1), '2,9');
 });
 
-/* ---------- Hikâye 7: sandık ---------- */
+/* ---------- Story 7: neighborhood fund ---------- */
 
-test('Hikâye 7: sandığın gelir tablosu ve ÖK kârlılığı', () => {
-  const a = sandikState(2);
-  assert.equal(a.fi, 427_500);
-  assert.equal(a.fg, 350_000);
+test('Story 7: the fund income statement and ROE', () => {
+  const a = fundState(2);
+  assert.equal(a.interestIncome, 427_500);
+  assert.equal(a.interestExpense, 350_000);
   assert.equal(a.nii, 77_500);
   assert.equal(a.prov, 19_000);
   assert.equal(a.net, 21_375);
   assert.equal(nf(a.roe, 1), '21,4');
-  assert.equal(nf(sandikState(0).roe, 1), '35,6');
+  assert.equal(nf(fundState(0).roe, 1), '35,6');
 });
 
-test('Hikâye 7: %10 batık kredide sandık zarar eder ve vergi ödemez', () => {
-  const s = sandikState(10);
+test('Story 7: at 10% bad loans the fund makes a loss and pays no tax', () => {
+  const s = fundState(10);
   assert.equal(s.tax, 0);
   assert.ok(s.net < 0);
   assert.ok(s.roe < 0);
 });
 
-/* ---------- Hikâye 8: günlük hasılat ve SMA ---------- */
+/* ---------- Story 8: daily takings and SMA ---------- */
 
-test('Hikâye 8: seri deterministik, 500 gün, pozitif ve 10 TL basamaklı', () => {
+test('Story 8: the series is deterministic, 500 days, positive and in steps of 10 TL', () => {
   const a = takings();
   assert.equal(a.length, TAKINGS_TOTAL);
   assert.ok(a.every((v) => Number.isInteger(v) && v > 0 && v % 10 === 0));
   assert.deepEqual(takings(), a);
-  /* Seri tohumludur: bu değerler değişirse hikâyedeki gün numaraları da değişir. */
+  /* The series is seeded: if these values change, the day numbers in the story change too. */
   assert.deepEqual(a.slice(0, 5), [3370, 5430, 5330, 5260, 5370]);
   assert.deepEqual(a.slice(-3), [7760, 5810, 6020]);
 });
 
-test('Hikâye 8: grafik son 300 günü gösterir, 200 günlük ortalama için 200 gün öncesi vardır', () => {
+test('Story 8: the chart shows the last 300 days; the 200-day average has 200 days of history before it', () => {
   for (const w of SMA_WINDOWS) {
     const s = smaStory(w);
     assert.equal(s.daily.length, TAKINGS_SHOWN);
     assert.equal(s.avg.length, TAKINGS_SHOWN);
     assert.equal(s.long.length, TAKINGS_SHOWN);
-    assert.ok(s.avg.every((v) => Number.isFinite(v)), `${w} günlük ortalamada boşluk var`);
+    assert.ok(s.avg.every((v) => Number.isFinite(v)), `the ${w}-day average has a gap`);
     assert.ok(s.long.every((v) => Number.isFinite(v)));
   }
 });
 
-test('Hikâye 8: ortalama src/lib/sma.ts ile aynı hesaptır', () => {
+test('Story 8: the average is the same calculation as shared/src/sma.ts', () => {
   const all = takings();
   for (const w of SMA_WINDOWS) {
     const s = smaStory(w);
@@ -155,26 +155,26 @@ test('Hikâye 8: ortalama src/lib/sma.ts ile aynı hesaptır', () => {
   }
 });
 
-test('Hikâye 8: bugünkü rakamlar metindekilerle uyumlu', () => {
+test('Story 8: today\'s figures match the text', () => {
   const s5 = smaStory(5);
   const s20 = smaStory(20);
   const s200 = smaStory(200);
   assert.equal(s20.today, 6020);
-  /* Yağmurlu son gün: kısa ortalamanın altında, 200 günlüğün üstünde. */
+  /* The rainy last day: below the short averages, above the 200-day one. */
   assert.ok(s5.dist < 0 && s20.dist < 0);
   assert.ok(s200.dist > 0);
   assert.equal(pct(s20.dist, 0), '%-15');
   assert.equal(pct(s200.dist, 0), '+%12');
 });
 
-test('Hikâye 8: kısa pencere dönüşü erken, uzun pencere geç gösterir', () => {
+test('Story 8: a short window shows the turn early, a long window late', () => {
   const troughs = SMA_WINDOWS.map((w) => smaStory(w).trough);
   for (let i = 1; i < troughs.length; i++) assert.ok(troughs[i] > troughs[i - 1], `${troughs}`);
-  assert.ok(troughs[0] >= ROADWORK_END, 'en düşük nokta yol çalışması bittikten sonra');
+  assert.ok(troughs[0] >= ROADWORK_END, 'lowest point comes after the roadwork ends');
   assert.ok(troughs[0] - ROADWORK_END < troughs[2] - ROADWORK_END);
 });
 
-test('Hikâye 8: önce ölüm, sonra altın kesişim; altın kesişim dönüşten sonra gelir', () => {
+test('Story 8: death cross first, then golden cross; the golden cross comes after the turn', () => {
   const { crosses } = smaStory(50);
   assert.deepEqual(
     crosses.map((c) => c.kind),
@@ -186,7 +186,7 @@ test('Hikâye 8: önce ölüm, sonra altın kesişim; altın kesişim dönüşte
   assert.deepEqual(smaStory(5).crosses, crosses);
 });
 
-test('crossings: boşluklu diziler atlanır, kesişim yönü doğru', () => {
+test('crossings: series with gaps are skipped, crossing direction is right', () => {
   const short = [null, 1, 3, 3, 1];
   const long = [null, 2, 2, 2, 2];
   assert.deepEqual(crossings(short, long), [
@@ -195,30 +195,30 @@ test('crossings: boşluklu diziler atlanır, kesişim yönü doğru', () => {
   ]);
 });
 
-test('Hikâye 8: olay günleri seride görünür (bayram sıçraması, yol çalışması düşüşü)', () => {
+test('Story 8: event days show in the series (holiday jump, roadwork dip)', () => {
   const s = smaStory(5);
   const mid = s.daily.slice(ROADWORK_START + 10, ROADWORK_END - 10);
   const before = s.daily.slice(0, ROADWORK_START - 1);
   const mean = (a: number[]): number => a.reduce((x, y) => x + y, 0) / a.length;
-  assert.ok(mean(mid) < mean(before), 'yol çalışması hasılatı düşürür');
-  for (const d of BAYRAM_DAYS) assert.ok(s.daily[d - 1] > mean(s.daily.slice(d - 8, d - 3)) * 1.1);
+  assert.ok(mean(mid) < mean(before), 'roadwork lowers takings');
+  for (const d of HOLIDAY_DAYS) assert.ok(s.daily[d - 1] > mean(s.daily.slice(d - 8, d - 3)) * 1.1);
 });
 
-/* ---------- Hikâye 9: iki ülke ---------- */
+/* ---------- Story 9: two countries ---------- */
 
-test('Hikâye 9: iki dükkânın F/K ve kazanç verimi aynı; fark faizde', () => {
-  const s = ulkeState(35);
-  assert.equal(s.fk, PEG_FK);
-  assert.equal(nf(s.fk, 1), '14,3');
+test('Story 9: both shops have the same P/E and earnings yield; the difference is the interest rate', () => {
+  const s = countryState(35);
+  assert.equal(s.pe, PEG_PE);
+  assert.equal(nf(s.pe, 1), '14,3');
   near(s.ey, 7);
   near(s.tr.gap, 7 - 35);
-  near(s.us.gap, 7 - ULKE.usRate);
-  near(s.tr.parityFk, 100 / 35);
-  near(s.us.parityFk, 25);
+  near(s.us.gap, 7 - COUNTRY.usRate);
+  near(s.tr.parityPe, 100 / 35);
+  near(s.us.parityPe, 25);
 });
 
-test('Hikâye 9: reel büyüme enflasyon düşülerek bulunur; PEG nominal büyümeyi bölen', () => {
-  const s = ulkeState(35);
+test('Story 9: real growth is found by subtracting inflation; PEG divides by nominal growth', () => {
+  const s = countryState(35);
   assert.equal(nf(s.tr.realGrowth, 1), '3,7');
   assert.equal(nf(s.us.realGrowth, 1), '3,9');
   assert.equal(nf(s.tr.peg, 2), '0,36');
@@ -228,39 +228,39 @@ test('Hikâye 9: reel büyüme enflasyon düşülerek bulunur; PEG nominal büy�
   near(realGrowth(21, 10), 10);
 });
 
-test('Hikâye 9: TL faizi değişince yalnızca Türkiye tarafı değişir', () => {
-  const a = ulkeState(10);
-  const b = ulkeState(50);
+test('Story 9: when the TL rate changes, only the Turkish side changes', () => {
+  const a = countryState(10);
+  const b = countryState(50);
   assert.equal(a.us.gap, b.us.gap);
   assert.notEqual(a.tr.gap, b.tr.gap);
   assert.equal(a.ey, b.ey);
 });
 
-/* ---------- Metin ve işaretleme ---------- */
+/* ---------- Text and markup ---------- */
 
-test('Senaryolar: BIST çağrıları tarihli, ABD şirketi örneği yok', () => {
+test('Stories: BIST callouts are dated, no US company examples', () => {
   const html = stories.markup();
   const calls = html.match(/<span class="muted">BIST 30'da[^<]{0,20}/g) ?? [];
-  assert.ok(calls.length >= 7, 'yedi hikâyede BIST 30 notu var');
+  assert.ok(calls.length >= 7, 'seven stories carry a BIST 30 note');
   for (const c of calls) assert.match(c, /^<span class="muted">BIST 30'da \(2 Ekim 2026\): /, c);
   assert.doesNotMatch(html, /\b(AAPL|MSFT|NVDA|AMZN|GOOGL?|TSLA|META|Apple|Microsoft|Nvidia|Amazon|Tesla)\b/);
 });
 
-test('Senaryolar: dokuz hikâye, eyebrow başlıkları ve benzersiz kimlikler', () => {
+test('Stories: nine stories, eyebrow headings and unique ids', () => {
   const html = stories.markup();
   for (let i = 1; i <= 9; i++) assert.ok(html.includes(`id="case${i}"`), `case${i}`);
   assert.ok(html.includes('Hikâye 8 · Hareketli ortalama'));
   assert.ok(html.includes('Bugün iyi bir gün müydü?'));
   assert.ok(html.includes('İki ülke, iki kahveci'));
   const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
-  assert.equal(new Set(ids).size, ids.length, 'yinelenen kimlik');
+  assert.equal(new Set(ids).size, ids.length, 'duplicate id');
   for (const id of [...smaHtml.html().matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]))
     assert.ok(id === 'case8' || id.startsWith('sma-'), id);
   for (const id of [...marketsHtml.html().matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]))
-    assert.ok(id === 'case9' || id.startsWith('ulke-'), id);
+    assert.ok(id === 'case9' || id.startsWith('country-'), id);
 });
 
-test('Senaryolar: tanıtım kutuları Learn sekmelerini ve tarayıcı uygulamasını anar, başka uygulamanın sekmelerini değil', () => {
+test('Stories: the intro boxes name the Learn tabs and the screener app, not tabs of the other app', () => {
   const html = stories.markup();
   for (const name of ['Senaryolar', 'Çarpanlar', 'Sözlük', 'Karar adımları', 'Kendini sına', 'Tarayıcı uygulaması (screener app)'])
     assert.ok(html.includes(name), name);
@@ -269,7 +269,7 @@ test('Senaryolar: tanıtım kutuları Learn sekmelerini ve tarayıcı uygulamas�
   assert.doesNotMatch(html, /href="#(screener|banks|calculator|settings)"/);
 });
 
-test('Hikâye 8 ve 9 öğrenme kutuları gerekli noktaları söyler', () => {
+test('The learning boxes of stories 8 and 9 make the required points', () => {
   const sma = smaHtml.html();
   for (const s of ['her zaman geriden gelir', 'SMA 20', 'SMA 200', 'altın kesişim (golden cross)', 'ölüm kesişimi (death cross)', 'eğilimi gösterir, değeri değil', 'enflasyon', 'Tarayıcı'])
     assert.ok(sma.toLowerCase().includes(s.toLowerCase()), s);
@@ -278,16 +278,16 @@ test('Hikâye 8 ve 9 öğrenme kutuları gerekli noktaları söyler', () => {
     assert.ok(mk.toLowerCase().includes(s.toLowerCase()), s);
 });
 
-test('Hikâye 9 gerçek faiz ya da enflasyon oranı iddia etmez: oranlar "örnek" diye çerçevelenir', () => {
+test('Story 9 does not claim real interest or inflation rates: the rates are framed as "örnek" (example)', () => {
   const mk = marketsHtml.html();
   assert.match(mk, /Buradaki oranlar örnektir/);
   assert.match(mk, /TL faizi \(örnek\)/);
   assert.doesNotMatch(mk, /Merkez Bankası|TCMB|Fed\b|politika faizi|TÜFE/);
 });
 
-/* ---------- Çarpanlar ---------- */
+/* ---------- Multiples ---------- */
 
-test('Çarpanlar: altı özgün kart, altı Türkiye notu, ayrı SMA bölümü', () => {
+test('Multiples: six original cards, six Turkey notes, a separate SMA section', () => {
   assert.equal(multiples.CARDS.length, 6);
   assert.equal(multiples.TR.length, 6);
   const root = fakeRoot();
@@ -299,11 +299,11 @@ test('Çarpanlar: altı özgün kart, altı Türkiye notu, ayrı SMA bölümü',
   assert.ok(h.includes('SMA(N) = son N kapanışın toplamı ÷ N'));
   assert.ok(h.includes('Tuzak:'));
   assert.ok(h.includes('Örnekler 2 Ekim 2026 verisiyle yazıldı'));
-  assert.ok(h.indexOf('lrn-sma') > h.indexOf('lrn-trlist'), 'SMA bölümü Türkiye listesinden sonra, ayrı');
+  assert.ok(h.indexOf('lrn-sma') > h.indexOf('lrn-trlist'), 'the SMA section comes after the Turkey list, separately');
   assert.equal([...h.matchAll(/<article class="card">/g)].length, 6 + multiples.smaCards().length);
 });
 
-test('Çarpanlar: SMA kartındaki örnek rakamlar hikâyenin serisinden gelir', () => {
+test('Multiples: the example figures on the SMA card come from the story series', () => {
   const n = multiples.smaExampleNumbers();
   assert.equal(n.today, 6020);
   const [sma, cross] = multiples.smaCards();
@@ -314,23 +314,23 @@ test('Çarpanlar: SMA kartındaki örnek rakamlar hikâyenin serisinden gelir', 
   assert.ok(cross.ex.includes(`${crosses[1].day}. günde yukarı`));
 });
 
-/* ---------- Sözlük ---------- */
+/* ---------- Glossary ---------- */
 
-test('Sözlük: özgün gruplar ve yeni terimler grubu', () => {
+test('Glossary: original groups and the new terms group', () => {
   const groups = GL.map((g) => g[0]);
   for (const g of ['Temel büyüklükler', 'Gelir tablosu', 'Nakit ve temettü', 'Oranlar', 'Piyasa', 'Bankacılık']) assert.ok(groups.includes(g), g);
-  /* İlk sürümde 51 madde vardı; hiçbiri silinmemeli. */
+  /* The first version had 51 entries; none may be removed. */
   const original = GL.slice(0, -1).reduce((n, g) => n + g[1].length, 0);
   assert.equal(original, 51);
-  assert.ok(GL[GL.length - 1][1].length >= 9, 'yeni terimler grubu');
+  assert.ok(GL[GL.length - 1][1].length >= 9, 'new terms group');
   for (const [, items] of GL)
     for (const i of items) {
-      assert.ok(i[0] && i[1] && i[2], `eksik alan: ${i[0]}`);
+      assert.ok(i[0] && i[1] && i[2], `missing field: ${i[0]}`);
       assert.ok(i[2].length > 15);
     }
 });
 
-test('Sözlük: istenen sekiz yeni terim Türkçe ve İngilizce karşılığıyla var', () => {
+test('Glossary: the eight requested new terms exist with their Turkish and English names', () => {
   const last = GL[GL.length - 1][1];
   const want: Array<[RegExp, RegExp]> = [
     [/^Hareketli ortalama$/, /SMA/],
@@ -344,38 +344,38 @@ test('Sözlük: istenen sekiz yeni terim Türkçe ve İngilizce karşılığıyl
   ];
   for (const [tr, en] of want) {
     const hit = last.find((i) => tr.test(i[0]));
-    assert.ok(hit, `${tr} yok`);
+    assert.ok(hit, `${tr} is missing`);
     assert.match(hit[1], en);
   }
 });
 
-test('Sözlük: arama Türkçe ve İngilizce metinde, büyük/küçük harf gözetmeden çalışır', () => {
+test('Glossary: search works on Turkish and English text, ignoring letter case', () => {
   const names = (q: string): string[] => filterGlossary(q).flatMap((g) => g[1].map((i) => i[0]));
-  assert.ok(names('ebitda').includes('FAVÖK'), 'küçük harfle EBITDA');
+  assert.ok(names('ebitda').includes('FAVÖK'), 'EBITDA in lowercase');
   assert.ok(names('EBITDA').includes('FAVÖK'));
   assert.ok(names('Ebitda').includes('FAVÖK'));
   assert.ok(names('özkaynak').includes('Özkaynak / özsermaye'));
   assert.ok(names('ÖZKAYNAK').includes('Özkaynak / özsermaye'));
-  assert.ok(names('ozkaynak').includes('Özkaynak / özsermaye'), 'Türkçe karakter yazmadan');
+  assert.ok(names('ozkaynak').includes('Özkaynak / özsermaye'), 'without typing Turkish characters');
   assert.ok(names('golden cross').includes('Altın kesişim'));
   assert.ok(names('GOLDEN').includes('Altın kesişim'));
   assert.ok(names('altın').includes('Altın kesişim'));
   assert.ok(names('sma').includes('Hareketli ortalama'));
   assert.ok(names('SMA').includes('Hareketli ortalama'));
-  /* "sma", "amortisman" ve "finansman" içinde de geçer; sözcük başı eşleşmesi öne alınır. */
-  assert.ok(!names('sma').includes('Amortisman'), 'sma: amortisman gürültüsü');
+  /* "sma" also occurs inside "amortisman" and "finansman"; matches at the start of a word come first. */
+  assert.ok(!names('sma').includes('Amortisman'), 'sma: noise from amortisman');
   assert.ok(!names('sma').includes('FAVÖK'));
-  /* Sözcük başında eşleşme yoksa metnin içinde aranır. */
+  /* With no match at the start of a word, the search looks inside the text. */
   assert.ok(names('kaynak').includes('Özkaynak / özsermaye'));
   assert.ok(names('moving average').includes('Üstel hareketli ortalama'));
   assert.ok(names('ortanca').includes('Sektör ortancası'));
-  assert.ok(!names('watchlist').length, 'izleme listesi ekran uygulamasına özgü, sözlükte yok');
+  assert.ok(!names('watchlist').length, 'the watchlist is specific to the screener app, not in the glossary');
   assert.deepEqual(names('xyzzy'), []);
   assert.equal(names('').length, GL.reduce((n, g) => n + g[1].length, 0));
   assert.equal(names('   ').length, names('').length);
 });
 
-test('fold: Türkçe büyük/küçük harf çiftleri aynı sadeleşir', () => {
+test('fold: Turkish upper/lower case pairs simplify to the same text', () => {
   assert.equal(fold('EBITDA'), fold('ebitda'));
   assert.equal(fold('İstanbul'), fold('istanbul'));
   assert.equal(fold('ISPARTA'), fold('ısparta'));
@@ -383,7 +383,7 @@ test('fold: Türkçe büyük/küçük harf çiftleri aynı sadeleşir', () => {
   assert.equal(fold('Kâr'), 'kar');
 });
 
-test('Sözlük: arama sonucu HTML olarak kaçırılır, sonuç yoksa mesaj verir', () => {
+test('Glossary: search results are HTML-escaped, and a message is shown when nothing matches', () => {
   assert.ok(renderGlossary('').includes('class="ggroup"'));
   const none = renderGlossary('<img src=x>');
   assert.ok(!none.includes('<img'));
@@ -394,9 +394,9 @@ test('Sözlük: arama sonucu HTML olarak kaçırılır, sonuç yoksa mesaj verir
   assert.ok(root.innerHTML.includes('Hareketli ortalama'));
 });
 
-/* ---------- Karar adımları ---------- */
+/* ---------- Decision steps ---------- */
 
-test('Karar adımları: beş özgün adım, altı genişletme maddesi, eğilim adımı ve kapanış notu', () => {
+test('Decision steps: five original steps, six widening items, the trend step and the closing note', () => {
   assert.equal(steps.WIDEN.length, 6);
   assert.equal(steps.STEPS.length, 6);
   assert.deepEqual(
@@ -414,18 +414,18 @@ test('Karar adımları: beş özgün adım, altı genişletme maddesi, eğilim a
   assert.ok(h.includes('Bakışı genişletmek'));
   assert.ok(h.includes('Tarama bir aday listesi üretir, alım kararı üretmez.'));
   assert.equal([...h.matchAll(/<li>/g)].length, 6);
-  /* Gerçek şirket rakamları tarihli etiketle gelir. */
+  /* Real-company figures come with a dated label. */
   assert.equal([...h.matchAll(/Örnek \(BIST 30, 2 Ekim 2026\):/g)].length, 5);
 });
 
-/* ---------- Kaynak taraması ---------- */
+/* ---------- Source scan ---------- */
 
-test('apps/learn/src: rastgelelik, tarih ya da emoji yok', () => {
+test('apps/learn/src: no randomness, dates or emoji', () => {
   const dir = new URL('../src/', import.meta.url);
   for (const f of readdirSync(dir).filter((n) => n.endsWith('.ts'))) {
     const src = readFileSync(new URL(f, dir), 'utf8');
     assert.ok(!src.includes('Math.random'), `${f}: Math.random`);
-    assert.ok(!/new Date\(|Date\.now\(/.test(src), `${f}: saate bağlı`);
+    assert.ok(!/new Date\(|Date\.now\(/.test(src), `${f}: depends on the clock`);
     assert.ok(!/\p{Extended_Pictographic}/u.test(src.replace(/[✓✕–−×÷≈≠→←↑↓·…«»‹›]/gu, '')), `${f}: emoji`);
   }
 });
