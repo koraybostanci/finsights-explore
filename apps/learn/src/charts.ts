@@ -6,7 +6,7 @@ import { esc, nf } from '@fintools/shared/format';
 /** Finds an element by id inside a tab's root; returns the right one even if ids clash with other tabs. */
 export function byId<T extends HTMLElement = HTMLElement>(root: ParentNode, id: string): T {
   const el = root.querySelector<T>('#' + id);
-  if (!el) throw new Error(`#${id} bulunamadı`);
+  if (!el) throw new Error(`Element #${id} not found`);
   return el;
 }
 

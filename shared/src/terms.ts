@@ -94,7 +94,7 @@ export const TERMS: Record<string, Term> = {
 
 function get(id: string): Term {
   const t = TERMS[id];
-  if (!t) throw new Error(`Bilinmeyen terim: ${id}`);
+  if (!t) throw new Error(`Unknown term: ${id}`);
   return t;
 }
 

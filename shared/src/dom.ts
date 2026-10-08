@@ -8,7 +8,7 @@ export const $ = <T extends HTMLElement = HTMLElement>(id: string): T | null =>
 /** Returns the element with the given id, or throws; for fixed ids inside a module. */
 export function must<T extends HTMLElement = HTMLElement>(id: string): T {
   const el = document.getElementById(id);
-  if (!el) throw new Error(`#${id} bulunamadı`);
+  if (!el) throw new Error(`Element #${id} not found`);
   return el as T;
 }
 
