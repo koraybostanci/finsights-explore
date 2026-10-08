@@ -88,7 +88,7 @@ function aiHtml(): string {
           <small id="st-base-msg">OpenAI uyumlu bir uç nokta. Yerel modeller için http://localhost da olur.</small></div>`
       : '';
 
-  const keyLabel = def.keyRequired ? '' : ' · isteğe bağlı';
+  const keyLabel = def.keyRequired ? '' : ' isteğe bağlı';
   const corsNote = def.corsVerified
     ? ''
     : `<p class="muted small">${esc(def.label)} için tarayıcıdan doğrudan çağrı (CORS) doğrulanmadı. "Bağlantıyı sına" ağ hatası verirse sağlayıcı tarayıcı isteklerine izin vermiyor olabilir.</p>`;
