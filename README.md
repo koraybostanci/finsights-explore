@@ -55,7 +55,7 @@ Also:
 - Leave the preview settings at their defaults.
 - Wrangler is not a dev dependency; `npx` fetches the current version at deploy time.
 - Not yet confirmed: whether Workers Builds clones the whole repo when a root directory is set, and how the watch-path wildcards are matched. Check both on the first build. If the root directory does not work, set it to the repo root and use build command `npm --prefix apps/<app> ci && npm --prefix apps/<app> run check && npm --prefix apps/<app> run build` and deploy command `npx wrangler deploy --config apps/<app>/wrangler.jsonc`.
-- After the first deploy, put both URLs into `shared/src/sites.ts`. Until then the apps do not link to each other.
+- After the first deploy, put both URLs into `shared/src/sites.ts` (done: Learn at https://fintools-learn.bostanci-koray.workers.dev, Screener at https://fintools-screener.bostanci-koray.workers.dev). While a URL is empty the apps do not link to each other.
 
 ## Notes
 

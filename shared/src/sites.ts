@@ -5,7 +5,10 @@
 
 import { esc } from './format.ts';
 
-export const SITES = { learn: '', screener: '' };
+export const SITES = {
+  learn: 'https://fintools-learn.bostanci-koray.workers.dev',
+  screener: 'https://fintools-screener.bostanci-koray.workers.dev',
+};
 
 export type SiteId = keyof typeof SITES;
 
