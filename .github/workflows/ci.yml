@@ -1,7 +1,7 @@
 name: ci
 
 # Checks every pull request and every push to main: shared and app unit tests, typecheck, build (screener app and Learn app).
-# Deploy logic lives in pages.yml and is not repeated here.
+# Deployment happens in Cloudflare Workers Builds, not here.
 on:
   pull_request:
   push:

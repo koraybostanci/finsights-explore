@@ -116,7 +116,7 @@ function aiHtml(): string {
       </div>
       ${corsNote}
     </div>
-    <p class="note">Anahtar depoya ya da bir sunucuya gönderilmez; istekler tarayıcınızdan doğrudan sağlayıcıya gider. Bir github.io adresinde aynı hesabın bütün projeleri tarayıcı belleğini paylaşır; bu yüzden anahtara harcama sınırı koymak ya da siteyi kendi alan adınızdan yayınlamak daha güvenlidir.</p>
+    <p class="note">Anahtar depoya ya da bir sunucuya gönderilmez; istekler tarayıcınızdan doğrudan sağlayıcıya gider. Anahtar yalnızca bu adres için bu tarayıcıda saklanır; tarayıcı profiline erişen herkes onu okuyabilir. Harcama sınırı olan bir anahtar kullanın; işiniz bitince “Anahtarı sil” düğmesiyle kaldırın.</p>
     <div class="howto">
       <div><b>Hisse yorumu</b>Tarayıcıda açtığınız hissenin çarpanlarını <span class="en">(multiples)</span> ve hareketli ortalamalarını <span class="en">(moving averages)</span> sade bir dille açıklar.</div>
       <div><b>Sektör karşılaştırması</b>Aynı piyasada aynı sektördeki hisseleri yan yana okur, farkların ne anlama gelebileceğini söyler.</div>

@@ -1,6 +1,6 @@
 /**
- * Public URLs of the two apps. Empty until each app has its own host;
- * while a URL is empty, siteLink() writes plain text instead of a link.
+ * Public URLs of the two apps. Each app is deployed on its own host. While a URL is empty,
+ * siteLink() writes plain text instead of a link.
  */
 
 import { esc } from './format.ts';
