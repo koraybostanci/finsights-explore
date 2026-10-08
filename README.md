@@ -33,7 +33,7 @@ npm run check              # shared tests, typecheck, tests and build of both ap
 
 ## Data
 
-The Screener's numbers come from a scheduled GitHub Actions job (`.github/workflows/data.yml`) that commits `apps/screener/public/data`. Sources, schema, adding a stock and the failure rules are in [apps/screener/docs/DATA.md](apps/screener/docs/DATA.md). 
+The Screener's numbers come from a scheduled GitHub Actions job (`.github/workflows/data.yml`) that commits `apps/screener/public/data`. Sources, schema, adding a stock and the failure rules are in [apps/screener/docs/DATA.md](apps/screener/docs/DATA.md).
 
 ## Deploy
 
