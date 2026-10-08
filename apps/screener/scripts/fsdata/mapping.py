@@ -13,7 +13,7 @@ from .config import StockSpec
 from .util import clean_number, r0, r1, r2
 
 # Screener columns, in request order. Names are the raw field ids of the scanner endpoint
-# (checked against the TradingView-Screener and tvscreener sources, see docs/DATA.md).
+# (checked against the TradingView-Screener and tvscreener sources).
 TV_COLUMNS: tuple[str, ...] = (
     "name",
     "close",

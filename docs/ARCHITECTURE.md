@@ -1,88 +1,83 @@
-# finsights.explore: architecture and conventions
+# Architecture
 
-A static web app (GitHub Pages) that teaches stock valuation with a coffee-shop story and then applies the same logic to BIST and US stocks. It continues the "BIST 30 Çarpan Rehberi" artifact; `docs/reference/original-artifact.html` is that page and is the reference for look, copy and behaviour.
-
-## Principles
-
-1. **The original design stays.** Same tokens, fonts and components (`src/styles/app.css` is the original stylesheet). New UI is built from existing components; new CSS uses the existing custom properties (`--accent`, `--line`, `--ui` …) and never introduces a new colour, font or visual language. Light and dark both work because everything goes through the tokens.
-2. **Learn, then apply.** Stories first; every new feature has a "learn" part and an "apply" part.
-3. **BIST and US stocks never share a table, chart or median.** Every list is for one market. `store.stocks(market)` enforces this.
-4. **Turkish UI, English counterparts for technical terms.** Use `term('fk')` from `src/terms.ts` so "F/K (P/E)" is written the same way everywhere.
-5. **Numbers are deterministic.** They come from `public/data/market.json`. AI only explains and asks questions, with the user's own API key, and the app is fully usable without a key.
-6. **Desktop web app first.** The original responsive behaviour is kept, but phone layouts are not a goal.
-7. **No invented figures.** Missing data is shown as "–" or "Veri bekliyor", never estimated.
-
-## Stack
-
-- Vite + TypeScript, no framework. Screens render with template strings and DOM events, as the original did.
-- TypeScript is written in erasable syntax only (no enums, no parameter properties), with `import type` for types and explicit `.ts` extensions in imports. This lets Node run the unit tests directly: `node --test "tests/**/*.test.ts"`.
-- No runtime dependencies.
-- No Vite-specific APIs in `src/` (`import.meta.env` etc.); data is fetched with document-relative URLs (`./data/...`), so the build works under any Pages path.
+Two static apps, Learn and Screener, plus a small shared package. Vite + TypeScript, no framework: screens render with template strings and DOM events. See the [README](../README.md) for how to run and deploy, and [DATA.md](../apps/screener/docs/DATA.md) for the data job.
 
 ## Layout
 
 ```
-index.html                  shell markup (header, tab bar, footer)
-src/main.ts                 shell: tabs, data bar, mounts each tab module
-src/types.ts                data contract and shared types
-src/data/store.ts           market data, watchlist per market, events, price series
-src/lib/                    format, dom/svg helpers, evaluate (screening rules), stats, sma
-src/terms.ts                term dictionary (TR + EN)
-src/styles/app.css          original stylesheet (do not restyle)
-src/styles/shared.css       new shared components (.seg, .box, tr.med, .two …)
-src/learn/                  Senaryolar, Çarpanlar, Sözlük, Karar adımları
-src/screener/               Tarayıcı (Sektör kıyası + Tüm liste, stock detail)
-src/banks/                  Bankalar (BIST only)
-src/calc/                   Kendi hesabın
-src/ai/                     provider adapters, prompts; types.ts is the contract
-src/settings/               Ayarlar (AI provider, watchlist)
-src/quiz/                   Kendini sına
-config/stocks.json          the stock universe and industries (edited by hand)
-scripts/                    data job (Python), run by GitHub Actions
-public/data/market.json     generated data, committed
-public/data/prices/         daily closes per stock, generated
-tests/                      unit tests (node:test)
+apps/learn/       index.html, vite.config.ts, wrangler.jsonc, src/ (one module per tab), tests/
+apps/screener/    same files, plus config/, scripts/ (Python), public/data/, docs/DATA.md
+shared/src/       format, dom, sma, terms, storage, shell, sites, vite-csp, styles/
+shared/tests/     tests for the shared modules
+tsconfig.base.json  strict TypeScript settings, extended by both apps
 ```
 
-## Tab modules
+Each app has its own `package.json` and lockfile and depends on `"@fintools/shared": "file:../../shared"`. The root `package.json` only holds scripts.
 
-Each tab is a module with:
+## Shared package
+
+`@fintools/shared` is plain TypeScript with no dependencies. Apps import a module by name without an extension, for example `@fintools/shared/format` or `@fintools/shared/styles/tokens.css`. Vite serves it from outside the app folder, so each `vite.config.ts` sets `server.fs.allow` to include `../../shared`; without it the dev server answers with 403.
+
+| Module | Purpose |
+|---|---|
+| `format` | number, percent, money and date formatting, `esc()` for HTML |
+| `dom` | `must()`, `cw()` (container width) and SVG text helpers |
+| `sma` | moving averages, crosses and trend |
+| `terms` | the term dictionary (see below) |
+| `storage` | `createStorage(prefix)` gives `lsGet`, `lsSet`, `lsRemove` over localStorage |
+| `shell` | `createApp()`: tab row, hash routing, last tab |
+| `sites` | URLs of the two apps, used for the link between them (hidden while empty) |
+| `vite-csp` | the Content-Security-Policy plugin; each app passes its `connect-src` |
+| `styles/` | `tokens.css`, `layout.css`, `components.css` shared by both apps |
+
+## Tab contract
+
+A tab is a module that exports:
 
 ```ts
-export function mount(root: HTMLElement): void;   // once, after data is loaded
-export function refresh(): void;                  // when the tab is shown and on resize (redraw charts)
+export function mount(root: HTMLElement): void;  // once, after beforeMount has run
+export function refresh(): void;                 // optional: tab shown, page width changed
 ```
 
-`root` is the tab's `<section class="panel stack-lg">`. Charts measure their container with `cw()` and skip drawing when it returns 0 (tab hidden). Modules subscribe to store events with `on('data' | 'watchlist' | 'ai', fn)`.
+`root` is the tab's `<section class="panel stack-lg">`. Charts measure their container with `cw()` and skip drawing when it returns 0 (hidden tab); `refresh()` redraws them.
 
-To send the user to another tab: `location.hash = '#ayarlar'` (tab ids: `senaryo`, `kavramlar`, `sozluk`, `adimlar`, `tarayici`, `bankalar`, `hesap`, `sina`, `ayarlar`).
+Each app's `main.ts` builds a list of tabs and calls `createApp({ tabs, defaultTab, storage, beforeMount })`. `beforeMount` runs once before the tabs mount (the Screener loads its data there). The shell opens the tab named in the URL hash, otherwise the last open tab from storage, otherwise `defaultTab`. To send the user to another tab, set `location.hash = '#settings'`.
 
-## Data contract
+Tab ids: Learn has `stories`, `multiples`, `glossary`, `steps`, `quiz`; Screener has `screener`, `banks`, `calculator`, `settings`.
 
-See `src/types.ts`. Short field names (`k`, `ad`, `fk`, `pd`, `fdf`, `peg`, `nb`, `mv`, `fg`, `ng`, `h`) are kept from the original so the screening rules read the same.
+To add a tab: create a folder or file with `mount` (and `refresh` if it draws), put its CSS next to it and import it from the module, then add an entry to `TABS` in the app's `main.ts`.
 
-- `public/data/market.json` → `MarketData` (`schema: 1`).
-- `public/data/prices/<MARKET>-<TICKER>.json` → `PriceSeries` (daily closes, oldest first).
-- `StockView` adds derived fields (`roe`, `sek`, `sekEn`, `cyclical`, `hasData`).
-- A stock with no data yet has `f: null` and nulls throughout; `hasData` is false and it is shown as "Veri bekliyor".
-- `asOfBy` holds the data time per market, because the data job fetches one market per scheduled run. Read it with `marketAsOf(market)`; never show one market's figures with the other market's date.
-- An empty `fk` means a loss only when `loss` is true. Without the flag the app says the F/K is missing, not that the company lost money.
-- Hand-written notes (`not`) are shown only while the market's data is from the day they were written (`noteIsCurrent`).
+## Language
 
-## Rules for code
+The UI is Turkish with an English counterpart for technical terms at first mention: "F/K (P/E)". Write terms through `term(id)` (HTML) or `termText(id)` (plain text) from the `TERMS` dictionary in `shared/src/terms.ts`, so a term reads the same everywhere. An unknown id throws. Code, comments and docs are English.
 
-- Everything written into HTML from data, user input or AI output goes through `esc()`.
-- API keys live only in `localStorage` (prefix `finsights.`), are never logged and never put in a URL.
-- The production build carries a Content-Security-Policy (`vite.config.ts`): scripts only from the site itself, so no inline `<script>` and no third-party script. Inline `style` attributes are allowed.
-- User-visible text is Turkish, sentence case, in the voice of the original copy.
-- Feature CSS lives next to the feature (`src/screener/screener.css`, imported from its module).
-- Persist small UI state with `lsGet` / `lsSet` from the store.
+## Storage
 
-## Local checks
+Each app creates its storage with its own prefix: `fintools.learn.` and `fintools.screener.`. The apps are on different origins, so the prefix is not needed to keep them apart, but it keeps keys recognizable and safe if both ever run on one origin. Use `lsGet` and `lsSet` for small UI state. Storage calls never throw.
 
-```
-npm install
-npm run typecheck   # app code and tests
-npm test
-npm run build     # output in dist/
-```
+## Principles
+
+1. One design. Use the existing tokens (`--accent`, `--line`, `--ui` and so on) and components; do not add colours or fonts. Light and dark work because everything goes through the tokens.
+2. BIST and US stocks never share a table, chart or median. `stocks(market)` in `apps/screener/src/data/store.ts` enforces this.
+3. Numbers are deterministic and come from `market.json`. AI only explains, with the user's own key, and the app is fully usable without it.
+4. No invented figures. Missing data shows as "–" or "Veri bekliyor", never an estimate.
+5. Escape everything written into HTML from data, user input or AI output with `esc()`.
+6. API keys live only in the Screener's localStorage, are never logged and never put in a URL.
+7. Desktop first. The layout is responsive, but phone layouts are not a goal.
+
+## Code conventions
+
+- Erasable TypeScript only (no enums, no parameter properties), `import type` for types, explicit `.ts` extensions for relative imports. This lets Node run the tests directly.
+- No runtime dependencies. Data is fetched with document-relative URLs (`./data/...`), so the build works under any path.
+- The production build carries a Content-Security-Policy (`shared/src/vite-csp.ts`): scripts only from the site itself, so no inline `<script>`. Inline `style` attributes are allowed. Learn allows only its own origin; Screener also allows https and localhost for AI providers.
+
+## Tests
+
+- `node --test` runs the `.ts` tests directly: `shared/tests/`, `apps/learn/tests/`, `apps/screener/tests/`.
+- Screener tests read `apps/screener/tests/fixtures/market.json`, not the live data, so a data refresh cannot break them.
+- The data job has Python `unittest` tests in `apps/screener/scripts/tests/`.
+- `npm run check` in an app runs shared tests, typecheck, app tests and the build; CI runs the same.
+
+## Adding a stock
+
+Edit `apps/screener/config/stocks.json`. The steps are in [DATA.md](../apps/screener/docs/DATA.md).
