@@ -1,3 +1,3 @@
-/* Hesaplayıcının ölçüt listesi (ilk sürümde satır içi stil olarak duruyordu). */
-.hs-checks{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
-.hs-checks li{display:grid;grid-template-columns:auto 1fr;gap:8px;font-size:.92rem}
+/* The calculator's check list (inline styles in the first release). */
+.calc-checks{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.calc-checks li{display:grid;grid-template-columns:auto 1fr;gap:8px;font-size:.92rem}
