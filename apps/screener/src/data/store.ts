@@ -108,10 +108,6 @@ export function stocks(market: MarketId, f: StockFilter = {}): StockView[] {
   );
 }
 
-export function findStock(market: MarketId, symbol: string): StockView | undefined {
-  return VIEWS.find((s) => s.market === market && s.symbol === symbol);
-}
-
 /* ---------- Watchlist ---------- */
 
 const wlKey = (m: MarketId) => `watchlist.${m}`;

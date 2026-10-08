@@ -88,14 +88,14 @@ function aiHtml(): string {
           <small id="st-base-msg">OpenAI uyumlu bir uç nokta. Yerel modeller için http://localhost da olur.</small></div>`
       : '';
 
-  const keyLabel = def.keyRequired ? '' : ' <span class="en">isteğe bağlı</span>';
+  const keyLabel = def.keyRequired ? '' : ' isteğe bağlı';
   const corsNote = def.corsVerified
     ? ''
     : `<p class="muted small">${esc(def.label)} için tarayıcıdan doğrudan çağrı (CORS) doğrulanmadı. "Bağlantıyı sına" ağ hatası verirse sağlayıcı tarayıcı isteklerine izin vermiyor olabilir.</p>`;
 
   return `
     <h3>${term('aiProvider')}</h3>
-    <p class="read">Kendi API anahtarınızı <span class="en">(API key)</span> girin; aşağıdaki üç özellik bu sağlayıcıyı ve seçtiğiniz modeli kullanır. Anahtar olmadan da tüm rakamlar, kural tabanlı gerekçeler ve hazır sorular çalışır.</p>
+    <p class="read">Kendi API anahtarınızı <span class="en">(API key)</span> girin; aşağıdaki iki özellik bu sağlayıcıyı ve seçtiğiniz modeli kullanır. Anahtar olmadan da tüm rakamlar ve kural tabanlı gerekçeler çalışır.</p>
     <div class="box">
       <div class="opts" role="radiogroup" aria-label="Sağlayıcı">${radios}</div>
       <div class="fields">

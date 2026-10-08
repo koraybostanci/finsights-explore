@@ -86,7 +86,6 @@ export const TERMS: Record<string, Term> = {
     def: 'Bir para biriminde en güvenli kabul edilen yatırımın getirisi.',
   },
   countryRisk: { tr: 'Ülke riski', en: 'Country risk' },
-  inflationAccounting: { tr: 'Enflasyon muhasebesi', en: 'Inflation accounting, TMS 29 / IAS 29' },
   nominalGrowth: { tr: 'Nominal büyüme', en: 'Nominal growth', def: 'Enflasyon düşülmeden ölçülen büyüme.' },
   realGrowth: { tr: 'Reel büyüme', en: 'Real growth', def: 'Enflasyon düşüldükten sonra kalan büyüme.' },
   multiple: { tr: 'Çarpan', en: 'Multiple', def: 'Fiyatın bir finansal büyüklüğe oranı.' },
