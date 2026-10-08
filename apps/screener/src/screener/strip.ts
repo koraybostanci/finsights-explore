@@ -1,17 +1,17 @@
 /**
- * "Ortancaya göre konum" şerit grafiği: her çarpan için bir yatay şerit,
- * hisse başına bir işaret, ortanca için bir çentik, borç şeridinde eşik için
- * kesikli bir çizgi. İlk sürümdeki grafikler gibi elle kurulan SVG'dir.
+ * Strip chart of each stock's position against the industry median: one horizontal
+ * strip per multiple, one marker per stock, a tick for the median and, on the debt
+ * strip, a dashed line for the threshold. Hand-built SVG, like the charts in the first release.
  *
- * Ölçek ve etiket yerleşimi saf işlevlerdir (DOM'a dokunmaz), testleri vardır.
+ * Scale and label placement are pure functions (no DOM access) and have tests.
  */
 
 import { svgText, svgWrap, tw } from '@fintools/shared/dom';
 import { esc, nf } from '@fintools/shared/format';
 
-/* ---------- Ölçek ---------- */
+/* ---------- Scale ---------- */
 
-/** 1, 2, 2,5, 5 ya da 10'un katı olan, verilen değerden küçük olmayan adım. */
+/** The step, a multiple of 1, 2, 2.5, 5 or 10 (times a power of ten), that is not smaller than the given value. */
 export function niceStep(raw: number): number {
   if (!(raw > 0) || !Number.isFinite(raw)) return 1;
   const p = Math.pow(10, Math.floor(Math.log10(raw)));
@@ -29,8 +29,8 @@ export interface Scale {
 }
 
 /**
- * Şeridin ölçeği: her zaman sıfırı içerir (çarpan oran olduğu için konum
- * sıfıra göre okunur), uçlar düzgün bir adıma yuvarlanır.
+ * Scale of a strip: always includes zero (a multiple is a ratio, so position is read
+ * relative to zero); the ends are rounded to a tidy step.
  */
 export function stripScale(values: number[]): Scale {
   const vals = values.filter((v) => Number.isFinite(v));
@@ -44,28 +44,28 @@ export function stripScale(values: number[]): Scale {
   return { lo: tidy(lo), hi: tidy(hi), step };
 }
 
-/* ---------- Etiket yerleşimi ---------- */
+/* ---------- Label placement ---------- */
 
 export interface LabelBox {
-  /** İstenen merkez */
+  /** Requested centre */
   x: number;
-  /** Metin genişliği */
+  /** Text width */
   w: number;
 }
 
 export interface Placed {
-  /** Kenarlara sığdırılmış merkez */
+  /** Centre fitted within the edges */
   x: number;
-  /** 0: şeride en yakın satır, 1: bir üstü (ya da altı) */
+  /** 0: the row closest to the strip, 1: the row above it (or below) */
   level: number;
   shown: boolean;
 }
 
 /**
- * Tek eksende etiket yerleşimi: soldan sağa gider, bir etiket kendi satırında
- * öncekine çarpıyorsa bir sonraki satıra kaydırılır; orada da yer yoksa
- * gösterilmez (değer tabloda ve işaretin ipucunda durur).
- * Sonuç girdi sırasındadır.
+ * Label placement along one axis: goes left to right; a label that collides with the
+ * previous one on its row moves to the next row, and if there is no room there either
+ * it is hidden (the value stays in the table and in the marker's tooltip).
+ * The result is in input order.
  */
 export function placeLabels(items: LabelBox[], lo: number, hi: number, gap = 6, levels = 2): Placed[] {
   const out: Placed[] = items.map((it) => ({ x: it.x, level: 0, shown: false }));
@@ -89,10 +89,10 @@ export function placeLabels(items: LabelBox[], lo: number, hi: number, gap = 6, 
 }
 
 /**
- * Üst üste binen işaretleri dikeyde ayırır: sırayla 0, bir adım yukarı, bir adım
- * aşağı, iki adım yukarı, iki adım aşağı dener; böylece aynı değerde beş işaret
- * ayrı ayrı görünür. Altıncı çakışan işaret yerinde kalır (değeri tabloda ve
- * işaretin ipucunda durur). Sonuç girdi sırasında dikey kaymadır (px).
+ * Separates overlapping markers vertically: tries 0, one step up, one step down, two
+ * steps up, two steps down in turn, so five markers at the same value stay individually
+ * visible. A sixth overlapping marker stays in place (its value is in the table and in
+ * the marker's tooltip). The result is the vertical offset in px, in input order.
  */
 export function dotOffsets(xs: number[], minDist = 11, step = 11): number[] {
   const out: number[] = new Array(xs.length).fill(0);
@@ -112,18 +112,18 @@ export function dotOffsets(xs: number[], minDist = 11, step = 11): number[] {
   return out;
 }
 
-/* ---------- İşaretler ---------- */
+/* ---------- Markers ---------- */
 
 export const SHAPES = ['circle', 'square', 'diamond', 'triangle'] as const;
 export type Shape = (typeof SHAPES)[number];
 
 export interface Marker {
-  /** CSS rengi (belirteç): var(--c1) … var(--c4) */
+  /** CSS colour (token): var(--c1) … var(--c4) */
   color: string;
   shape: Shape;
 }
 
-/** İlk dört hisse dört renkle daire; sonrakiler aynı renkleri başka biçimle kullanır. */
+/** The first four stocks get four colours as circles; later ones reuse the colours with another shape. */
 export function markerFor(i: number): Marker {
   return { color: `var(--c${(i % 4) + 1})`, shape: SHAPES[Math.floor(i / 4) % SHAPES.length] };
 }
@@ -149,22 +149,22 @@ export function markerSvg(m: Marker, cx: number, cy: number, r = 6): string {
   return `<circle cx="${x}" cy="${y}" r="${r}" ${st}/>`;
 }
 
-/** Açıklama satırı için küçük işaret (16 × 16) */
+/** Small marker for the legend row (16 × 16) */
 export function markerIcon(m: Marker): string {
   return `<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">${markerSvg(m, 8, 8, 5)}</svg>`;
 }
 
-/* ---------- Yerleşim ---------- */
+/* ---------- Layout ---------- */
 
 export interface StripDef {
   key: string;
-  /** Türkçe ad, ör. "PD/DD" */
+  /** Turkish name, e.g. "PD/DD" */
   label: string;
-  /** İngilizce karşılık, ör. "P/B" */
+  /** English counterpart, e.g. "P/B" */
   en: string;
   items: Array<{ symbol: string; v: number }>;
   median: number | null;
-  /** Yalnız eşiği olan şeritte (Net borç/FAVÖK) */
+  /** Only on the strip that has a threshold (net debt/EBITDA) */
   threshold?: number | null;
 }
 
@@ -178,9 +178,9 @@ export interface StripText {
 export interface StripGeom {
   def: StripDef;
   scale: Scale;
-  /** Şerit çizgisinin dikey konumu */
+  /** Vertical position of the strip line */
   y: number;
-  /** Sol başlığın (çarpan adı) dikey konumu */
+  /** Vertical position of the left heading (the multiple's name) */
   labelY: number;
   x0: number;
   x1: number;
@@ -188,7 +188,7 @@ export interface StripGeom {
   values: StripText[];
   medianX: number | null;
   thresholdX: number | null;
-  /** Ortanca ve eşik çentiklerinin şeritten yukarı ve aşağı uzunluğu; üst üste dizilmiş işaretlerin arkasında kaybolmasın diye uzar */
+  /** How far the median and threshold ticks reach up and down from the strip; they extend so they do not vanish behind stacked markers */
   medianTick: TickReach;
   thresholdTick: TickReach;
   below: Array<StripText & { kind: 'median' | 'threshold' }>;
@@ -211,12 +211,12 @@ const VAL_FS = 11.5;
 const LBL_FS = 11.5;
 const LINE = 14;
 const TICK = 12;
-/** İşaretin yarıçapı */
+/** Marker radius */
 const DOT_R = 6;
-/** Çentiğin, üstüne gelen işaretten taşan kısmı */
+/** How far a tick sticks out past the marker on top of it */
 const TICK_OVER = 5;
 
-/** Eşik, veriye göre çok uzakta değilse ölçeğe katılır (yoksa noktalar tek uca yığılır). */
+/** The threshold joins the scale unless it is far from the data (otherwise the points would pile up at one end). */
 export function thresholdInScale(values: number[], th: number): boolean {
   const reach = Math.max(10, 10 * Math.max(0, ...values.map((v) => Math.abs(v))));
   return Math.abs(th) <= reach;
@@ -244,7 +244,7 @@ export function layoutStrips(defs: StripDef[], W: number, markers: Map<string, M
     const dys = dotOffsets(xs);
     const medianX = def.median != null ? X(def.median) : null;
     const thresholdX = thIn && th != null ? X(th) : null;
-    // Çentik, üstüne gelen işaret yığınından en az TICK_OVER kadar taşar.
+    // The tick sticks out of the marker stack on top of it by at least TICK_OVER.
     const reach = (x: number | null): TickReach => {
       const r: TickReach = { up: TICK, down: TICK };
       if (x == null) return r;
@@ -323,7 +323,7 @@ export function layoutStrips(defs: StripDef[], W: number, markers: Map<string, M
   return { W, H: Math.max(cursor - 8, 0), narrow, strips };
 }
 
-/** Şeritlerde kullanılan alanlar (StockView bunları taşır) */
+/** Fields used by the strips (StockView carries them) */
 export interface StripSource {
   symbol: string;
   pe: number | null;
@@ -340,10 +340,10 @@ export interface StripMedians {
 }
 
 /**
- * Şerit tanımları: PD/DD, FD/FAVÖK ve Net borç/FAVÖK; en az iki hissenin F/K'sı
- * varsa başa F/K eklenir. Hiç değeri olmayan şerit çizilmez.
+ * Strip definitions: P/B, EV/EBITDA and net debt/EBITDA; P/E is added at the front when
+ * at least two stocks have a P/E. A strip with no values is not drawn.
  */
-export function buildStripDefs(list: StripSource[], med: StripMedians, nbThreshold: number): StripDef[] {
+export function buildStripDefs(list: StripSource[], med: StripMedians, netDebtThreshold: number): StripDef[] {
   const col = (key: 'pe' | 'pb' | 'evEbitda' | 'netDebtEbitda'): Array<{ symbol: string; v: number }> =>
     list.flatMap((s) => {
       const v = s[key];
@@ -360,12 +360,12 @@ export function buildStripDefs(list: StripSource[], med: StripMedians, nbThresho
     en: 'Net debt/EBITDA',
     items: col('netDebtEbitda'),
     median: med.netDebtEbitda,
-    threshold: nbThreshold,
+    threshold: netDebtThreshold,
   });
   return defs.filter((d) => d.items.length > 0);
 }
 
-/* ---------- Çizim ---------- */
+/* ---------- Rendering ---------- */
 
 export function stripSvg(layout: StripLayout, aria: string): string {
   let g = '';

@@ -1,7 +1,7 @@
 /**
- * Yapay zekâ kutularının durumu ve HTML'i (hisse yorumu, sektör karşılaştırması).
- * İstek yalnızca kullanıcı düğmeye basınca gider; sonuç bu oturum boyunca
- * bellekte tutulur, böylece satır yeniden açıldığında yeni istek gerekmez.
+ * State and HTML of the AI boxes (stock comment, industry comparison).
+ * A request goes out only when the user presses the button; the result is kept in
+ * memory for the session, so reopening a row needs no new request.
  */
 
 import { aiTextHtml } from '../ai/index.ts';
@@ -12,7 +12,7 @@ export interface AiSlot {
   status: 'loading' | 'done' | 'error';
   result?: AiText;
   error?: string;
-  /** Aynı kutu için en son başlatılan isteğin sırası; eski yanıtlar yok sayılır */
+  /** Sequence number of the latest request started for the same box; older responses are ignored */
   token: number;
 }
 
@@ -22,13 +22,13 @@ const metaLine = (r: AiText): string => {
 };
 
 interface BlockText {
-  /** İlk kez: "Yorumla" */
+  /** First time: "Yorumla" */
   run: string;
-  /** Yeniden: "Yeniden yorumla" */
+  /** Again: "Yeniden yorumla" */
   rerun: string;
-  /** Beklerken: "Yorumlanıyor…" */
+  /** While waiting: "Yorumlanıyor…" */
   busy: string;
-  /** data-act değeri */
+  /** data-act value */
   act: string;
 }
 
@@ -50,7 +50,7 @@ function actionRow(slot: AiSlot | undefined, status: AiStatus, t: BlockText, key
 const errorHtml = (slot: AiSlot | undefined): string =>
   slot?.status === 'error' && slot.error ? `<p class="note" role="alert">${esc(slot.error)}</p>` : '';
 
-/* ---------- Hisse yorumu (açılan satırda) ---------- */
+/* ---------- Stock comment (in the expanded row) ---------- */
 
 export function commentBlockHtml(key: string, slot: AiSlot | undefined, status: AiStatus): string {
   const text = slot?.result ? `<div class="ai-text">${aiTextHtml(slot.result.text)}</div>` : '';
@@ -68,12 +68,12 @@ export function commentBlockHtml(key: string, slot: AiSlot | undefined, status: 
   return `<div class="lbl">Yapay zekâ yorumu · <span lang="en">AI commentary</span></div>${text}${hint}${errorHtml(slot)}${row}`;
 }
 
-/* ---------- Sektör karşılaştırması ---------- */
+/* ---------- Industry comparison ---------- */
 
 export interface CompareContext {
-  /** Sektörün Türkçe adı */
+  /** Turkish industry name */
   industryTr: string;
-  /** Verisi olan (ve süzgeçten geçen) hisse sayısı */
+  /** Number of stocks with data (that also passed the filter) */
   withData: number;
 }
 

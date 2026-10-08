@@ -1,4 +1,4 @@
-/** Tarayıcı tablolarının HTML'i: başlık, "Tüm liste" satırı, "Sektör kıyası" satırı, ortanca satırı. */
+/** HTML of the screener tables: header, full-list row, industry-comparison row, median row. */
 
 import type { IndustryMedian, StockView, Thresholds } from '../types.ts';
 import { ICON, VLABEL, cellColor } from '../lib/evaluate.ts';
@@ -26,7 +26,7 @@ export function headHtml(cols: Col[], sort: SortState): string {
   );
 }
 
-/** Fiyatın ortalamaya uzaklığı; ortalamanın kendisi ipucunda (title) */
+/** Distance of the price from the average; the average itself goes in the tooltip (title) */
 function smaCell(s: StockView, d: number | null, avg: number | null, n: 50 | 200): string {
   if (d == null || avg == null) return '<td>–</td>';
   return `<td title="${esc(`${n} günlük ortalama: ${money(avg, s.currency)}`)}">${esc(distText(d))}</td>`;
@@ -40,7 +40,7 @@ const resCell = (r: Row): string =>
 const rowOpen = (r: Row, open: boolean): string =>
   `<tr class="row" data-symbol="${esc(r.s.symbol)}" data-f="row:${esc(r.s.symbol)}" tabindex="0" aria-expanded="${open}">`;
 
-/** Çarpan hücreleri: bankalarda FAVÖK'e dayananlar "–" (ilk sürümdeki gibi) */
+/** Multiple cells: for banks those based on EBITDA show "–" (as in the first release) */
 function multipleCells(r: Row, th: Thresholds): {
   pe: string;
   pb: string;
@@ -61,7 +61,7 @@ function multipleCells(r: Row, th: Thresholds): {
   };
 }
 
-/** "Tüm liste" satırı (13 sütun) */
+/** Full-list row (13 columns) */
 export function listRowHtml(r: Row, th: Thresholds, open: boolean): string {
   const s = r.s;
   const c = multipleCells(r, th);
@@ -86,7 +86,7 @@ export function listRowHtml(r: Row, th: Thresholds, open: boolean): string {
   );
 }
 
-/** "Sektör kıyası" satırı (11 sütun) */
+/** Industry-comparison row (11 columns) */
 export function peerRowHtml(r: Row, th: Thresholds, open: boolean): string {
   const s = r.s;
   const c = multipleCells(r, th);
@@ -107,7 +107,7 @@ export function peerRowHtml(r: Row, th: Thresholds, open: boolean): string {
   );
 }
 
-/** Sektör ortancası satırı ("Sektör kıyası" sütunlarıyla) */
+/** Industry median row (with the industry-comparison columns) */
 export function medianRowHtml(m: IndustryMedian): string {
   return `<tr class="med"><td colspan="2">Sektör ortancası <span class="en">(Median)</span></td><td>${nf(m.pe)}</td><td>${nf(
     m.pb,
@@ -122,7 +122,7 @@ export const detailRowHtml = (colspan: number, inner: string): string =>
 export const messageRowHtml = (colspan: number, text: string): string =>
   `<tr><td class="sc-msg" colspan="${colspan}">${esc(text)}</td></tr>`;
 
-/** Özet rozetleri; "Veri bekliyor" yalnızca böyle hisse varsa görünür */
+/** Summary pills; the "waiting for data" pill only shows when such stocks exist */
 export function summaryHtml(c: VerdictCounts, showBanks: boolean): string {
   const pill = (v: 'good' | 'warn' | 'bad', n: number): string =>
     `<span class="pill ${v}">${ICON[v]} ${VLABEL[v]}: ${n}</span>`;

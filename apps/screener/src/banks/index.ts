@@ -1,7 +1,7 @@
 /**
- * Bankalar sekmesi (yalnızca BIST): bankalar FAVÖK ve borçla değil, özkaynak
- * kârlılığı ile PD/DD'nin ilişkisiyle değerlendirilir. İlk sürümdeki saçılım
- * grafiği, tablo ve terim kartları.
+ * Banks tab (BIST only): banks are judged not by EBITDA and debt but by the relation
+ * between return on equity and P/B. The scatter chart, table and term cards from the
+ * first release.
  */
 
 import { on, stocks } from '../data/store.ts';
@@ -13,7 +13,7 @@ let root: HTMLElement | null = null;
 
 const banks = (): StockView[] => stocks('BIST', { banks: 'only' });
 
-/** Her 1 birim PD/DD'ye karşılık kaç puan özkaynak kârlılığı */
+/** Points of return on equity per 1 unit of P/B */
 const yieldPerPb = (b: StockView): number | null => (b.roe != null && b.pb != null && b.pb !== 0 ? b.roe / b.pb : null);
 
 const BT: Array<[string, string, string]> = [
@@ -71,10 +71,10 @@ function renderChart(): void {
   if (W <= 0) return;
   const H = Math.round(Math.min(400, Math.max(280, W * 0.55)));
   const m = { l: 52, r: 16, t: 22, b: 46 };
-  const pds = withData.map((b) => b.pb);
+  const pbs = withData.map((b) => b.pb);
   const roes = withData.map((b) => b.roe);
-  const x0 = Math.min(0.5, Math.floor(Math.min(...pds) * 10) / 10);
-  const x1 = Math.max(1.2, Math.ceil(Math.max(...pds) * 10) / 10);
+  const x0 = Math.min(0.5, Math.floor(Math.min(...pbs) * 10) / 10);
+  const x1 = Math.max(1.2, Math.ceil(Math.max(...pbs) * 10) / 10);
   const y0 = Math.min(10, Math.floor(Math.min(...roes) / 4) * 4);
   const y1 = Math.max(26, Math.ceil(Math.max(...roes) / 4) * 4);
   const X = (v: number): number => m.l + ((v - x0) / (x1 - x0)) * (W - m.l - m.r);
@@ -96,7 +96,7 @@ function renderChart(): void {
   g += svgText((m.l + W - m.r) / 2, H - 8, 'PD/DD · P/B (sola doğru daha ucuz)', { a: 'middle', fs: 11.5, fill: 'var(--muted)' });
   g += `<text transform="translate(13 ${(m.t + H - m.b) / 2}) rotate(-90)" text-anchor="middle" font-size="11.5" fill="var(--muted)" font-family="var(--ui)">ÖK kârlılığı ≈ · ROE</text>`;
 
-  // Etiket yerleşimi: noktalar ve önceki etiketlerle çakışmayan ilk konumu seç
+  // Label placement: pick the first position that overlaps neither the points nor earlier labels
   interface Rect {
     x1: number;
     y1: number;
@@ -216,7 +216,7 @@ export function mount(el: HTMLElement): void {
   render();
 }
 
-/** Sekme görünür olunca ve genişlik değişince grafik yeni genişlikle çizilir. */
+/** When the tab becomes visible or the width changes, the chart is redrawn at the new width. */
 export function refresh(): void {
   renderChart();
 }
