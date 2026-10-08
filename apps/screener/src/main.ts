@@ -14,6 +14,7 @@ import { MARKETS, MARKET_LABEL, data, dataError, loadData, marketAsOf, marketHas
 import { esc, fmtDate } from '@fintools/shared/format';
 import { must } from '@fintools/shared/dom';
 import { createApp, type TabDef } from '@fintools/shared/shell';
+import { mountSiblingLink } from '@fintools/shared/sites';
 
 import * as screener from './screener/index.ts';
 import * as banks from './banks/index.ts';
@@ -59,6 +60,7 @@ function renderDataBar(): void {
   must('footsrc').textContent = `Veri kaynağı: ${d.source}.`;
 }
 
+mountSiblingLink('learn', 'Hisse Değerleme Rehberi (Valuation Guide)');
 void createApp({
   tabs: TABS,
   defaultTab: 'screener',

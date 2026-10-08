@@ -89,7 +89,7 @@ export const CARDS: MultipleCard[] = [
     ],
     howToRead: "F/K 20 olan ama kârını yılda %40 büyüten şirketin PEG'i 0,5'tir; F/K 10 olup %5 büyüyenin PEG'i 2'dir. PEG, yüksek F/K'lı büyüme şirketlerini adil kıyaslamaya yarar.",
     pitfall: "Büyüme oranı düşük bir bazdan geliyorsa (zarardan kâra, kötü bir yıldan toparlanma) PEG yapay olarak sıfıra yaklaşır. 0,1'in altındaki PEG çoğunlukla bir uyarıdır, fırsat değil.",
-    ex: 'GUBRF 0,57 büyümesi faaliyetten geldiği için güvenilir; TOASO 0,02 ve TUPRS 0,07 baz etkisi yüzünden yanıltıcı.',
+    ex: 'GUBRF 0,57 büyümesi faaliyetten geldiği için güvenilir; TOASO 0,02 ve TUPRS 0,07 baz etkisi (base effect) yüzünden yanıltıcı.',
   },
   {
     n: 'ÖK kârlılığı',

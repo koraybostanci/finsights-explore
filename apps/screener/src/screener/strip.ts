@@ -8,6 +8,7 @@
 
 import { svgText, svgWrap, tw } from '@fintools/shared/dom';
 import { esc, nf } from '@fintools/shared/format';
+import { TERMS } from '@fintools/shared/terms';
 
 /* ---------- Scale ---------- */
 
@@ -351,13 +352,13 @@ export function buildStripDefs(list: StripSource[], med: StripMedians, netDebtTh
     });
   const defs: StripDef[] = [];
   const pe = col('pe');
-  if (pe.length >= 2) defs.push({ key: 'pe', label: 'F/K', en: 'P/E', items: pe, median: med.pe });
-  defs.push({ key: 'pb', label: 'PD/DD', en: 'P/B', items: col('pb'), median: med.pb });
-  defs.push({ key: 'evEbitda', label: 'FD/FAVÖK', en: 'EV/EBITDA', items: col('evEbitda'), median: med.evEbitda });
+  if (pe.length >= 2) defs.push({ key: 'pe', label: TERMS.pe.tr, en: TERMS.pe.en, items: pe, median: med.pe });
+  defs.push({ key: 'pb', label: TERMS.pb.tr, en: TERMS.pb.en, items: col('pb'), median: med.pb });
+  defs.push({ key: 'evEbitda', label: TERMS.evEbitda.tr, en: TERMS.evEbitda.en, items: col('evEbitda'), median: med.evEbitda });
   defs.push({
     key: 'netDebtEbitda',
-    label: 'Net borç/FAVÖK',
-    en: 'Net debt/EBITDA',
+    label: TERMS.netDebtEbitda.tr,
+    en: TERMS.netDebtEbitda.en,
     items: col('netDebtEbitda'),
     median: med.netDebtEbitda,
     threshold: netDebtThreshold,

@@ -56,7 +56,7 @@ export function commentBlockHtml(key: string, slot: AiSlot | undefined, status: 
   const text = slot?.result ? `<div class="ai-text">${aiTextHtml(slot.result.text)}</div>` : '';
   const hint =
     status.configured && !slot
-      ? `<p class="muted small">Çarpanları ve ortalamaları hikâyelerin diliyle açıklar. İstek yalnızca düğmeye bastığınızda, kendi API anahtarınızla gider.</p>`
+      ? `<p class="muted small">Çarpanları ve ortalamaları sade bir dille açıklar. İstek yalnızca düğmeye bastığınızda, kendi API anahtarınızla gider.</p>`
       : '';
   const row = actionRow(
     slot,
@@ -81,7 +81,7 @@ export function compareBlockHtml(key: string, slot: AiSlot | undefined, status: 
   const lbl = `<div class="lbl">Sektör karşılaştırması · <span lang="en">AI comparison</span></div>`;
   if (!status.configured && !slot?.result)
     return `${lbl}
-<p>Yapay zekâ bu sektördeki hisseleri yan yana okur ve farkların ne anlama gelebileceğini hikâyelerin diliyle anlatır. Sayılar yine tablodan gelir; yapay zekâ yalnızca açıklar.</p>
+<p>Yapay zekâ bu sektördeki hisseleri yan yana okur ve farkların ne anlama gelebileceğini anlatır. Sayılar yine tablodan gelir; yapay zekâ yalnızca açıklar.</p>
 <p class="muted small">Kendi API anahtarınızla çalışır ve anahtar yalnızca bu tarayıcıda saklanır.</p>
 <div class="ai-meta"><button class="btn" type="button" data-act="goto-settings">Ayarlar'da yapay zekâyı aç</button></div>`;
 
@@ -92,7 +92,7 @@ export function compareBlockHtml(key: string, slot: AiSlot | undefined, status: 
     return `${lbl}<p class="muted small">Karşılaştırma için bu sektörde verisi olan en az iki hisse gerekir.</p>`;
 
   const intro = !slot?.result
-    ? `<p>Bu sektördeki hisseleri yan yana okutun: yapay zekâ farkların ne anlama gelebileceğini hikâyelerin diliyle anlatır. Sayılar yine tablodan gelir.</p>
+    ? `<p>Bu sektördeki hisseleri yan yana okutun: yapay zekâ farkların ne anlama gelebileceğini anlatır. Sayılar yine tablodan gelir.</p>
 <p class="muted small">İstek yalnızca düğmeye bastığınızda, kendi API anahtarınızla gider.</p>`
     : '';
   const row = actionRow(

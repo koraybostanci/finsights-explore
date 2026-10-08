@@ -142,7 +142,7 @@ export function evaluate(s: StockView, th: Thresholds): Evaluation {
         label: CHECK_LABEL.peg,
         status: 'warn',
         short: `PEG ${nf(s.peg)}: şüpheli derecede düşük`,
-        long: `PEG ${nf(s.peg)} olağandışı düşük; büyüme büyük olasılıkla baz etkisi veya tek seferlik kalemlerden.`,
+        long: `PEG ${nf(s.peg)} olağandışı düşük; büyüme büyük olasılıkla baz etkisi (base effect) veya tek seferlik kalemlerden.`,
       });
     else if (s.peg <= th.maxPeg)
       C.push({
@@ -184,7 +184,7 @@ export function evaluate(s: StockView, th: Thresholds): Evaluation {
       label: CHECK_LABEL.growthQuality,
       status: 'warn',
       short: `Net kâr ${s.netIncomeGrowthNote || 'karşılaştırılamıyor'}: baz etkisi`,
-      long: `FAVÖK ${pct(s.ebitdaGrowth)} büyümüş; net kâr ${s.netIncomeGrowthNote || 'karşılaştırılamıyor'}, bu yüzden baz etkisi var.`,
+      long: `FAVÖK ${pct(s.ebitdaGrowth)} büyümüş; net kâr ${s.netIncomeGrowthNote || 'karşılaştırılamıyor'}, bu yüzden baz etkisi (base effect) var.`,
     });
   else if (s.netIncomeGrowth > s.ebitdaGrowth + 50)
     C.push({

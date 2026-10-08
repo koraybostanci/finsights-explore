@@ -9,6 +9,7 @@ import '@fintools/shared/styles/components.css';
 import './styles/learn.css';
 
 import { createApp, type TabDef } from '@fintools/shared/shell';
+import { mountSiblingLink } from '@fintools/shared/sites';
 
 import * as stories from './stories.ts';
 import * as multiples from './multiples.ts';
@@ -25,4 +26,5 @@ const TABS: TabDef[] = [
   { id: 'quiz', label: 'Kendini sına', mod: quiz },
 ];
 
+mountSiblingLink('screener', 'Hisse Tarayıcı (Stock Screener)');
 void createApp({ tabs: TABS, defaultTab: 'stories', storage });

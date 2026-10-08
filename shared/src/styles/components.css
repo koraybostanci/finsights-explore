@@ -15,7 +15,7 @@
 .legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font-family:var(--ui);font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
+.chip{font-family:var(--ui);font-size:.78rem;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--ink);max-width:100%}
 
 .ctl{display:flex;flex-direction:column;gap:4px;min-width:0}
 .ctl label{font-size:.8rem;font-weight:600;line-height:1.3}

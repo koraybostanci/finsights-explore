@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<meta name="description" content="BIST ve ABD hisselerini çarpanlarına, sektör kıyasına ve hareketli ortalamalarına göre tarayın.">
-<title>Hisse Tarayıcı</title>
+<meta name="description" content="BIST ve ABD hisselerini çarpanlar (multiples), sektör kıyası ve hareketli ortalamalar (moving averages) ile tarayın.">
+<title>Hisse Tarayıcı (Stock Screener)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Literata:opsz,wght@7..72,400;7..72,600&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -15,7 +15,8 @@
   <header class="top">
     <span class="eyebrow">BIST ve ABD hisseleri · Temel analiz taraması</span>
     <h1>Hisse Tarayıcı (Stock Screener)</h1>
-    <p class="lede">BIST ve ABD hisselerini kurallarla ve kendi izleme listenizle tarayın: çarpanlar, sektör ortancası ve hareketli ortalamalar gerçek verilerle hesaplanır.</p>
+    <p class="lede">BIST ve ABD hisselerini kendi ölçütlerinizle tarayın ve aynı sektördeki benzerleriyle kıyaslayın.</p>
+    <p class="sibling" id="sibling" hidden></p>
     <div class="databar">
       <div class="meta" id="datameta"><span>Veri yükleniyor…</span></div>
       <span class="refresh-msg" id="datanote" style="flex-basis:auto"></span>
@@ -29,7 +30,7 @@
   <main id="panels"></main>
 
   <footer>
-    <span>Bu sayfa bilgi amaçlıdır, yatırım tavsiyesi değildir. Veriler gün içinde değişir; karar vermeden önce güncel bilançoyu ve fiyatı kontrol edin.</span>
+    <span>Bu sayfa bilgi amaçlıdır, yatırım tavsiyesi değildir. Veriler gün içinde değişir; karar vermeden önce güncel veriyi kontrol edin.</span>
     <span id="footsrc"></span>
   </footer>
 </div>

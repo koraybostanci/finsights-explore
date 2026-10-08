@@ -7,6 +7,7 @@
  */
 
 import { esc } from '@fintools/shared/format';
+import { termText } from '@fintools/shared/terms';
 
 export interface Step {
   /** The question of the step */
@@ -33,14 +34,14 @@ export const STEPS: Step[] = [
   },
   {
     title: 'Kâr gerçek mi?',
-    body: 'Net kâr büyümesini FAVÖK ve esas faaliyet kârıyla karşılaştırın. Faaliyetler büyümeden net kâr sıçrıyorsa, kaynağı parasal kazanç, finansal gelir ya da baz etkisidir ve kalıcı olmayabilir.',
-    chips: ['FAVÖK büyümesi (EBITDA growth)', 'Esas faaliyet kârı (EBIT)', 'Parasal kazanç'],
+    body: 'Net kâr büyümesini FAVÖK ve esas faaliyet kârıyla karşılaştırın. Faaliyetler büyümeden net kâr sıçrıyorsa, kaynağı parasal kazanç, finansal gelir ya da baz etkisidir (base effect) ve kalıcı olmayabilir.',
+    chips: [termText('netIncomeGrowth'), termText('ebitdaGrowth'), 'Esas faaliyet kârı (EBIT)', 'Parasal kazanç'],
     ex: "GUBRF'ta satış, FAVÖK ve net kâr aynı yönde büyüyor; MGROS'ta esas faaliyet zararda.",
   },
   {
     title: 'Bilanço sağlam mı?',
     body: "Net borç/FAVÖK 2,5'in altında mı? Nakit fazlası var mı? Yüksek faizde borçlu şirketin kârını faiz gideri yer.",
-    chips: ['Net borç/FAVÖK', 'Nakit (cash)'],
+    chips: [termText('netDebtEbitda'), 'Nakit (cash)'],
     ex: 'ENKAI ve TUPRS net nakitte; SASA ve PETKM borç baskısı altında.',
   },
   {
