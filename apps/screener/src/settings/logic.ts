@@ -1,14 +1,14 @@
 /**
- * Hisselerim (watchlist) için saf yardımcılar: Türkçe'ye duyarlı arama ve
- * liste işlemleri. DOM'a dokunmaz; tests/settings.test.ts sınar.
+ * Pure helpers for the watchlist: Turkish-aware search and list operations.
+ * No DOM access; tests/settings.test.ts covers them.
  */
 
 import type { StockView } from '../types.ts';
 
 /**
- * Aramada harf farklarını yok sayar: büyük/küçük harf Türkçe kurala göre
- * çevrilir (I → ı, İ → i), sonra noktalı/noktasız i ile ş, ğ, ü, ö, ç
- * yalın karşılıklarına indirilir. Böylece "isctr", "ISCTR", "turk" ve "Türk" eşleşir.
+ * Ignores letter differences in search: case is converted by Turkish rules
+ * (I → ı, İ → i), then dotted/dotless i and ş, ğ, ü, ö, ç are reduced to their plain
+ * counterparts. So "isctr", "ISCTR", "turk" and "Türk" all match.
  */
 export function fold(text: string): string {
   return text
@@ -20,26 +20,26 @@ export function fold(text: string): string {
     .trim();
 }
 
-/** Düşük sayı daha iyi eşleşme; eşleşme yoksa -1. */
+/** A lower number is a better match; -1 when there is no match. */
 export function matchRank(s: { symbol: string; name: string }, query: string): number {
   const q = fold(query);
   if (!q) return -1;
-  const k = fold(s.symbol);
-  const ad = fold(s.name);
-  const hay = `${k} ${ad}`;
+  const sym = fold(s.symbol);
+  const name = fold(s.name);
+  const hay = `${sym} ${name}`;
   const tokens = q.split(' ');
   if (!tokens.every((t) => hay.includes(t))) return -1;
-  if (k === q) return 0;
-  if (k.startsWith(q)) return 1;
-  if (ad.startsWith(q)) return 2;
-  if (ad.split(' ').some((w) => w.startsWith(tokens[0]))) return 3;
-  if (k.includes(q)) return 4;
+  if (sym === q) return 0;
+  if (sym.startsWith(q)) return 1;
+  if (name.startsWith(q)) return 2;
+  if (name.split(' ').some((w) => w.startsWith(tokens[0]))) return 3;
+  if (sym.includes(q)) return 4;
   return 5;
 }
 
 /**
- * Bir piyasanın evreninde sembol ya da şirket adına göre arar. En iyi eşleşme
- * başta; eşitlikte sembol sırası. Boş sorguda sonuç dönmez.
+ * Searches a market's universe by symbol or company name. The best match comes first;
+ * ties are ordered by symbol. An empty query returns nothing.
  */
 export function searchUniverse(universe: StockView[], query: string, limit = 8): StockView[] {
   return universe
@@ -50,13 +50,14 @@ export function searchUniverse(universe: StockView[], query: string, limit = 8):
     .map((x) => x.s);
 }
 
-/** Sembolü listeye ekler (yoksa); sıra korunur. */
-export const addTicker = (list: string[], k: string): string[] => (list.includes(k) ? list.slice() : [...list, k]);
+/** Adds the symbol to the list (if absent); order is preserved. */
+export const addTicker = (list: string[], ticker: string): string[] =>
+  list.includes(ticker) ? list.slice() : [...list, ticker];
 
-/** Sembolü listeden çıkarır. */
-export const removeTicker = (list: string[], k: string): string[] => list.filter((x) => x !== k);
+/** Removes the symbol from the list. */
+export const removeTicker = (list: string[], ticker: string): string[] => list.filter((x) => x !== ticker);
 
-/** Evrende olup listede olmayan hisseler (yeniden eklenebilecekler), sembol sırasıyla. */
+/** Stocks in the universe but not in the list (the ones that can be added again), ordered by symbol. */
 export function notInList(universe: StockView[], list: string[]): StockView[] {
   const have = new Set(list);
   return universe.filter((s) => !have.has(s.symbol)).sort((a, b) => a.symbol.localeCompare(b.symbol, 'tr'));
