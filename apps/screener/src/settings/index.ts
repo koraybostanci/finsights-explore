@@ -1,8 +1,8 @@
 /**
- * Ayarlar sekmesi: yapay zekâ sağlayıcısı (kendi API anahtarınızla) ve
- * Hisselerim (BIST ve ABD listeleri ayrı).
+ * Settings tab: the AI provider (with your own API key) and the watchlist
+ * (separate lists for BIST and US).
  *
- * Anahtar yalnızca bu tarayıcıda saklanır; ekrana yazdırılmaz, adrese eklenmez.
+ * The key is stored only in this browser; it is never printed on screen or added to a URL.
  */
 
 import './settings.css';
@@ -34,7 +34,7 @@ import { addTicker, notInList, removeTicker, searchUniverse } from './logic.ts';
 
 let root: HTMLElement | null = null;
 
-/* ---------- Yapay zekâ bölümü ---------- */
+/* ---------- AI section ---------- */
 
 type Note = { kind: 'idle' } | { kind: 'busy'; text: string } | { kind: 'ok'; text: string } | { kind: 'err'; text: string };
 
@@ -134,7 +134,7 @@ function setNote(n: Note): void {
   if (el) el.innerHTML = noteHtml();
 }
 
-/** Alanlardaki son değerleri kaydeder (düğmeye basılmadan önce yazılmış olabilir). */
+/** Saves the latest values in the fields (they may have been typed before a button press). */
 function saveFields(): void {
   const p = getProvider();
   const key = root?.querySelector<HTMLInputElement>('#st-key');
@@ -262,7 +262,7 @@ function onAiClick(e: Event): void {
   }
 }
 
-/* ---------- Hisselerim ---------- */
+/* ---------- Watchlist ---------- */
 
 let addMarket: MarketId = 'BIST';
 let query = '';
@@ -385,7 +385,7 @@ function onWlClick(e: Event): void {
   }
 }
 
-/* ---------- Kurulum ---------- */
+/* ---------- Setup ---------- */
 
 export function mount(el: HTMLElement): void {
   root = el;
@@ -409,5 +409,5 @@ export function mount(el: HTMLElement): void {
 }
 
 export function refresh(): void {
-  /* çizim yok; içerik olaylarla güncellenir */
+  /* nothing to draw; content updates through events */
 }

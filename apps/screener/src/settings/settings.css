@@ -1,6 +1,6 @@
-/* Ayarlar: sağlayıcı seçenekleri, alanlar ve Hisselerim çipleri. Renk ve yazı tipleri app.css belirteçlerinden gelir. */
+/* Settings: provider options, fields and watchlist chips. Colours and fonts come from the tokens in @fintools/shared/styles/tokens.css. */
 
-/* Sağlayıcı seçenekleri (radyo kutuları) */
+/* Provider options (radio buttons) */
 .st-ai .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
 .st-ai .opt{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:.9rem;font-weight:600;line-height:1.3;cursor:pointer}
 .st-ai .opt small{display:block;font-weight:400;font-size:.76rem;color:var(--muted)}
@@ -8,7 +8,7 @@
 .st-ai .opt.sel{border-color:var(--accent);background:var(--accent-soft)}
 .st-ai .opt:hover{border-color:var(--accent)}
 
-/* Anahtar, adres ve model alanları */
+/* Key, URL and model fields */
 .st-ai .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px;align-items:start}
 .st-ai .st-keyrow{display:flex;gap:8px;align-items:stretch}
 .st-ai .st-keyrow input{flex:1 1 auto;min-width:0}
@@ -16,10 +16,10 @@
 .st-ai .st-status{display:flex;flex-wrap:wrap;align-items:center;gap:8px;flex:1 1 260px;min-width:0;font-size:.82rem}
 .st-ai .st-status .pill{flex:0 0 auto}
 
-/* Metin görünümlü düğme (bağlantı gibi) */
+/* Button styled as text (like a link) */
 .st-link{font:inherit;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
 
-/* Hisselerim */
+/* Watchlist */
 .st-wl .st-add{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}
 .st-wl .st-add .ctl label{min-height:0}
 .st-wl .st-add .ctl label .en{display:inline}

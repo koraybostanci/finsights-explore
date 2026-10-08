@@ -1,8 +1,8 @@
 /**
- * Veri sözleşmesi (data contract), şema 2.
+ * Data contract, schema 2.
  *
- * public/data/market.json bu yapıdadır; scripts/ altındaki veri işi üretir,
- * uygulama okur. Alan adları İngilizcedir.
+ * public/data/market.json has this shape: the data job under scripts/ writes it
+ * and the app reads it.
  */
 
 import type { Currency } from '@fintools/shared/format';
@@ -12,67 +12,67 @@ export type MarketId = 'BIST' | 'US';
 export type Verdict = 'good' | 'warn' | 'bad' | 'na';
 
 export interface Industry {
-  /** Türkçe ad, ör. "Havayolu" */
+  /** Turkish name, e.g. "Havayolu" */
   nameTr: string;
-  /** İngilizce karşılık, ör. "Airlines" */
+  /** English name, e.g. "Airlines" */
   nameEn: string;
-  /** Döngüsel sektör mü (emtia, rafineri, metal, havayolu) */
+  /** Whether the industry is cyclical (commodities, refining, metals, airlines) */
   cyclical: boolean;
 }
 
 export interface Stock {
-  /** Sembol, ör. "THYAO", "AAPL". Aynı piyasa içinde tekildir. */
+  /** Ticker symbol, e.g. "THYAO", "AAPL". Unique within a market. */
   symbol: string;
-  /** Şirket adı */
+  /** Company name */
   name: string;
   market: MarketId;
   currency: Currency;
-  /** Sektör kimliği; MarketData.industries anahtarı */
+  /** Industry id; a key of MarketData.industries */
   industry: string;
-  /** Banka: ayrı yöntemle değerlendirilir */
+  /** Bank: evaluated with a separate method */
   bank?: boolean;
-  /** Sektör bayrağını hisse düzeyinde ezmek için */
+  /** Overrides the industry flag at stock level */
   cyc?: boolean;
 
-  /** Fiyat (price) */
+  /** Price */
   price: number | null;
-  /** F/K (P/E). null: son 12 ayda zarar (loss: true) ya da veri yok */
+  /** P/E. null: loss over the last 12 months (loss: true) or no data */
   pe: number | null;
-  /** Son 12 ayda zarar etti (hisse başına kâr sıfır ya da eksi). Yoksa: zarar yok ya da bilinmiyor. */
+  /** Made a loss over the last 12 months (earnings per share zero or negative). Absent: no loss, or unknown. */
   loss?: boolean;
-  /** PD/DD (P/B) */
+  /** P/B */
   pb: number | null;
-  /** FD/FAVÖK (EV/EBITDA) */
+  /** EV/EBITDA */
   evEbitda: number | null;
   /** PEG */
   peg: number | null;
-  /** Net borç/FAVÖK (Net debt/EBITDA) */
+  /** Net debt/EBITDA */
   netDebtEbitda: number | null;
-  /** Piyasa değeri (market cap), milyar, hissenin para biriminde */
+  /** Market cap, in billions, in the stock's own currency */
   marketCap: number | null;
-  /** FAVÖK büyümesi % (EBITDA growth, yıllık) */
+  /** EBITDA growth in % (year over year) */
   ebitdaGrowth: number | null;
-  /** Net kâr büyümesi % (net income growth, yıllık) */
+  /** Net income growth in % (year over year) */
   netIncomeGrowth: number | null;
-  /** ebitdaGrowth hesaplanamıyorsa açıklama, ör. "eksiden artıya" */
+  /** Explanation when ebitdaGrowth cannot be computed, e.g. "eksiden artıya" */
   ebitdaGrowthNote?: string;
-  /** netIncomeGrowth hesaplanamıyorsa açıklama, ör. "zarardan kâra" */
+  /** Explanation when netIncomeGrowth cannot be computed, e.g. "zarardan kâra" */
   netIncomeGrowthNote?: string;
-  /** Analistlerin ortalama 12 aylık hedef fiyatı */
+  /** Analysts' average 12-month target price */
   targetPrice: number | null;
 
-  /** Basit hareketli ortalamalar (simple moving averages), günlük kapanıştan */
+  /** Simple moving averages (SMA), computed from daily closes */
   sma20: number | null;
   sma50: number | null;
   sma200: number | null;
 
-  /** Fonksiyonel para birimi notu (BIST), ör. "USD" */
+  /** Functional currency note (BIST), e.g. "USD" */
   usd?: string;
-  /** Elle yazılmış yorum ve yazıldığı tarih (ISO gün) */
+  /** Hand-written comment and the date it was written (ISO day) */
   note?: string;
   noteAsOf?: string;
 
-  /** Yalnızca bankalar: takipteki kredi oranı %, sermaye yeterliliği %, net faiz marjı % */
+  /** Banks only: non-performing loan ratio %, capital adequacy ratio %, net interest margin % */
   npl?: number | null;
   car?: number | null;
   nim?: number | null;
@@ -80,62 +80,62 @@ export interface Stock {
 
 export interface MarketData {
   schema: 2;
-  /** En son veri güncellemesinin tarihi (ISO 8601) */
+  /** Date of the latest data update (ISO 8601) */
   asOf: string;
   /**
-   * Piyasa başına verinin tarihi. Zamanlanmış iş her seferinde tek piyasayı çeker;
-   * bu yüzden BIST ve ABD verisinin tarihi farklı olabilir. Yoksa asOf geçerlidir.
+   * Data date per market. The scheduled job fetches one market per run,
+   * so BIST and US data can carry different dates. When absent, asOf applies.
    */
   asOfBy?: Partial<Record<MarketId, string>>;
-  /** Ekranda gösterilecek kaynak adı */
+  /** Source name shown on screen */
   source: string;
-  /** Piyasa başına bilanço dönemi, ör. { BIST: "2026/6" } */
+  /** Reporting period per market, e.g. { BIST: "2026/6" } */
   period: Partial<Record<MarketId, string>>;
   industries: Record<string, Industry>;
   stocks: Stock[];
 }
 
-/** public/data/prices/<MARKET>-<SEMBOL>.json: günlük kapanışlar, eskiden yeniye */
+/** public/data/prices/<MARKET>-<SYMBOL>.json: daily closes, oldest first */
 export interface PriceSeries {
   symbol: string;
   market: MarketId;
   currency: Currency;
-  /** ISO günler (YYYY-MM-DD) */
+  /** ISO days (YYYY-MM-DD) */
   dates: string[];
-  /** Kapanış fiyatları; dates ile aynı uzunlukta */
+  /** Closing prices; same length as dates */
   closes: number[];
 }
 
-/** Stock + türetilmiş alanlar; ekranlar bununla çalışır */
+/** Stock plus derived fields; the screens work with this */
 export interface StockView extends Stock {
-  /** Yaklaşık özkaynak kârlılığı % = PD/DD ÷ F/K × 100 */
+  /** Approximate return on equity in % = P/B ÷ P/E × 100 */
   roe: number | null;
-  /** Sektörün Türkçe adı */
+  /** Turkish industry name */
   industryTr: string;
-  /** Sektörün İngilizce adı */
+  /** English industry name */
   industryEn: string;
-  /** Döngüsel mi (hisse bayrağı yoksa sektörden) */
+  /** Whether cyclical (from the industry when the stock has no flag) */
   cyclical: boolean;
-  /** Fiyatı ve en az bir çarpanı var mı */
+  /** Whether it has a price and at least one multiple */
   hasData: boolean;
 }
 
 export interface Thresholds {
-  /** En yüksek F/K */
+  /** Highest P/E */
   maxPe: number;
-  /** En yüksek PEG */
+  /** Highest PEG */
   maxPeg: number;
-  /** En yüksek Net borç/FAVÖK */
+  /** Highest net debt/EBITDA */
   maxNetDebtEbitda: number;
-  /** En düşük FAVÖK büyümesi % */
+  /** Lowest EBITDA growth in % */
   minEbitdaGrowth: number;
-  /** Döngüsel sektörleri uyar */
+  /** Warn about cyclical industries */
   warnCyclical: boolean;
-  /** Bankaları listede göster */
+  /** Show banks in the list */
   showBanks: boolean;
 }
 
-/** Ölçüt kimlikleri; mantık bunlara bakar, ekranda CHECK_LABEL gösterilir */
+/** Check ids; the logic keys on these, the screen shows CHECK_LABEL */
 export type CheckId =
   | 'data'
   | 'bank'
@@ -149,12 +149,12 @@ export type CheckId =
 
 export interface Check {
   id: CheckId;
-  /** Ölçütün ekrandaki adı, ör. "F/K" */
+  /** On-screen name of the check, e.g. "F/K" */
   label: string;
   status: Verdict;
-  /** Kısa gerekçe (tablo) */
+  /** Short reason (table) */
   short: string;
-  /** Uzun gerekçe (açılan satır) */
+  /** Long reason (expanded row) */
   long: string;
 }
 
@@ -164,9 +164,9 @@ export interface Evaluation {
   warns: number;
 }
 
-/** Bir sektördeki hisselerin ortanca (median) değerleri */
+/** Median values of the stocks in one industry */
 export interface IndustryMedian {
-  /** Ortancaya giren hisse sayısı (verisi olanlar) */
+  /** Number of stocks in the median (those with data) */
   n: number;
   pe: number | null;
   pb: number | null;

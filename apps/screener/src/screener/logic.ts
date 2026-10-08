@@ -1,6 +1,6 @@
 /**
- * Tarayıcının DOM'a dokunmayan mantığı: satırlar, süzgeç, sıralama, özet.
- * Sıralama kuralları ilk sürümle aynıdır (boş değerler her zaman sonda).
+ * The screener's DOM-free logic: rows, filter, sorting, summary.
+ * Sorting rules match the first release (empty values always come last).
  */
 
 import type { Evaluation, MarketId, StockView, Thresholds } from '../types.ts';
@@ -11,9 +11,9 @@ import { nf, pct } from '@fintools/shared/format';
 export interface Row {
   s: StockView;
   ev: Evaluation;
-  /** Fiyatın 50 günlük ortalamaya uzaklığı % */
+  /** Distance of the price from the 50-day average, in % */
   d50: number | null;
-  /** Fiyatın 200 günlük ortalamaya uzaklığı % */
+  /** Distance of the price from the 200-day average, in % */
   d200: number | null;
 }
 
@@ -42,13 +42,13 @@ export interface Col {
   lbl: string;
   en?: string;
   nosort?: boolean;
-  /** Başlık sola yaslı */
+  /** Header is left-aligned */
   left?: boolean;
 }
 
 const CUR_OF: Record<MarketId, string> = { BIST: 'TL', US: 'USD' };
 
-/** "Tüm liste" sütunları: ilk sürümün sütunları + Net borç/FAVÖK'ten sonra 200 günlük ortalama. */
+/** Columns of the full list: the first release's columns plus the 200-day average after net debt/EBITDA. */
 export function listCols(market: MarketId): Col[] {
   return [
     { key: 'symbol', lbl: 'Hisse' },
@@ -67,7 +67,7 @@ export function listCols(market: MarketId): Col[] {
   ];
 }
 
-/** "Sektör kıyası" sütunları: yana kaydırmadan sığan dar tablo. */
+/** Columns of the industry comparison: a narrow table that fits without horizontal scrolling. */
 export const PEER_COLS: Col[] = [
   { key: 'symbol', lbl: 'Hisse' },
   { key: 'verdict', lbl: 'Sonuç', left: true },
@@ -91,13 +91,13 @@ export function buildRows(list: StockView[], th: Thresholds): Row[] {
   }));
 }
 
-/** Fiyat 200 günlük ortalamanın üstünde mi? Ortalama ya da fiyat yoksa false. */
+/** Is the price above the 200-day average? False when the average or the price is missing. */
 export function aboveSma200(s: Pick<StockView, 'price' | 'sma200'>): boolean {
   return s.price != null && s.sma200 != null && s.price > s.sma200;
 }
 
 export interface RowFilter {
-  /** Yalnız fiyatı 200 günlük ortalamanın üstünde olanlar; ortalaması olmayanlar da gizlenir */
+  /** Only stocks priced above the 200-day average; those without an average are hidden too */
   aboveSma: boolean;
 }
 
@@ -120,7 +120,7 @@ export function sortValue(r: Row, key: SortKey): number | string | null {
   }
 }
 
-/** Yeni bir dizi döner. Boş değerler yön ne olursa olsun sonda kalır. */
+/** Returns a new array. Empty values stay last whatever the direction. */
 export function sortRows(rows: Row[], key: SortKey, dir: 1 | -1): Row[] {
   return [...rows].sort((a, b) => {
     const x = sortValue(a, key);
@@ -135,10 +135,10 @@ export function sortRows(rows: Row[], key: SortKey, dir: 1 | -1): Row[] {
 
 const ASC_FIRST: SortKey[] = ['symbol', 'verdict', 'pe', 'pb', 'evEbitda', 'peg', 'netDebtEbitda'];
 
-/** Bir sütuna ilk tıklamada yön: çarpanlar küçükten büyüğe, büyüme ve getiri büyükten küçüğe. */
+/** Direction on the first click of a column: multiples ascending, growth and return descending. */
 export const defaultDir = (key: SortKey): 1 | -1 => (ASC_FIRST.includes(key) ? 1 : -1);
 
-/** Başlığa tıklanınca: aynı sütunsa yön değişir, değilse o sütunun ilk yönü. */
+/** On a header click: the same column flips direction, another column starts with its default direction. */
 export function nextSort(cur: SortState, key: SortKey): SortState {
   return cur.key === key ? { key, dir: cur.dir === 1 ? -1 : 1 } : { key, dir: defaultDir(key) };
 }
@@ -147,9 +147,9 @@ export interface VerdictCounts {
   good: number;
   warn: number;
   bad: number;
-  /** Verisi olan bankalar (ayrı yöntemle değerlendirilir) */
+  /** Banks with data (evaluated with a separate method) */
   bank: number;
-  /** Verisi henüz gelmemiş hisseler */
+  /** Stocks whose data has not arrived yet */
   waiting: number;
 }
 
@@ -163,13 +163,13 @@ export function countVerdicts(rows: Row[]): VerdictCounts {
   return c;
 }
 
-/** Sonuç rozetindeki metin */
+/** Text on the verdict badge */
 export function verdictLabel(r: Row): string {
   if (!r.s.hasData) return 'Veri bekliyor';
   return r.ev.verdict === 'warn' ? `${VLABEL.warn} (${r.ev.warns})` : VLABEL[r.ev.verdict];
 }
 
-/* ---------- Hücre metinleri ---------- */
+/* ---------- Cell texts ---------- */
 
 export const peText = (s: StockView): string => (!s.hasData ? '–' : s.pe == null ? (s.loss ? 'zarar' : '–') : nf(s.pe));
 
@@ -177,10 +177,10 @@ export const growthText = (v: number | null, why?: string): string => (v == null
 
 export const roeText = (roe: number | null): string => (roe == null ? '–' : '%' + nf(roe, 1));
 
-/** Fiyatın ortalamaya uzaklığı: "+%4,2", "%-3,1", bilinmiyorsa "–" */
+/** Distance of the price from the average: "+%4,2", "%-3,1", or "–" when unknown */
 export const distText = (d: number | null): string => pct(d, 1);
 
-/* ---------- Sektör seçimi ---------- */
+/* ---------- Industry selection ---------- */
 
 export interface IndustryGroup {
   industry: string;
@@ -190,8 +190,8 @@ export interface IndustryGroup {
 }
 
 /**
- * Sektör çiplerinin sırası: önce kıyas yapılabilenler (en az iki hisse), sonra
- * tek hisseli sektörler; her iki grup kendi içinde girdi sırasını (ada göre) korur.
+ * Order of the industry chips: industries that can be compared (at least two stocks)
+ * first, then single-stock industries; each group keeps its input order (by name).
  */
 export function orderGroups<T extends { stocks: unknown[] }>(groups: T[]): T[] {
   const rank = (g: T): number => (g.stocks.length >= 2 ? 0 : 1);
@@ -202,8 +202,8 @@ export function orderGroups<T extends { stocks: unknown[] }>(groups: T[]): T[] {
 }
 
 /**
- * Seçili sektör: hatırlanan hâlâ listedeyse o; değilse kıyas yapılabilen
- * (en az iki hissesi olan) ilk sektör, o da yoksa ilk sektör.
+ * The selected industry: the remembered one if it is still listed; otherwise the first
+ * industry that can be compared (at least two stocks), otherwise the first industry.
  */
 export function pickIndustry(groups: IndustryGroup[], remembered: string | null | undefined): string | null {
   if (!groups.length) return null;

@@ -1,7 +1,7 @@
 {
  "$schema": "http://json-schema.org/draft-07/schema#",
  "$id": "stocks.schema.json",
- "title": "finsights.explore stock universe (config/stocks.json)",
+ "title": "Fintools Screener stock universe (config/stocks.json)",
  "description": "Edited by hand. The data job reads tickers and industries only from this file.",
  "type": "object",
  "additionalProperties": false,

@@ -1,8 +1,8 @@
-/** Ortanca (median) ve sektör özeti. */
+/** Median and industry summary. */
 
 import type { IndustryMedian, StockView } from '../types.ts';
 
-/** Boş değerleri atar; hiç değer yoksa null. */
+/** Skips empty values; null when there are none. */
 export function median(values: Array<number | null | undefined>): number | null {
   const a = values.filter((v): v is number => v != null && !Number.isNaN(v)).sort((x, y) => x - y);
   if (!a.length) return null;
@@ -10,7 +10,7 @@ export function median(values: Array<number | null | undefined>): number | null 
   return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
 }
 
-/** Aynı sektördeki, verisi olan hisselerin ortancaları. */
+/** Medians of the stocks in one industry that have data. */
 export function industryMedian(stocks: StockView[]): IndustryMedian {
   const withData = stocks.filter((s) => s.hasData);
   const col = (f: (s: StockView) => number | null) => median(withData.map(f));
@@ -27,7 +27,7 @@ export function industryMedian(stocks: StockView[]): IndustryMedian {
   };
 }
 
-/** Hisseleri sektör kimliğine göre gruplar; grup sırası sektör adına göredir. */
+/** Groups stocks by industry id; groups are ordered by industry name. */
 export function groupByIndustry(stocks: StockView[]): Array<{ industry: string; industryTr: string; industryEn: string; stocks: StockView[] }> {
   const map = new Map<string, { industry: string; industryTr: string; industryEn: string; stocks: StockView[] }>();
   for (const s of stocks) {

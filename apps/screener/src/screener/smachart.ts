@@ -1,6 +1,6 @@
 /**
- * Fiyat ve hareketli ortalamalar çizgi grafiği (ilk sürümün elle kurulan SVG tarzında).
- * Girdi gerçek günlük kapanış serisidir; seri yoksa grafik çizilmez.
+ * Line chart of the price and moving averages (hand-built SVG, as in the first release).
+ * The input is the real daily close series; without a series no chart is drawn.
  */
 
 import type { PriceSeries } from '../types.ts';
@@ -12,14 +12,14 @@ import { niceStep } from './strip.ts';
 
 const MONTHS = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
 
-/** Grafikte gösterilen işlem günü sayısı (yaklaşık bir yıl) */
+/** Number of trading days shown on the chart (about one year) */
 export const SMA_WINDOW = 250;
 
 export interface SmaLine {
   id: 'price' | 'sma20' | 'sma50' | 'sma200';
-  /** "x,y x,y …"; hiç nokta yoksa boş */
+  /** "x,y x,y …"; empty when there are no points */
   points: string;
-  /** Çizilen nokta sayısı */
+  /** Number of points drawn */
   n: number;
 }
 
@@ -27,7 +27,7 @@ export interface SmaChartModel {
   W: number;
   H: number;
   m: { l: number; r: number; t: number; b: number };
-  /** Gösterilen ilk ve son günün sırası (seri içinde) */
+  /** Indexes of the first and last day shown (within the series) */
   start: number;
   end: number;
   yLo: number;
@@ -40,7 +40,7 @@ export interface SmaChartModel {
 
 const r1 = (v: number): number => Math.round(v * 10) / 10;
 
-/** Seri çizilebilir mi: en az iki gün, sayılar geçerli */
+/** Can the series be drawn: at least two days and valid numbers */
 export function seriesUsable(series: PriceSeries | null | undefined): series is PriceSeries {
   return (
     !!series &&
@@ -91,7 +91,7 @@ export function smaChartModel(series: PriceSeries, W: number, win = SMA_WINDOW):
   const yTicks: SmaChartModel['yTicks'] = [];
   for (let v = Math.ceil(yLo / step) * step; v <= yHi + 1e-9; v += step) yTicks.push({ v, y: r1(Y(v)), text: nf(v, dec) });
 
-  // Ay başları: ocakta yıl, diğer aylarda ay adı
+  // Month starts: the year for January, the month name for other months
   const marks: Array<{ i: number; x: number; text: string }> = [];
   for (let i = start + 1; i <= end; i++) {
     const cur = series.dates[i].slice(0, 7);
