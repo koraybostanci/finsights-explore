@@ -1,48 +1,61 @@
-# finsights.explore
+# fintools
 
-Hisse değerlemeyi önce bir kahvecinin hikâyesiyle öğreten, sonra aynı mantığı BIST ve ABD hisselerine gerçek verilerle uygulatan bir web uygulaması. Eğitim amaçlıdır; yatırım tavsiyesi değildir.
+Two small static web apps for learning stock valuation and screening BIST and US stocks. For education only, not investment advice.
 
-A static web app that teaches stock valuation with a coffee-shop story (in Turkish, with English counterparts for the technical terms) and then applies the same rules to BIST and US stocks. It continues the "BIST 30 Çarpan Rehberi" page and keeps its design.
+- **Learn**, "Hisse Değerleme Rehberi (Valuation Guide)": stories with sliders and charts, multiples, a glossary, decision steps and a quiz. No data, no network, no API key.
+- **Screener**, "Hisse Tarayıcı (Stock Screener)": BIST and US stocks checked against adjustable rules, a bank view, a calculator, and settings with a watchlist and optional AI comments. AI uses your own API key, which stays in your browser; requests go straight to the provider. Everything else works without a key.
 
-## What is in it
+The UI is Turkish, with an English counterpart for technical terms, for example "F/K (P/E)". Code and documentation are English.
 
-- **Senaryolar**: nine short stories with sliders and charts (balance sheet, income statement, multiples, PEG, inflation accounting, cyclicality, banks, moving averages, why two markets are kept apart).
-- **Çarpanlar, Sözlük, Karar adımları**: formulas, a searchable glossary, an ordered checklist.
-- **Tarayıcı**: screening rules with adjustable thresholds. BIST and US stocks are always in separate tables. "Sektör kıyası" compares the stocks of one industry with the industry median; "Tüm liste" is the full table. An opened row shows the reasons, moving averages (SMA 20/50/200) and, with an API key, an AI commentary.
-- **Bankalar** (BIST only), **Kendi hesabın** (calculator), **Kendini sına** (quiz).
-- **Ayarlar**: the AI provider (Claude, Gemini, OpenAI, OpenCode Go or any OpenAI-compatible address) with your own API key, and your watchlist per market.
+## Layout
 
-Everything works without an API key. The key, if you add one, stays in your browser and requests go straight from the browser to the provider.
+```
+apps/learn/      Learn app (Vite + TypeScript)
+apps/screener/   Screener app, its data job (Python) and data: config/, scripts/, public/data/
+shared/          @fintools/shared: code and styles used by both apps
+docs/            ARCHITECTURE.md
+```
 
-## Develop
+Each app is an independent npm project with its own lockfile. There are no npm workspaces and no runtime dependencies.
+
+## Run and check
 
 Needs Node 22.18 or later.
 
 ```
-npm install
-npm run dev         # local server
-npm run typecheck   # app code and tests
-npm test            # unit tests (Node's test runner)
-npm run build       # output in dist/
+npm --prefix apps/learn ci
+npm --prefix apps/screener ci
+npm run dev:learn          # or dev:screener
+npm run check              # shared tests, typecheck, tests and build of both apps
 ```
 
-There is no `package-lock.json` in the repository yet. Commit the one your first `npm install` creates; the Pages workflow then installs with `npm ci` and builds become reproducible.
+`npm run check:learn` and `npm run check:screener` check one app. The Python tests for the data job are in [apps/screener/docs/DATA.md](apps/screener/docs/DATA.md).
 
-Data job (Python 3.12): see [docs/DATA.md](docs/DATA.md).
+## Data
 
-## Deploy to GitHub Pages
+The Screener's numbers come from a scheduled GitHub Actions job (`.github/workflows/data.yml`) that commits `apps/screener/public/data`. Sources, schema, adding a stock and the failure rules are in [apps/screener/docs/DATA.md](apps/screener/docs/DATA.md). Code structure and conventions are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-1. Push to `main`.
-2. Repository Settings → Pages → Source: **GitHub Actions**.
-3. Settings → Actions → General → Workflow permissions: **Read and write** (the data job commits `public/data`).
-4. Actions → **data** → Run workflow, to fetch the first real data. After that it runs on weekdays by itself and the site redeploys after each run.
+## Deploy
 
-## Configure
+Cloudflare Workers with static assets: one Worker per app, each built from this repo by Workers Builds. A data commit triggers a rebuild of the Screener.
 
-- **Stocks**: `config/stocks.json` (one object per stock, grouped by industry). See [docs/DATA.md](docs/DATA.md).
-- **Bank figures** kept by hand: `config/banks_manual.json`.
-- **How the code is organised**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+In the Cloudflare dashboard, create two Workers from this repository:
 
-## Data sources
+| Setting | Learn | Screener |
+|---|---|---|
+| Worker name (matches `wrangler.jsonc`) | `fintools-learn` | `fintools-screener` |
+| Root directory | `apps/learn` | `apps/screener` |
+| Build command | `npm run check && npm run build` | same |
+| Deploy command | `npx wrangler deploy` | same |
+| Build watch paths | `apps/learn/*`, `shared/*`, `tsconfig.base.json` | `apps/screener/*`, `shared/*`, `tsconfig.base.json` |
 
-Fundamentals from the TradingView screener and daily closes from Yahoo Finance, both unofficial and delayed. Until the data job has run, the app shows the BIST figures of a Fintables snapshot dated 2 October 2026 and no US figures.
+Also:
+
+- Make sure the `workers.dev` subdomain is enabled for each Worker.
+- Leave the preview settings at their defaults.
+- After the first deploy, put both URLs into `shared/src/sites.ts`. Until then the apps do not link to each other.
+
+## Notes
+
+- Each app has its own origin, so `localStorage` is separate: watchlist, thresholds and the API key live only in the Screener. Learn keeps just its last tab and quiz score.
+- Fundamentals come from the unofficial TradingView screener and daily closes from Yahoo Finance. Both are delayed.
