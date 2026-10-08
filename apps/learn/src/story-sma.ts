@@ -1,7 +1,7 @@
 /**
- * Hikâye 8: "Bugün iyi bir gün müydü?" Günlük hasılat ve hareketli ortalama
- * (simple moving average, SMA). Seri kurgusaldır ve model.ts içinde tohumlu
- * olarak üretilir; her açılışta aynıdır.
+ * Story 8: "Bugün iyi bir gün müydü?" (Was today a good day?) Daily takings and the
+ * simple moving average (SMA). The series is fictional and generated from a seed
+ * in model.ts, so it is the same on every load.
  */
 
 import { cw, svgText, svgWrap } from '@fintools/shared/dom';
@@ -58,7 +58,7 @@ export function bind(r: HTMLElement): void {
   render();
 }
 
-/** Kutucuklar, açıklama ve grafik. */
+/** Tiles, note and chart. */
 function render(): void {
   if (!root) return;
   const st = smaStory(win);
@@ -104,7 +104,7 @@ function render(): void {
   draw();
 }
 
-/** SVG metni: çizgilerin üstünde okunabilsin diye zemin renginde kenarlıkla. */
+/** SVG text with an outline in the background color so it stays readable over the lines. */
 const halo = (x: number, y: number, t: string, fill: string, a: 'start' | 'middle' | 'end'): string =>
   `<text x="${x}" y="${y}" font-size="11.5" font-weight="700" font-family="var(--ui)" fill="${fill}" text-anchor="${a}" stroke="var(--surface)" stroke-width="3.5" stroke-linejoin="round" paint-order="stroke">${esc(t)}</text>`;
 

@@ -1,26 +1,26 @@
-/** Kendini sına: soru biçimi. Metinler düz metindir; ekrana esc() ile yazılır. */
+/** Quiz question shape. Texts are plain text; they are written to the page through esc(). */
 
-/** Yanlış yanıttan sonra okurun dönüp bakacağı yer */
+/** Where the reader can go back to look after a wrong answer */
 export interface QuizRef {
-  /** Sekme kimliği, ör. "stories" */
+  /** Tab id, e.g. "stories" */
   tab: string;
-  /** Sekme içindeki öğe kimliği, ör. "case4" (isteğe bağlı) */
+  /** Id of an item inside the tab, e.g. "case4" (optional) */
   anchor?: string;
-  /** Bağlantı metni, ör. "Senaryolar · Hikâye 4: Aynı fiyat, üç farklı kahveci" */
+  /** Link text, e.g. "Senaryolar · Hikâye 4: Aynı fiyat, üç farklı kahveci" */
   label: string;
 }
 
 export interface QuizQuestion {
-  /** Tekil kimlik, ör. "peg-film-set" */
+  /** Unique id, e.g. "peg-film-set" */
   id: string;
-  /** Konu başlığı, ör. "Büyüme ve PEG" */
+  /** Topic title, e.g. "Büyüme ve PEG" */
   topic: string;
   q: string;
-  /** Tam 4 seçenek */
+  /** Exactly 4 options */
   options: string[];
-  /** Doğru seçeneğin sırası (0–3) */
+  /** Index of the correct option (0-3) */
   correct: number;
-  /** Doğru yanıtın açıklaması */
+  /** Explanation of the correct answer */
   why: string;
   ref: QuizRef;
 }

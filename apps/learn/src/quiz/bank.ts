@@ -1,12 +1,13 @@
 /**
- * Kendini sına: hazır soru bankası. Sorular hikâyelerdeki kavramları ve
- * rakamları kullanır (Ayşe'nin Kahvesi, üç kahveci, Sahil dondurmacısı,
- * Mahalle sandığı, günlük hasılat, iki ülke). Gerçek şirketler hakkında
- * hiçbir rakam içermez.
+ * Quiz: the fixed question bank. The questions use the concepts and figures of
+ * the stories (Ayşe's coffee shop, the three coffee shops, the seaside ice cream
+ * shop, the neighborhood fund, daily takings, two countries). They contain no
+ * figures about real companies.
  *
- * Her sorunun tek bir doğru yanıtı vardır ve doğru yanıt ilgili hikâyenin
- * "Ne öğrendik?" kutusundan çıkar. Seçenekler oyunda karıştırılır; bu yüzden
- * "hepsi" ya da "hiçbiri" gibi sıraya bağlı seçenek yazılmaz.
+ * Each question has exactly one correct answer, and it can be derived from the
+ * "Ne öğrendik?" box of the matching story. The options are shuffled during play,
+ * so no order-dependent options such as "all of the above" or "none of the above"
+ * are written.
  */
 
 import { termText as T } from '@fintools/shared/terms';
@@ -71,15 +72,15 @@ interface Item {
   id: string;
   topic: TopicId;
   q: string;
-  /** Doğru yanıt */
+  /** Correct answer */
   a: string;
-  /** Üç yanlış seçenek */
+  /** Three wrong options */
   x: [string, string, string];
   why: string;
 }
 
 const ITEMS: Item[] = [
-  /* ---------- Hikâye 1: bilanço ---------- */
+  /* ---------- Story 1: balance sheet ---------- */
   {
     id: 'balance-sheet-equation',
     topic: 'balanceSheet',
@@ -117,7 +118,7 @@ const ITEMS: Item[] = [
     why: 'Pay başına defter değeri = özkaynak ÷ pay sayısı: 600.000 ÷ 100.000 = 6 TL. 8 TL, borçla alınan varlıkları da sayar; 2,10 TL ise hisse başına kârdır.',
   },
 
-  /* ---------- Hikâye 2: gelir tablosu ---------- */
+  /* ---------- Story 2: income statement ---------- */
   {
     id: 'income-ebitda-net-income',
     topic: 'income',
@@ -147,7 +148,7 @@ const ITEMS: Item[] = [
     why: 'F/K = fiyat ÷ hisse başına kâr: 30 ÷ 2,10 ≈ 14,3. Kâr aynı kalırsa ödediğiniz fiyat yaklaşık 14 yılda geri döner. 5,0 aynı fiyattaki PD/DD\'dir.',
   },
 
-  /* ---------- Hikâye 3: piyasa değeri ve çarpanlar ---------- */
+  /* ---------- Story 3: market cap and multiples ---------- */
   {
     id: 'multiples-price-measures',
     topic: 'multiples',
@@ -189,7 +190,7 @@ const ITEMS: Item[] = [
     why: 'PD/DD, özkaynak kârlılığıyla birlikte okunur: kârlılığı yüksek ve istikrarlı işe piyasa prim öder. Bu kadar kârlı bir işi defter değerine satan olmaz.',
   },
 
-  /* ---------- Hikâye 4: büyüme ve PEG ---------- */
+  /* ---------- Story 4: growth and PEG ---------- */
   {
     id: 'peg-corner-chain',
     topic: 'peg',
@@ -239,7 +240,7 @@ const ITEMS: Item[] = [
     why: 'PEG = F/K ÷ kâr büyümesi. F/K artıyken PEG\'in eksi çıkması için büyümenin eksi olması, yani kârın gerilemesi gerekir. Tarayıcı uygulaması eksi PEG\'i "kâr düşüyor" diye eler.',
   },
 
-  /* ---------- Hikâye 5: enflasyon muhasebesi ---------- */
+  /* ---------- Story 5: inflation accounting ---------- */
   {
     id: 'inflation-monetary-gain',
     topic: 'inflation',
@@ -273,7 +274,7 @@ const ITEMS: Item[] = [
     why: '200.000 × %35 = 70.000 TL. Kahve satışından gelen 210.000 TL\'lik kâra eklenince raporlanan net kâr 280.000 TL olur; faaliyet ise aynıdır.',
   },
 
-  /* ---------- Hikâye 6: döngüsellik ---------- */
+  /* ---------- Story 6: cyclicality ---------- */
   {
     id: 'cyclical-summer-quarter',
     topic: 'cyclical',
@@ -311,7 +312,7 @@ const ITEMS: Item[] = [
     why: 'Rafineri, çelik, madencilik ve havayolu gibi işlerde kâr, şirketin denetimi dışındaki fiyat ve talep döngülerine bağlıdır. Tarayıcı uygulaması bu sektörlerdeki hisselere "Döngüsel sektör" uyarısı ekler.',
   },
 
-  /* ---------- Hikâye 7: banka mantığı ---------- */
+  /* ---------- Story 7: how a bank works ---------- */
   {
     id: 'bank-ebitda',
     topic: 'bank',
@@ -357,7 +358,7 @@ const ITEMS: Item[] = [
     why: 'Banka kendi parasının katlarca büyüklüğünde bir bilanço taşır. Krediler batarsa zarar önce özkaynaktan karşılanır; sermaye yeterlilik oranı bu yastığın yeterli olup olmadığını gösterir.',
   },
 
-  /* ---------- Hikâye 8: hareketli ortalama ---------- */
+  /* ---------- Story 8: moving average ---------- */
   {
     id: 'sma-calculation',
     topic: 'sma',
@@ -419,7 +420,7 @@ const ITEMS: Item[] = [
     why: 'Ayşe kahveye zam yapınca hasılat da ortalamanın üstüne çıkar, ama daha çok kahve satmış olmaz. Enflasyonun yüksek olduğu bir para biriminde fiyatın ortalamanın üstünde olması tek başına güçlü bir eğilim kanıtı değildir.',
   },
 
-  /* ---------- Hikâye 9: iki ayrı piyasa ---------- */
+  /* ---------- Story 9: two separate markets ---------- */
   {
     id: 'markets-earnings-yield',
     topic: 'markets',
@@ -465,7 +466,7 @@ const ITEMS: Item[] = [
     why: 'Bir hisse kendi piyasasındaki ve kendi sektöründeki benzerleriyle kıyaslanır. Her piyasanın kendi tablosu ve kendi sektör ortancası (industry median) vardır.',
   },
 
-  /* ---------- Karar adımları ---------- */
+  /* ---------- Decision steps ---------- */
   {
     id: 'steps-order',
     topic: 'steps',
@@ -480,7 +481,7 @@ const ITEMS: Item[] = [
   },
 ];
 
-/** Hazır soru bankası; doğru yanıt her soruda ilk sıradadır, oyunda karıştırılır. */
+/** The fixed question bank; the correct answer is first in every question and is shuffled during play. */
 export const BANK: QuizQuestion[] = ITEMS.map((it) => ({
   id: it.id,
   topic: TOPICS[it.topic].label,
@@ -491,5 +492,5 @@ export const BANK: QuizQuestion[] = ITEMS.map((it) => ({
   ref: TOPICS[it.topic].ref,
 }));
 
-/** Sorunun konu kimliği (tur kurulurken konuları dengelemek için) */
+/** Topic id of a question (to balance the topics when a round is built) */
 export const topicOf = (id: string): TopicId | null => ITEMS.find((it) => it.id === id)?.topic ?? null;

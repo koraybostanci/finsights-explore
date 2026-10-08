@@ -1,60 +1,61 @@
 /**
- * Hikâyelerin hesapları. DOM'a dokunmayan saf işlevlerdir; tests/learn.test.ts
- * ilk sürümün rakamlarıyla doğrular. Tutarlar TL'dir, aksi yazılmadıkça.
+ * Calculations for the stories. Pure functions that never touch the DOM;
+ * tests/learn.test.ts checks them against the figures of the first version.
+ * Amounts are in TL unless stated otherwise.
  */
 
 import { distancePct, smaSeries } from '@fintools/shared/sma';
 
-/* ---------- Hikâye 3: Ayşe'nin Kahvesi, fiyat ve çarpanlar ---------- */
+/* ---------- Story 3: Ayşe's coffee shop, price and multiples ---------- */
 
-/** Net kâr, özkaynak, FAVÖK, net borç, pay sayısı */
-export const KAHVE = { nk: 210000, ok: 600000, fv: 400000, nb: 50000, pay: 100000 } as const;
+/** Net income, equity, EBITDA, net debt, share count */
+export const CAFE = { netIncome: 210000, equity: 600000, ebitda: 400000, netDebt: 50000, shares: 100000 } as const;
 
-export interface FiyatState {
-  /** Pay fiyatı */
+export interface PriceState {
+  /** Share price */
   p: number;
-  /** Beklenen net kâr büyümesi % */
+  /** Expected net income growth % */
   gr: number;
-  /** Piyasa değeri */
-  pd: number;
-  fk: number;
-  pddd: number;
-  /** Firma değeri */
-  fd: number;
-  fdf: number;
-  /** Büyüme sıfır ya da eksiyse null */
+  /** Market cap */
+  marketCap: number;
+  pe: number;
+  pb: number;
+  /** Enterprise value */
+  ev: number;
+  evEbitda: number;
+  /** Null when growth is zero or negative */
   peg: number | null;
-  /** Özkaynak kârlılığı % */
+  /** Return on equity % */
   roe: number;
-  /** Kazanç verimi % = 100 ÷ F/K */
+  /** Earnings yield % = 100 ÷ P/E */
   ey: number;
-  /** Hisse başına kâr */
+  /** Earnings per share */
   eps: number;
 }
 
-export function fiyatState(p: number, gr: number): FiyatState {
-  const pd = p * KAHVE.pay;
-  const fk = pd / KAHVE.nk;
-  const fd = pd + KAHVE.nb;
+export function priceState(p: number, gr: number): PriceState {
+  const marketCap = p * CAFE.shares;
+  const pe = marketCap / CAFE.netIncome;
+  const ev = marketCap + CAFE.netDebt;
   return {
     p,
     gr,
-    pd,
-    fk,
-    pddd: pd / KAHVE.ok,
-    fd,
-    fdf: fd / KAHVE.fv,
-    peg: gr > 0 ? fk / gr : null,
-    roe: (KAHVE.nk / KAHVE.ok) * 100,
-    ey: 100 / fk,
-    eps: KAHVE.nk / KAHVE.pay,
+    marketCap,
+    pe,
+    pb: marketCap / CAFE.equity,
+    ev,
+    evEbitda: ev / CAFE.ebitda,
+    peg: gr > 0 ? pe / gr : null,
+    roe: (CAFE.netIncome / CAFE.equity) * 100,
+    ey: 100 / pe,
+    eps: CAFE.netIncome / CAFE.shares,
   };
 }
 
-export const fkText = (fk: number): string =>
-  fk < 8
+export const peText = (pe: number): string =>
+  pe < 8
     ? 'Ucuz bölge: kâr sabit kalsa bile fiyatı hızla geri öder.'
-    : fk < 15
+    : pe < 15
       ? 'Orta: kâr bu seviyede kalırsa makul bir fiyat.'
       : 'Yüksek: fiyatı haklı çıkarmak için kârın büyümesi gerekir.';
 
@@ -65,128 +66,128 @@ export const pegText = (peg: number | null): string =>
       ? 'Büyümesine göre makul, tahmin doğruysa.'
       : 'Büyümesine göre pahalı.';
 
-/* ---------- Hikâye 4: üç kahveci ---------- */
+/* ---------- Story 4: three coffee shops ---------- */
 
 export interface PegCase {
   n: string;
-  /** Net kâr büyümesi % */
+  /** Net income growth % */
   g: number;
-  nb: number;
+  netDebt: number;
   st: 'good' | 'warn' | 'bad';
   t: string;
 }
 
 export const PEG_PRICE = 3000000;
-export const PEG_FK = PEG_PRICE / KAHVE.nk;
+export const PEG_PE = PEG_PRICE / CAFE.netIncome;
 
 export const PEG_C: PegCase[] = [
-  { n: 'Köşe Kahvecisi', g: 5, nb: 0, st: 'bad', t: 'büyümeye göre pahalı' },
-  { n: 'Zincir Kahve', g: 35, nb: 1500000, st: 'good', t: 'ucuz ama borçlu' },
-  { n: 'Film Seti Kahvesi', g: 200, nb: 0, st: 'warn', t: 'tek seferlik büyüme' },
+  { n: 'Köşe Kahvecisi', g: 5, netDebt: 0, st: 'bad', t: 'büyümeye göre pahalı' },
+  { n: 'Zincir Kahve', g: 35, netDebt: 1500000, st: 'good', t: 'ucuz ama borçlu' },
+  { n: 'Film Seti Kahvesi', g: 200, netDebt: 0, st: 'warn', t: 'tek seferlik büyüme' },
 ];
 
-export const pegOf = (c: PegCase): number => PEG_FK / c.g;
-export const evOf = (c: PegCase): number => PEG_PRICE + c.nb;
+export const pegOf = (c: PegCase): number => PEG_PE / c.g;
+export const evOf = (c: PegCase): number => PEG_PRICE + c.netDebt;
 
-/* ---------- Hikâye 5: enflasyon muhasebesi ---------- */
+/* ---------- Story 5: inflation accounting ---------- */
 
-export interface EnfState {
+export interface InflationState {
   inf: number;
-  /** Faaliyetten gelen kâr */
+  /** Operating profit */
   op: number;
-  /** Parasal kazanç */
+  /** Monetary gain */
   gain: number;
-  /** Raporlanan net kâr */
+  /** Reported net income */
   rep: number;
-  /** Borcun yıl başı parasıyla değeri */
+  /** Value of the debt in start-of-year money */
   real: number;
 }
 
-export function enfState(inf: number): EnfState {
+export function inflationState(inf: number): InflationState {
   const op = 210000;
   const gain = (200000 * inf) / 100;
   return { inf, op, gain, rep: op + gain, real: 200000 / (1 + inf / 100) };
 }
 
-/* ---------- Hikâye 6: dondurmacı ---------- */
+/* ---------- Story 6: ice cream shop ---------- */
 
-/** Aylık net kâr, bin TL (Ocak–Aralık) */
-export const DON_V = [-10, -10, 0, 20, 60, 120, 160, 150, 60, 10, -10, -15];
+/** Monthly net income, thousand TL (January to December) */
+export const ICE_CREAM_MONTHLY = [-10, -10, 0, 20, 60, 120, 160, 150, 60, 10, -10, -15];
 
-export interface DondurmaState {
-  /** Yıllık kâr, bin TL */
+export interface IceCreamState {
+  /** Annual net income, thousand TL */
   yr: number;
-  /** Yaz çeyreği (Haz–Ağu), bin TL */
+  /** Summer quarter (June to August), thousand TL */
   summer: number;
-  /** Satış fiyatı, bin TL */
+  /** Sale price, thousand TL */
   price: number;
-  fk: number;
-  /** Yaz çeyreği × 4, bin TL */
+  pe: number;
+  /** Summer quarter × 4, thousand TL */
   peakYr: number;
-  peakFk: number;
+  peakPe: number;
 }
 
-export function dondurmaState(): DondurmaState {
-  const yr = DON_V.reduce((a, b) => a + b, 0);
-  const summer = DON_V[5] + DON_V[6] + DON_V[7];
+export function iceCreamState(): IceCreamState {
+  const yr = ICE_CREAM_MONTHLY.reduce((a, b) => a + b, 0);
+  const summer = ICE_CREAM_MONTHLY[5] + ICE_CREAM_MONTHLY[6] + ICE_CREAM_MONTHLY[7];
   const price = 5000;
-  return { yr, summer, price, fk: price / yr, peakYr: summer * 4, peakFk: price / (summer * 4) };
+  return { yr, summer, price, pe: price / yr, peakYr: summer * 4, peakPe: price / (summer * 4) };
 }
 
-/* ---------- Hikâye 7: mahalle sandığı ---------- */
+/* ---------- Story 7: neighborhood fund (a bank in miniature) ---------- */
 
-export interface SandikState {
+export interface FundState {
   npl: number;
-  /** Krediler */
+  /** Loans */
   L: number;
-  /** Özkaynak */
+  /** Equity */
   E: number;
-  /** Faiz geliri, faiz gideri, net faiz geliri */
-  fi: number;
-  fg: number;
+  /** Interest income, interest expense, net interest income */
+  interestIncome: number;
+  interestExpense: number;
   nii: number;
   opex: number;
-  /** Batık kredi karşılığı */
+  /** Loan loss provisions */
   prov: number;
   tax: number;
   net: number;
   roe: number;
 }
 
-export function sandikState(npl: number): SandikState {
+export function fundState(npl: number): FundState {
   const L = 950000;
   const D = 1000000;
   const E = 100000;
-  const fi = L * 0.45;
-  const fg = D * 0.35;
-  const nii = fi - fg;
+  const interestIncome = L * 0.45;
+  const interestExpense = D * 0.35;
+  const nii = interestIncome - interestExpense;
   const opex = 30000;
   const prov = (L * npl) / 100;
   const pre = nii - opex - prov;
   const tax = pre > 0 ? pre * 0.25 : 0;
   const net = pre - tax;
-  return { npl, L, E, fi, fg, nii, opex, prov, tax, net, roe: (net / E) * 100 };
+  return { npl, L, E, interestIncome, interestExpense, nii, opex, prov, tax, net, roe: (net / E) * 100 };
 }
 
-/* ---------- Hikâye 8: günlük hasılat ve hareketli ortalama ---------- */
+/* ---------- Story 8: daily takings and the moving average ---------- */
 
-/** Seçilebilen pencereler (gün) */
+/** Selectable windows (days) */
 export const SMA_WINDOWS = [5, 20, 50, 200] as const;
-/** Kesişimde kullanılan kısa ve uzun pencere */
+/** Short and long window used for the crossover */
 export const SMA_SHORT = 50;
 export const SMA_LONG = 200;
 
-/** Üretilen gün sayısı ve grafikte gösterilen son gün sayısı */
+/** Number of generated days and number of latest days shown in the chart */
 export const TAKINGS_TOTAL = 500;
 export const TAKINGS_SHOWN = 300;
 const HIDDEN = TAKINGS_TOTAL - TAKINGS_SHOWN;
 
-/** Grafikteki gün numaralarıyla (1…300) hikâyenin olayları */
+/** Events of the story by day number in the chart (1…300) */
 export const ROADWORK_START = 50;
 export const ROADWORK_END = 140;
-export const BAYRAM_DAYS = [251, 252];
+export const HOLIDAY_DAYS = [251, 252];
 
-/** Eğilimin düğüm noktaları: [gün sırası (0…499), günlük hasılat] */
+/** Knots of the trend: [day index (0…499), daily takings] */
 const KNOTS: Array<[number, number]> = [
   [0, 5300],
   [HIDDEN + ROADWORK_START, 5700],
@@ -194,7 +195,7 @@ const KNOTS: Array<[number, number]> = [
   [TAKINGS_TOTAL - 1, 7000],
 ];
 
-/** Tohumlu sözde rastgele sayı üreteci (mulberry32): her açılışta aynı seri. */
+/** Seeded pseudo-random number generator (mulberry32): the same series on every load. */
 function rng(seed: number): () => number {
   let a = seed | 0;
   return () => {
@@ -205,7 +206,7 @@ function rng(seed: number): () => number {
   };
 }
 
-/** Gürültüsüz eğilim: düğümler arasında yumuşak (kosinüs) geçiş. */
+/** Noise-free trend: smooth (cosine) transition between the knots. */
 export function takingsTrend(i: number): number {
   for (let k = 1; k < KNOTS.length; k++) {
     const [x0, y0] = KNOTS[k - 1];
@@ -221,9 +222,9 @@ export function takingsTrend(i: number): number {
 let TAKINGS: number[] | null = null;
 
 /**
- * Ayşe'nin Kahvesi'nin kurgusal günlük hasılatı, 500 gün, eskiden yeniye.
- * Eğilim + haftalık düzen (pazar günü kalabalık) + rastgele dalga + yağmurlu
- * günler + bayram. Son gün yağmurludur. Rakamlar 10 TL'ye yuvarlanır.
+ * Fictional daily takings of Ayşe's coffee shop, 500 days, oldest first.
+ * Trend + weekly pattern (busy on Sundays) + random noise + rainy days +
+ * holiday. The last day is rainy. Figures are rounded to 10 TL.
  */
 export function takings(): number[] {
   if (TAKINGS) return TAKINGS;
@@ -239,7 +240,7 @@ export function takings(): number[] {
     if (rain) v *= 0.72;
     out.push(v);
   }
-  BAYRAM_DAYS.forEach((d, k) => {
+  HOLIDAY_DAYS.forEach((d, k) => {
     out[HIDDEN + d - 1] = takingsTrend(HIDDEN + d - 1) * (1.45 - k * 0.1);
   });
   out[TAKINGS_TOTAL - 1] = takingsTrend(TAKINGS_TOTAL - 1) * 0.86;
@@ -249,11 +250,11 @@ export function takings(): number[] {
 
 export interface CrossMark {
   kind: 'golden' | 'death';
-  /** Grafikteki gün numarası (1…300) */
+  /** Day number in the chart (1…300) */
   day: number;
 }
 
-/** İki ortalama dizisinin kesişimleri (diziler aynı uzunlukta; null olan günler atlanır). */
+/** Crossovers of two average series (same length; days with null are skipped). */
 export function crossings(short: Array<number | null>, long: Array<number | null>): Array<{ kind: 'golden' | 'death'; index: number }> {
   const out: Array<{ kind: 'golden' | 'death'; index: number }> = [];
   for (let i = 1; i < short.length; i++) {
@@ -266,29 +267,29 @@ export function crossings(short: Array<number | null>, long: Array<number | null
 }
 
 export interface SmaStory {
-  /** Seçilen pencere (gün) */
+  /** Selected window (days) */
   win: number;
-  /** Son 300 günün hasılatı */
+  /** Takings of the last 300 days */
   daily: number[];
-  /** Seçilen pencerenin ortalaması, aynı 300 gün */
+  /** Average of the selected window, same 300 days */
   avg: number[];
-  /** 200 günlük ortalama, aynı 300 gün */
+  /** 200-day average, same 300 days */
   long: number[];
-  /** Bugünkü (son gün) hasılat */
+  /** Today's (last day's) takings */
   today: number;
-  /** Bugünkü N günlük ortalama */
+  /** Today's N-day average */
   avgToday: number;
-  /** Bugünün ortalamaya uzaklığı % */
+  /** Distance of today from the average, % */
   dist: number;
-  /** Ortalamanın yaklaşık gecikmesi, gün: (N − 1) ÷ 2 */
+  /** Approximate lag of the average, in days: (N − 1) ÷ 2 */
   lag: number;
-  /** Ortalamanın en düşük olduğu gün (1…300) */
+  /** Day on which the average is lowest (1…300) */
   trough: number;
-  /** 50 ve 200 günlük ortalamaların grafikteki kesişimleri */
+  /** Crossovers of the 50- and 200-day averages in the chart */
   crosses: CrossMark[];
 }
 
-/** Hikâye 8'in durumu: seçilen pencereye göre ortalama, uzaklık ve kesişimler. */
+/** State of story 8: the average, distance and crossovers for the selected window. */
 export function smaStory(win: number): SmaStory {
   const all = takings();
   const cut = <T>(a: T[]): T[] => a.slice(HIDDEN);
@@ -314,65 +315,65 @@ export function smaStory(win: number): SmaStory {
   };
 }
 
-/* ---------- Hikâye 9: iki ülke, iki kahveci ---------- */
+/* ---------- Story 9: two countries, two coffee shops ---------- */
 
 /**
- * Örnek (kurgusal) rakamlar: gerçek faiz ya da enflasyon oranları değildir.
- * İki dükkânın F/K'sı aynıdır (Ayşe'nin Kahvesi'nin 30 TL'deki F/K'sı).
+ * Example (fictional) figures: not real interest or inflation rates.
+ * Both shops have the same P/E (that of Ayşe's coffee shop at 30 TL).
  */
-export const ULKE = {
-  fk: PEG_FK,
-  /** Dolar faizi % */
+export const COUNTRY = {
+  pe: PEG_PE,
+  /** Dollar interest rate % */
   usRate: 4,
-  /** Enflasyon %: Türkiye, ABD */
+  /** Inflation %: Turkey, US */
   trInf: 35,
   usInf: 3,
-  /** Nominal net kâr büyümesi %: TL, USD */
+  /** Nominal net income growth %: TL, USD */
   trGrowth: 40,
   usGrowth: 7,
 } as const;
 
-export interface UlkeSide {
-  /** Yerel faiz % */
+export interface CountrySide {
+  /** Local interest rate % */
   rate: number;
-  /** Kazanç verimi − faiz, puan */
+  /** Earnings yield − interest rate, in percentage points */
   gap: number;
-  /** Kazanç veriminin faize eşit olduğu F/K = 100 ÷ faiz */
-  parityFk: number;
+  /** The P/E at which earnings yield equals the rate: 100 ÷ rate */
+  parityPe: number;
   inf: number;
-  /** Nominal ve reel kâr büyümesi % */
+  /** Nominal and real net income growth % */
   growth: number;
   realGrowth: number;
   peg: number;
 }
 
-export interface UlkeState {
-  fk: number;
-  /** Kazanç verimi % (iki dükkânda aynı) */
+export interface CountryState {
+  pe: number;
+  /** Earnings yield % (the same in both shops) */
   ey: number;
-  tr: UlkeSide;
-  us: UlkeSide;
+  tr: CountrySide;
+  us: CountrySide;
 }
 
-/** Reel büyüme % = (1 + nominal) ÷ (1 + enflasyon) − 1 */
+/** Real growth % = (1 + nominal) ÷ (1 + inflation) − 1 */
 export const realGrowth = (nominalPct: number, infPct: number): number =>
   ((1 + nominalPct / 100) / (1 + infPct / 100) - 1) * 100;
 
-export function ulkeState(trRate: number): UlkeState {
-  const ey = 100 / ULKE.fk;
-  const side = (rate: number, inf: number, growth: number): UlkeSide => ({
+export function countryState(trRate: number): CountryState {
+  const ey = 100 / COUNTRY.pe;
+  const side = (rate: number, inf: number, growth: number): CountrySide => ({
     rate,
     gap: ey - rate,
-    parityFk: 100 / rate,
+    parityPe: 100 / rate,
     inf,
     growth,
     realGrowth: realGrowth(growth, inf),
-    peg: ULKE.fk / growth,
+    peg: COUNTRY.pe / growth,
   });
   return {
-    fk: ULKE.fk,
+    pe: COUNTRY.pe,
     ey,
-    tr: side(trRate, ULKE.trInf, ULKE.trGrowth),
-    us: side(ULKE.usRate, ULKE.usInf, ULKE.usGrowth),
+    tr: side(trRate, COUNTRY.trInf, COUNTRY.trGrowth),
+    us: side(COUNTRY.usRate, COUNTRY.usInf, COUNTRY.usGrowth),
   };
 }

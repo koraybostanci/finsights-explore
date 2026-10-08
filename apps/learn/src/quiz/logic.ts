@@ -1,5 +1,5 @@
 /**
- * Kendini sına: tur kurma. Saf işlevler; rastgelelik dışarıdan verilir.
+ * Quiz: building a round. Pure functions; the randomness is passed in.
  */
 
 import { topicOf } from './bank.ts';
@@ -7,7 +7,7 @@ import type { QuizQuestion } from './types.ts';
 
 export type Rnd = () => number;
 
-/** Bir turdaki soru sayısı */
+/** Number of questions in a round */
 export const ROUND_SIZE = 8;
 
 export function shuffle<T>(list: readonly T[], rnd: Rnd = Math.random): T[] {
@@ -19,13 +19,13 @@ export function shuffle<T>(list: readonly T[], rnd: Rnd = Math.random): T[] {
   return a;
 }
 
-/** Seçenekleri karıştırır ve doğru yanıtın sırasını günceller. */
+/** Shuffles the options and updates the index of the correct answer. */
 export function shuffleOptions(q: QuizQuestion, rnd: Rnd = Math.random): QuizQuestion {
   const order = shuffle(q.options.map((_, i) => i), rnd);
   return { ...q, options: order.map((i) => q.options[i]), correct: order.indexOf(q.correct) };
 }
 
-/** Her anahtardan en çok bir öğe alarak n öğe seçer; yetmezse kalanlardan tamamlar. */
+/** Picks n items taking at most one per key; fills up from the remaining ones if there are too few. */
 function pickDistinct<T>(list: T[], n: number, key: (x: T) => string, rnd: Rnd): T[] {
   const pool = shuffle(list, rnd);
   const seen = new Set<string>();
@@ -47,7 +47,7 @@ export interface RoundOptions {
   rnd?: Rnd;
 }
 
-/** Bir tur kurar: farklı konulardan, tekrarsız sorular; seçenekler karıştırılır. */
+/** Builds a round: questions from different topics, no repeats, options shuffled. */
 export function buildRound(bank: QuizQuestion[], o: RoundOptions = {}): QuizQuestion[] {
   const rnd = o.rnd ?? Math.random;
   const size = o.size ?? ROUND_SIZE;
@@ -60,7 +60,7 @@ export interface RoundResult {
   total: number;
 }
 
-/** Yanıtlardan sonuç; answers[i] seçilen seçeneğin sırasıdır (yanıtlanmadıysa null). */
+/** Result from the answers; answers[i] is the chosen option index (null if unanswered). */
 export function score(round: QuizQuestion[], answers: Array<number | null>): RoundResult {
   let correct = 0;
   round.forEach((q, i) => {
