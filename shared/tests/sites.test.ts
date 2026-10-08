@@ -3,9 +3,14 @@ import assert from 'node:assert/strict';
 
 import { SITES, siteLink, siblingLinkHtml } from '../src/sites.ts';
 
+const NO_SITES = { learn: '', screener: '' };
+
+test('SITES: both apps have an https URL without a trailing slash', () => {
+  for (const url of Object.values(SITES)) assert.match(url, /^https:\/\/[^/\s]+$/);
+});
+
 test('siteLink: escaped plain text while the URL is empty, a link once it is set', () => {
-  assert.deepEqual(SITES, { learn: '', screener: '' });
-  assert.equal(siteLink('screener', 'Tarayıcı <yeni>'), 'Tarayıcı &lt;yeni&gt;');
+  assert.equal(siteLink('screener', 'Tarayıcı <yeni>', NO_SITES), 'Tarayıcı &lt;yeni&gt;');
   const sites = { learn: '', screener: 'https://example.org/?a=1&b="2"' };
   assert.equal(
     siteLink('screener', 'Tarayıcı & co', sites),
@@ -15,7 +20,7 @@ test('siteLink: escaped plain text while the URL is empty, a link once it is set
 });
 
 test('siblingLinkHtml: nothing while the URL is empty, an escaped noopener link with an arrow once it is set', () => {
-  assert.equal(siblingLinkHtml('screener', 'Hisse Tarayıcı'), '');
+  assert.equal(siblingLinkHtml('screener', 'Hisse Tarayıcı', NO_SITES), '');
   const sites = { learn: '', screener: 'https://example.org/?a=1&b="2"' };
   assert.equal(
     siblingLinkHtml('screener', 'Tarayıcı <x>', sites),
