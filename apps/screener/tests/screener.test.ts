@@ -94,8 +94,8 @@ test('sortRows: empty values stay last in both directions, the input array is un
 
 test('sortRows: Turkish ordering by symbol, and ordering by distance from the average', () => {
   const rows = buildRows(bist, DEF);
-  const byK = sortRows(rows, 'symbol', 1).map((r) => r.s.symbol);
-  assert.deepEqual(byK, [...byK].sort((a, b) => a.localeCompare(b, 'tr')));
+  const bySymbol = sortRows(rows, 'symbol', 1).map((r) => r.s.symbol);
+  assert.deepEqual(bySymbol, [...bySymbol].sort((a, b) => a.localeCompare(b, 'tr')));
   const a = withFields('THYAO', { price: 110, sma200: 100 });
   const b = withFields('PGSUS', { price: 90, sma200: 100 });
   const c = withFields('TCELL', { sma200: null });
@@ -361,8 +361,8 @@ test('layoutStrips: points lie within the strip, labels do not overlap, threshol
             }
         }
       }
-      const nb = lay.strips.find((s) => s.def.key === 'netDebtEbitda');
-      if (nb) assert.ok(nb.below.some((b) => b.kind === 'threshold'), 'threshold label on the debt strip');
+      const netDebtStrip = lay.strips.find((s) => s.def.key === 'netDebtEbitda');
+      if (netDebtStrip) assert.ok(netDebtStrip.below.some((b) => b.kind === 'threshold'), 'threshold label on the debt strip');
     }
   }
 });

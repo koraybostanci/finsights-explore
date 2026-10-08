@@ -261,11 +261,11 @@ function bodyRows(rows: Row[], th: Thresholds, colspan: number, rowHtml: (r: Row
 
 /** Colours and shapes are fixed per ticker; they do not change when the table order changes. */
 function markersFor(rows: Row[]): Map<string, Marker> {
-  const ks = rows
+  const symbols = rows
     .filter((r) => r.s.hasData)
     .map((r) => r.s.symbol)
     .sort((a, b) => a.localeCompare(b, 'tr'));
-  return new Map(ks.map((k, i) => [k, markerFor(i)]));
+  return new Map(symbols.map((symbol, i) => [symbol, markerFor(i)]));
 }
 
 function compareHtml(m: PeersModel): string {
@@ -292,7 +292,7 @@ function peersHtml(th: Thresholds, m: PeersModel): string {
     medianRowHtml(m.med);
   const other = state.market === 'BIST' ? MARKET_LABEL.US : MARKET_LABEL.BIST;
   const markers = markersFor(m.rows);
-  const legend = [...markers].map(([k, mk]) => `<span>${markerIcon(mk)}${esc(k)}</span>`).join('');
+  const legend = [...markers].map(([symbol, mk]) => `<span>${markerIcon(mk)}${esc(symbol)}</span>`).join('');
   const notes: string[] = [];
   if (hidden > 0)
     notes.push(
@@ -518,8 +518,8 @@ function runCompare(key: string, force: boolean): Promise<void> {
 
 /* ---------- Events ---------- */
 
-function toggleRow(k: string): void {
-  const id = `${state.market}-${k}`;
+function toggleRow(symbol: string): void {
+  const id = `${state.market}-${symbol}`;
   state.open = state.open === id ? null : id;
   renderBody();
 }
