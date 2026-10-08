@@ -1,9 +1,9 @@
 /**
- * Basit hareketli ortalama (simple moving average, SMA).
- * Girdi: günlük kapanışlar, eskiden yeniye.
+ * Simple moving average (SMA).
+ * Input: daily closes, oldest first.
  */
 
-/** n günlük SMA dizisi; ilk n-1 değer null. */
+/** SMA series over n days; the first n-1 values are null. */
 export function smaSeries(closes: number[], n: number): Array<number | null> {
   const out: Array<number | null> = new Array(closes.length).fill(null);
   if (n <= 0) return out;
@@ -16,7 +16,7 @@ export function smaSeries(closes: number[], n: number): Array<number | null> {
   return out;
 }
 
-/** Son günün n günlük ortalaması; yeterli veri yoksa null. */
+/** Average of the last n days; null when there is not enough data. */
 export function lastSma(closes: number[], n: number): number | null {
   if (n <= 0 || closes.length < n) return null;
   let sum = 0;
@@ -24,7 +24,7 @@ export function lastSma(closes: number[], n: number): number | null {
   return sum / n;
 }
 
-/** Fiyatın ortalamaya uzaklığı %; (fiyat / ortalama - 1) × 100. */
+/** Distance of the price from the average in %: (price / average - 1) × 100. */
 export function distancePct(price: number | null, avg: number | null): number | null {
   if (price == null || avg == null || avg === 0) return null;
   return (price / avg - 1) * 100;
@@ -34,14 +34,14 @@ export type CrossKind = 'golden' | 'death';
 
 export interface Cross {
   kind: CrossKind;
-  /** closes dizisindeki gün sırası */
+  /** Day index in the closes array */
   index: number;
 }
 
 /**
- * Son `lookback` gün içindeki en yeni kesişim.
- * golden: kısa ortalama uzunu yukarı keser (altın kesişim, golden cross)
- * death: kısa ortalama uzunu aşağı keser (ölüm kesişimi, death cross)
+ * The most recent crossover within the last `lookback` days.
+ * golden: the short average crosses above the long one (golden cross)
+ * death: the short average crosses below the long one (death cross)
  */
 export function lastCross(closes: number[], short = 50, long = 200, lookback = 60): Cross | null {
   const a = smaSeries(closes, short);
@@ -59,9 +59,9 @@ export function lastCross(closes: number[], short = 50, long = 200, lookback = 6
 export type Trend = 'up' | 'down' | 'mixed';
 
 /**
- * Basit trend okuması:
- * up: fiyat > SMA50 > SMA200, down: fiyat < SMA50 < SMA200, aksi halde mixed.
- * Eksik veri varsa null.
+ * Simple trend reading:
+ * up: price > SMA50 > SMA200, down: price < SMA50 < SMA200, otherwise mixed.
+ * null when data is missing.
  */
 export function trend(price: number | null, sma50: number | null, sma200: number | null): Trend | null {
   if (price == null || sma50 == null || sma200 == null) return null;

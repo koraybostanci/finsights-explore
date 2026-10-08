@@ -1,6 +1,6 @@
-/** Biçimlendirme yardımcıları. Sayılar Türkçe yazımla (1.234,56) gösterilir. */
+/** Formatting helpers. Numbers use Turkish notation (1.234,56). */
 
-/** Para birimi. Tek tanım burada; uygulamanın types.ts dosyası bunu yeniden dışa aktarır. */
+/** Currency. Defined once here; each app's types.ts re-exports it. */
 export type Currency = 'TRY' | 'USD';
 
 export const nf = (v: number | null | undefined, d = 2): string =>
@@ -23,10 +23,10 @@ export const curLabel = (cur: Currency): string => CUR_LABEL[cur];
 
 const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
-/** HTML'e yazılacak her dış metin bundan geçer. */
+/** Every piece of external text written into HTML goes through this. */
 export const esc = (s: unknown): string => String(s).replace(/[&<>"']/g, (c) => ESC[c]);
 
-/** "2 Ekim 2026 15:00" (İstanbul saatiyle) */
+/** "2 Ekim 2026 15:00" (Istanbul time) */
 export function fmtDate(iso: string, withTime = true): string {
   try {
     const d = new Date(iso);

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { nf, pct, esc, money } from '../src/format.ts';
 
-test('nf ve pct Türkçe yazımla biçimlendirir', () => {
+test('nf and pct format with Turkish notation', () => {
   assert.equal(nf(1234.5), '1.234,50');
   assert.equal(nf(null), '–');
   assert.equal(nf(3.6, 1), '3,6');
@@ -14,6 +14,6 @@ test('nf ve pct Türkçe yazımla biçimlendirir', () => {
   assert.equal(money(12.5, 'USD'), '12,50 USD');
 });
 
-test('esc HTML özel karakterlerini kaçırır', () => {
+test('esc escapes HTML special characters', () => {
   assert.equal(esc(`<a href="x">T&'s</a>`), '&lt;a href=&quot;x&quot;&gt;T&amp;&#39;s&lt;/a&gt;');
 });

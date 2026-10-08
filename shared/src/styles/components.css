@@ -34,35 +34,35 @@
 
 .note{font-family:var(--ui);font-size:.85rem;background:var(--warn-soft);color:var(--ink);border-radius:8px;padding:10px 12px}
 
-/* İkili/üçlü geçiş düğmesi: piyasa (BIST / ABD), görünüm (Tüm liste / Sektör kıyası) */
+/* Two- or three-way toggle: market (BIST / US), view (full list / industry comparison) */
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
 .seg button{font-family:var(--ui);font-size:.85rem;font-weight:600;padding:8px 14px;border:0;background:none;color:var(--muted);cursor:pointer}
 .seg button:hover{color:var(--ink)}
 .seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
 
-/* Seçilebilir çip (sektör seçimi vb.) */
+/* Selectable chip (industry picker etc.) */
 button.chip{border:0;cursor:pointer;font-size:.85rem;padding:6px 12px}
 button.chip .en{font-size:.85em}
 button.chip[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
 button.chip[aria-pressed="true"] .en{color:var(--accent-soft)}
 
-/* Beyaz kutu: ayar ve form grupları */
+/* White box: settings and form groups */
 .box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:16px;font-family:var(--ui)}
 
-/* Metin, parola, arama ve seçim alanları; sayı alanlarıyla aynı görünüm */
+/* Text, password, search and select fields; same look as number fields */
 .ctl input[type=text],.ctl input[type=password],.ctl input[type=search],.ctl input[type=url],.ctl select{font-family:var(--mono);font-size:.95rem;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
 
-/* Başlık satırı: solda başlık, sağda düğmeler */
+/* Heading row: title on the left, buttons on the right */
 .headrow{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
 .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
 
 /* Rules used by both Learn and the screener app (moved here from app.css in the Learn split). */
-/* Nasıl kullanılır kutuları */
+/* How-to boxes */
 .howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px}
 .howto div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;font-family:var(--ui);font-size:.9rem}
 .howto b{display:block;font-family:var(--display);font-size:1rem;margin-bottom:2px}
 
-/* Kartlar */
+/* Cards */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:16px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .card .tag{font-family:var(--ui);font-size:.85rem;color:var(--muted)}
@@ -73,7 +73,7 @@ button.chip[aria-pressed="true"] .en{color:var(--accent-soft)}
 .tr-list div{border-top:2px solid var(--line);padding-top:10px}
 .tr-list b{font-family:var(--display);display:block;margin-bottom:2px}
 
-/* Tablo kutusu ve temel tablo biçimi */
+/* Table box and base table style */
 .tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 table{border-collapse:collapse;width:100%;font-family:var(--ui);font-size:.86rem}
 th,td{padding:9px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line);vertical-align:top}
@@ -86,11 +86,11 @@ td.name{font-family:var(--ui)}
 td.name b{font-family:var(--mono);font-size:.9rem}
 td.name span{display:block;font-size:.72rem;color:var(--muted)}
 
-/* Değer renkleri ve durum simgeleri */
+/* Value colors and status icons */
 .v-bad{color:var(--bad)} .v-good{color:var(--good)} .v-warn{color:var(--warn)}
 .ico{font-family:var(--ui);font-weight:800;width:18px;height:18px;border-radius:50%;display:inline-grid;place-items:center;font-size:.68rem;margin-top:1px}
 .ico.good{background:var(--good-soft);color:var(--good)} .ico.warn{background:var(--warn-soft);color:var(--warn)} .ico.bad{background:var(--bad-soft);color:var(--bad)} .ico.na{background:var(--accent-soft);color:var(--muted)}
 
-/* Vurgu kutusu: Learn'ün "Ne öğrendik?" kutusu ve tarayıcının yapay zekâ sektör kutusu */
+/* Highlight box: Learn's "Ne öğrendik?" (what we learned) box and the screener's AI industry box */
 .learn{background:var(--accent-soft);border-radius:10px;padding:12px 14px;font-size:.95rem;display:flex;flex-direction:column;gap:6px}
 .learn b{font-family:var(--display)}

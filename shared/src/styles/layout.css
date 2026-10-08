@@ -4,7 +4,7 @@ body{margin:0}
 img{max-width:100%}
 [hidden]:not([hidden=until-found i]){display:none!important}
 
-/* Layout: ders kitabı + terminal — sticky sekme çubuğu, okuma sütunu ~760px, tarayıcı tam genişlik */
+/* Layout: textbook plus terminal; sticky tab bar, ~760px reading column, full-width screener */
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.6;padding:0 16px}
 .wrap{max-width:1320px;margin:0 auto;padding-block:20px 56px}
@@ -38,7 +38,7 @@ footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-fa
 footer a{color:var(--accent)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 
-/* Odak, seçim ve imleç */
+/* Focus, selection and caret */
 select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 ::selection{background:var(--accent-soft);color:var(--ink)}
 input,select,textarea{caret-color:var(--accent)}

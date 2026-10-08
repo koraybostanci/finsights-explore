@@ -54,13 +54,13 @@ export async function createApp({ tabs, defaultTab, storage, beforeMount }: AppO
       try {
         history.replaceState(null, '', '#' + b.dataset.tab);
       } catch {
-        /* dosyadan açılmışsa adres değişmeyebilir */
+        /* the address may not change when opened from a file */
       }
       window.scrollTo({ top: 0 });
     });
   }
 
-  /** Bir sekmeyi gösterir. Başka modüller de çağırabilir: location.hash = '#settings' yeterlidir. */
+  /** Shows a tab. Other modules can trigger it too: setting location.hash = '#settings' is enough. */
   function show(id: string): void {
     const tab = tabs.find((t) => t.id === id) ?? tabs[0];
     current = tab.id;
@@ -124,7 +124,7 @@ export async function createApp({ tabs, defaultTab, storage, beforeMount }: AppO
     const id = (location.hash || '').slice(1);
     if (tabs.some((t) => t.id === id) && id !== current) {
       show(id);
-      // Sayfa içi bağlantıyla gelindi (ör. "Ayarlar'da açabilirsiniz"): yeni sekme baştan okunur.
+      // Arrived through an in-page link (e.g. "Ayarlar'da açabilirsiniz"): the new tab is read from the top.
       window.scrollTo({ top: 0 });
     }
   });
