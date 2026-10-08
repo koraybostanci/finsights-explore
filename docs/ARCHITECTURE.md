@@ -73,7 +73,7 @@ Each app creates its storage with its own prefix: `fintools.learn.` and `fintool
 
 ## Tests
 
-- `node --test` runs the `.ts` tests directly: `shared/tests/`, `apps/learn/tests/`, `apps/screener/tests/`.
+- `node --test` runs the `.ts` tests directly: `shared/tests/`, `apps/learn/tests/`, `apps/screener/tests/`. `shared/tests/deploy-config.test.ts` guards the free-plan, assets-only Worker config.
 - Screener tests read `apps/screener/tests/fixtures/market.json`, not the live data, so a data refresh cannot break them.
 - The data job has Python `unittest` tests in `apps/screener/scripts/tests/`.
 - `npm run check` in an app runs shared tests, typecheck, app tests and the build; CI runs the same.

@@ -57,6 +57,13 @@ Also:
 - Not yet confirmed: whether Workers Builds clones the whole repo when a root directory is set, and how the watch-path wildcards are matched. Check both on the first build. If the root directory does not work, set it to the repo root and use build command `npm --prefix apps/<app> ci && npm --prefix apps/<app> run check && npm --prefix apps/<app> run build` and deploy command `npx wrangler deploy --config apps/<app>/wrangler.jsonc`.
 - After the first deploy, put both URLs into `shared/src/sites.ts` (done: Learn at https://fintools-learn.bostanci-koray.workers.dev, Screener at https://fintools-screener.bostanci-koray.workers.dev). While a URL is empty the apps do not link to each other.
 
+### Free plan only
+
+- The project uses Workers static assets only: free, with unlimited requests. Hitting a free limit stops the operation instead of billing.
+- `shared/tests/deploy-config.test.ts` fails if a `wrangler.jsonc` gains a Worker script (`main`), a paid binding or any other key beyond name, compatibility date and the assets directory.
+- To verify the account has no paid subscription, `cf accounts subscriptions get` must return `[]`. Never click "Upgrade".
+- A custom domain is a separate purchase and is not required.
+
 ## Notes
 
 - Each app has its own origin, so `localStorage` is separate: watchlist, thresholds and the API key live only in the Screener. Learn keeps just its last tab and quiz score.
