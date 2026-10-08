@@ -81,7 +81,7 @@ export function compareBlockHtml(key: string, slot: AiSlot | undefined, status: 
   const lbl = `<div class="lbl">Sektör karşılaştırması · <span lang="en">AI comparison</span></div>`;
   if (!status.configured && !slot?.result)
     return `${lbl}
-<p>Yapay zekâ bu sektördeki hisseleri yan yana okur ve farkların ne anlama gelebileceğini anlatır. Sayılar yine tablodan gelir; yapay zekâ yalnızca açıklar.</p>
+<p>Yapay zekâ <span class="en">(AI)</span> bu sektördeki hisseleri yan yana okur ve farkların ne anlama gelebileceğini anlatır. Sayılar yine tablodan gelir; yapay zekâ yalnızca açıklar.</p>
 <p class="muted small">Kendi API anahtarınızla çalışır ve anahtar yalnızca bu tarayıcıda saklanır.</p>
 <div class="ai-meta"><button class="btn" type="button" data-act="goto-settings">Ayarlar'da yapay zekâyı aç</button></div>`;
 

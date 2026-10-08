@@ -2,7 +2,7 @@
 
 Two small static web apps for learning stock valuation and screening BIST and US stocks. For education only, not investment advice.
 
-- **Learn**, "Hisse Değerleme Rehberi (Valuation Guide)": stories with sliders and charts, multiples, a glossary, decision steps and a quiz. No data, no network, no API key.
+- **Learn**, "Hisse Değerleme Rehberi (Valuation Guide)": stories with sliders and charts, multiples, a glossary, decision steps and a quiz. No data requests and no API key; only the web fonts come from Google Fonts.
 - **Screener**, "Hisse Tarayıcı (Stock Screener)": BIST and US stocks checked against adjustable rules, a bank view, a calculator, and settings with a watchlist and optional AI comments. AI uses your own API key, which stays in your browser; requests go straight to the provider. Everything else works without a key.
 
 The UI is Turkish, with an English counterpart for technical terms, for example "F/K (P/E)". Code and documentation are English.
