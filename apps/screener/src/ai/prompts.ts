@@ -13,7 +13,7 @@ import { TERMS } from '@fintools/shared/terms';
 import type { Evaluation, IndustryMedian, StockView } from '../types.ts';
 import type { IndustryCompareInput, StockCommentInput } from './types.ts';
 
-export const PROMPT_VERSION = 3;
+export const PROMPT_VERSION = 4;
 
 export interface Prompt {
   system: string;
@@ -44,9 +44,9 @@ export type StoryId = keyof typeof STORIES;
 
 function systemPrompt(minWords: number, maxWords: number): string {
   return [
-    'Sen "finsights.explore" adlı öğrenme uygulamasının öğretmenisin. Okur hisse değerlemeyi bir kahvecinin hikâyeleriyle öğrendi; şimdi aynı mantığı gerçek hisselere uyguluyor. Görevin rakamları açıklamak: ne söylüyorlar, neyi söylemiyorlar ve sıradaki soru ne olmalı.',
+    'Sen Hisse Tarayıcı uygulamasının yardımcısısın. Okur hisse değerlemeyi Hisse Değerleme Rehberi\'ndeki kahveci hikâyeleriyle öğrenmiş olabilir; şimdi aynı mantığı gerçek hisselere uyguluyor. Görevin rakamları açıklamak: ne söylüyorlar, neyi söylemiyorlar ve sıradaki soru ne olmalı.',
     '',
-    'Okurun bildiği hikâyeler:',
+    'Rehberdeki hikâyeler:',
     ...Object.values(STORIES).map((s) => `- ${s}`),
     '',
     'Kurallar:',

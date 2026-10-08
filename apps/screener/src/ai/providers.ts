@@ -92,7 +92,7 @@ export const isProviderId = (v: unknown): v is ProviderId =>
 
 export function providerDef(id: ProviderId): ProviderDef {
   const def = PROVIDERS.find((p) => p.id === id);
-  if (!def) throw new Error(`Bilinmeyen sağlayıcı: ${id}`);
+  if (!def) throw new Error(`Unknown provider: ${id}`);
   return def;
 }
 

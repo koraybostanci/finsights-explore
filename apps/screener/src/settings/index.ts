@@ -118,7 +118,7 @@ function aiHtml(): string {
     </div>
     <p class="note">Anahtar depoya ya da bir sunucuya gönderilmez; istekler tarayıcınızdan doğrudan sağlayıcıya gider. Bir github.io adresinde aynı hesabın bütün projeleri tarayıcı belleğini paylaşır; bu yüzden anahtara harcama sınırı koymak ya da siteyi kendi alan adınızdan yayınlamak daha güvenlidir.</p>
     <div class="howto">
-      <div><b>Hisse yorumu</b>Tarayıcıda açtığınız hissenin çarpanlarını ve hareketli ortalamalarını hikâyelerin diliyle açıklar.</div>
+      <div><b>Hisse yorumu</b>Tarayıcıda açtığınız hissenin çarpanlarını <span class="en">(multiples)</span> ve hareketli ortalamalarını <span class="en">(moving averages)</span> sade bir dille açıklar.</div>
       <div><b>Sektör karşılaştırması</b>Aynı piyasada aynı sektördeki hisseleri yan yana okur, farkların ne anlama gelebileceğini söyler.</div>
     </div>`;
 }
