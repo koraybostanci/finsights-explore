@@ -14,7 +14,6 @@ import type { AiStatus } from './types.ts';
 const K_PROVIDER = 'ai.provider';
 const kKey = (p: ProviderId) => `ai.key.${p}`;
 const kModel = (p: ProviderId) => `ai.model.${p}`;
-const kModels = (p: ProviderId) => `ai.models.${p}`;
 const K_BASE = 'ai.baseUrl';
 
 const text = (v: unknown): string => (typeof v === 'string' ? v : '');
@@ -38,15 +37,14 @@ export function setKey(p: ProviderId, key: string): void {
   emit('ai');
 }
 
-/** Deletes the key and the model list fetched with it; the selected model name stays. */
+/** Deletes the key; the selected model name stays. */
 export function clearKey(p: ProviderId): void {
   lsRemove(kKey(p));
-  lsRemove(kModels(p));
   emit('ai');
 }
 
-/** The last model selected per provider */
-export const getModel = (p: ProviderId): string => text(lsGet<unknown>(kModel(p), ''));
+/** The model the user last typed for this provider, or the provider's default model */
+export const getModel = (p: ProviderId): string => text(lsGet<unknown>(kModel(p), '')) || providerDef(p).defaultModel;
 
 export function setModel(p: ProviderId, model: string): void {
   const m = model.trim();
@@ -62,18 +60,7 @@ export function setBaseUrl(url: string): void {
   const u = url.trim();
   if (u) lsSet(K_BASE, u);
   else lsRemove(K_BASE);
-  lsRemove(kModels('custom'));
   emit('ai');
-}
-
-/** The model list most recently fetched from the provider (stored so the dropdown is already filled after a page reload) */
-export function getModelList(p: ProviderId): string[] {
-  const v = lsGet<unknown>(kModels(p), []);
-  return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
-}
-
-export function setModelList(p: ProviderId, models: string[]): void {
-  lsSet(kModels(p), models);
 }
 
 /** Call-ready configuration for one provider */

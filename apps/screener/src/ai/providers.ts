@@ -4,7 +4,7 @@
  * Everything here is a pure function; nothing uses fetch or storage. That way each
  * provider's URL, headers and body are tested in tests/ai.test.ts.
  * There are three API shapes: Anthropic (messages), Gemini (generateContent) and
- * OpenAI-compatible (chat/completions; OpenAI, OpenCode Go and the custom endpoint).
+ * OpenAI-compatible (chat/completions; OpenAI and the custom endpoint).
  *
  * The key is written only into a request header; it never enters a URL.
  */
@@ -12,7 +12,7 @@
 import { AiError } from './types.ts';
 import type { AiErrorCode } from './types.ts';
 
-export type ProviderId = 'anthropic' | 'gemini' | 'openai' | 'opencode' | 'custom';
+export type ProviderId = 'anthropic' | 'gemini' | 'openai' | 'custom';
 export type ApiShape = 'anthropic' | 'gemini' | 'openai';
 
 export interface ProviderDef {
@@ -24,6 +24,11 @@ export interface ProviderDef {
   shape: ApiShape;
   /** Fixed base URL; empty for the custom endpoint (the user enters it) */
   baseUrl: string;
+  /**
+   * Model prefilled in the settings until the user types another one; empty for the custom endpoint.
+   * These are cost-efficient defaults the user can override; they may need updating when providers retire models.
+   */
+  defaultModel: string;
   /** Whether a key is required (local models do not need one) */
   keyRequired: boolean;
   /** Name of the output-limit field in the OpenAI shape */
@@ -39,6 +44,7 @@ export const PROVIDERS: ProviderDef[] = [
     vendor: 'Anthropic',
     shape: 'anthropic',
     baseUrl: 'https://api.anthropic.com/v1',
+    defaultModel: 'claude-haiku-4-5-20251001',
     keyRequired: true,
     tokenParam: 'max_tokens',
     corsVerified: true,
@@ -49,6 +55,7 @@ export const PROVIDERS: ProviderDef[] = [
     vendor: 'Google',
     shape: 'gemini',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    defaultModel: 'gemini-3.5-flash-lite',
     keyRequired: true,
     tokenParam: 'max_tokens',
     corsVerified: true,
@@ -59,19 +66,10 @@ export const PROVIDERS: ProviderDef[] = [
     vendor: 'OpenAI',
     shape: 'openai',
     baseUrl: 'https://api.openai.com/v1',
+    defaultModel: 'gpt-6-luna',
     keyRequired: true,
     tokenParam: 'max_completion_tokens',
     corsVerified: true,
-  },
-  {
-    id: 'opencode',
-    label: 'OpenCode Go',
-    vendor: 'OpenCode',
-    shape: 'openai',
-    baseUrl: 'https://opencode.ai/zen/go/v1',
-    keyRequired: true,
-    tokenParam: 'max_tokens',
-    corsVerified: false,
   },
   {
     id: 'custom',
@@ -79,6 +77,7 @@ export const PROVIDERS: ProviderDef[] = [
     vendor: 'OpenAI uyumlu uç nokta',
     shape: 'openai',
     baseUrl: '',
+    defaultModel: '',
     keyRequired: false,
     tokenParam: 'max_tokens',
     corsVerified: false,
@@ -185,7 +184,7 @@ function authHeaders(def: ProviderDef, key: string): Record<string, string> {
   return key ? { Authorization: `Bearer ${key}` } : {};
 }
 
-/** Gemini model names come with a "models/…" prefix in the list; the request URL carries the prefix only once. */
+/** Gemini model names are often copied with a "models/…" prefix; the request URL carries the prefix only once. */
 const geminiModel = (model: string): string => model.trim().replace(/^models\//, '');
 
 export function buildCompletionRequest(cfg: ResolvedConfig, req: CompletionRequest): HttpRequest {
@@ -226,14 +225,6 @@ export function buildCompletionRequest(cfg: ResolvedConfig, req: CompletionReque
   messages.push({ role: 'user', content: req.user });
   const body: Record<string, unknown> = { model, messages, [def.tokenParam]: req.maxTokens + THINKING_HEADROOM };
   return { url: `${base}/chat/completions`, method: 'POST', headers, body: JSON.stringify(body) };
-}
-
-export function buildModelsRequest(cfg: ResolvedConfig): HttpRequest {
-  const def = providerDef(cfg.provider);
-  const base = baseUrlOf(cfg);
-  const headers = authHeaders(def, cfg.key.trim());
-  const query = def.shape === 'anthropic' ? '?limit=1000' : def.shape === 'gemini' ? '?pageSize=1000' : '';
-  return { url: `${base}/models${query}`, method: 'GET', headers };
 }
 
 /* ---------- Parsing responses ---------- */
@@ -300,34 +291,6 @@ export function parseCompletion(shape: ApiShape, json: unknown): Completion {
   return { text, truncated: choice.finish_reason === 'length' };
 }
 
-/** OpenAI models unsuitable for chat (audio, image, embeddings, etc.); a rough filter. */
-const NOT_CHAT = /embed|whisper|tts|dall-e|image|audio|realtime|moderation|transcribe|sora|babbage|davinci|search|computer-use/i;
-
-/** Extracts model ids from the model-list response (duplicates are dropped). */
-export function parseModels(provider: ProviderId, json: unknown): string[] {
-  const def = providerDef(provider);
-  if (!isObj(json)) throw bad('Model listesi bir JSON nesnesi değil.');
-  let ids: string[] = [];
-
-  if (def.shape === 'gemini') {
-    if (!Array.isArray(json.models)) throw bad('Model listesinde "models" alanı yok.');
-    ids = json.models
-      .filter((m): m is Obj => isObj(m))
-      .filter((m) => !Array.isArray(m.supportedGenerationMethods) || m.supportedGenerationMethods.includes('generateContent'))
-      .map((m) => str(m.name).replace(/^models\//, ''));
-  } else {
-    if (!Array.isArray(json.data)) throw bad('Model listesinde "data" alanı yok.');
-    let rows = json.data.filter((m): m is Obj => isObj(m));
-    if (provider === 'openai') {
-      rows = rows
-        .filter((m) => !NOT_CHAT.test(str(m.id)))
-        .sort((a, b) => (typeof b.created === 'number' ? b.created : 0) - (typeof a.created === 'number' ? a.created : 0));
-    }
-    ids = rows.map((m) => str(m.id));
-  }
-  return [...new Set(ids.map((s) => s.trim()).filter(Boolean))];
-}
-
 /* ---------- Error mapping ---------- */
 
 /** Makes a provider message displayable: masks the key if present, strips angle brackets, truncates. */
@@ -365,7 +328,7 @@ export function providerMessage(bodyText: string): { message: string; marker: st
 }
 
 /** Turns a non-2xx HTTP response into an AiError. */
-export function httpError(provider: ProviderId, status: number, bodyText: string, key = ''): AiError {
+export function httpError(_provider: ProviderId, status: number, bodyText: string, key = ''): AiError {
   const { message, marker } = providerMessage(bodyText);
   const detail = tidyMessage(message, key);
   let code: AiErrorCode = 'provider';
@@ -376,8 +339,7 @@ export function httpError(provider: ProviderId, status: number, bodyText: string
   const withStatus = detail ? `${detail} (HTTP ${status})` : `HTTP ${status}`;
   const hint =
     code === 'provider' && status === 404
-      ? ' Model adını ve adresi kontrol edin.' +
-        (provider === 'opencode' ? " OpenCode Go'da yalnızca chat/completions uç noktasını kullanan modeller çalışır." : '')
+      ? ' Model adını ve adresi kontrol edin.'
       : '';
   return new AiError(code, withStatus + hint);
 }
@@ -386,11 +348,7 @@ export function httpError(provider: ProviderId, status: number, bodyText: string
 export function networkError(provider: ProviderId, timedOut: boolean): AiError {
   if (timedOut) return new AiError('network', 'İstek zaman aşımına uğradı; biraz sonra yeniden deneyin.');
   const def = providerDef(provider);
-  const extra = def.corsVerified
-    ? ''
-    : def.id === 'opencode'
-      ? " OpenCode Go'nun tarayıcıdan çağrıya izin verdiği doğrulanmadı; engel büyük olasılıkla CORS."
-      : ' Özel adresin tarayıcıdan çağrıya (CORS) izin verdiğinden emin olun.';
+  const extra = def.corsVerified ? '' : ' Özel adresin tarayıcıdan çağrıya (CORS) izin verdiğinden emin olun.';
   return new AiError('network', NETWORK_HINT + extra);
 }
 

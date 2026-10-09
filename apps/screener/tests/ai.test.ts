@@ -4,23 +4,21 @@ import { readFileSync } from 'node:fs';
 
 import {
   buildCompletionRequest,
-  buildModelsRequest,
   checkBaseUrl,
   cleanText,
   httpError,
   isConfigured,
   parseCompletion,
-  parseModels,
   PROVIDERS,
   THINKING_HEADROOM,
   tidyMessage,
 } from '../src/ai/providers.ts';
 import type { ProviderId, ResolvedConfig } from '../src/ai/providers.ts';
-import { complete, listModels, testConnection } from '../src/ai/client.ts';
+import { complete, testConnection } from '../src/ai/client.ts';
 import type { FetchLike } from '../src/ai/client.ts';
 import * as config from '../src/ai/config.ts';
 import { CACHE_MAX, cacheGet, cacheKey, cachePut, cacheSize, hash } from '../src/ai/cache.ts';
-import { industryPrompt, matchingStories, PROMPT_VERSION, smaFigures, stockPrompt } from '../src/ai/prompts.ts';
+import { industryPrompt, PROMPT_VERSION, smaFigures, stockPrompt } from '../src/ai/prompts.ts';
 import { AiError, aiErrorMessage, aiStatus, aiTextHtml, commentStock, compareIndustry } from '../src/ai/index.ts';
 import { on, setData, toView } from '../src/data/store.ts';
 import { DEF, evaluate } from '../src/lib/evaluate.ts';
@@ -153,15 +151,6 @@ test('Gemini request: key in the header, not the URL; native API body', () => {
   });
 });
 
-test('OpenCode Go request: OpenAI-compatible, max_tokens', () => {
-  const r = buildCompletionRequest(cfg('opencode'), REQ);
-  assert.equal(r.url, 'https://opencode.ai/zen/go/v1/chat/completions');
-  assert.equal(r.headers.Authorization, `Bearer ${KEY}`);
-  const body = JSON.parse(r.body!);
-  assert.equal(body.max_tokens, 500 + THINKING_HEADROOM);
-  assert.equal('max_completion_tokens' in body, false);
-});
-
 test('Custom endpoint request: the base URL is normalized; without a key no Authorization is sent', () => {
   const r = buildCompletionRequest(cfg('custom', { baseUrl: 'http://localhost:11434/v1/', key: '' }), REQ);
   assert.equal(r.url, 'http://localhost:11434/v1/chat/completions');
@@ -182,32 +171,13 @@ test('an empty system prompt is not written to the body', () => {
   assert.deepEqual(JSON.parse(buildCompletionRequest(cfg('openai'), empty).body!).messages, [{ role: 'user', content: 'u' }]);
 });
 
-test('model list requests', () => {
-  const a = buildModelsRequest(cfg('anthropic'));
-  assert.equal(a.url, 'https://api.anthropic.com/v1/models?limit=1000');
-  assert.equal(a.method, 'GET');
-  assert.deepEqual(a.headers, {
-    'x-api-key': KEY,
-    'anthropic-version': '2023-06-01',
-    'anthropic-dangerous-direct-browser-access': 'true',
-  });
-  assert.equal(buildModelsRequest(cfg('openai')).url, 'https://api.openai.com/v1/models');
-  assert.deepEqual(buildModelsRequest(cfg('openai')).headers, { Authorization: `Bearer ${KEY}` });
-  const g = buildModelsRequest(cfg('gemini'));
-  assert.equal(g.url, 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000');
-  assert.deepEqual(g.headers, { 'x-goog-api-key': KEY });
-  assert.equal(buildModelsRequest(cfg('opencode')).url, 'https://opencode.ai/zen/go/v1/models');
-  assert.equal(buildModelsRequest(cfg('custom', { baseUrl: 'https://llm.ornek.com/v1' })).url, 'https://llm.ornek.com/v1/models');
-});
-
 test('the key is never written to the URL or the body for any provider', () => {
   for (const p of PROVIDERS) {
     const c = cfg(p.id, { baseUrl: 'https://llm.ornek.com/v1' });
-    for (const r of [buildCompletionRequest(c, REQ), buildModelsRequest(c)]) {
-      assert.equal(r.url.includes(KEY), false, `${p.id}: key in the URL`);
-      assert.equal((r.body ?? '').includes(KEY), false, `${p.id}: key in the body`);
-      assert.ok(Object.values(r.headers).some((v) => v.includes(KEY)), `${p.id}: key should be in a header`);
-    }
+    const r = buildCompletionRequest(c, REQ);
+    assert.equal(r.url.includes(KEY), false, `${p.id}: key in the URL`);
+    assert.equal((r.body ?? '').includes(KEY), false, `${p.id}: key in the body`);
+    assert.ok(Object.values(r.headers).some((v) => v.includes(KEY)), `${p.id}: key should be in a header`);
   }
 });
 
@@ -272,45 +242,6 @@ test('parseCompletion: Gemini drops thought parts and reports a block', () => {
   assert.equal(parseCompletion('gemini', { candidates: [{ content: { parts: [] }, finishReason: 'MAX_TOKENS' }] }).truncated, true);
 });
 
-test('parseModels: each provider\'s list shape', () => {
-  const anthropic = {
-    data: [
-      { type: 'model', id: 'claude-b', display_name: 'B', created_at: '2026-07-24T00:00:00Z' },
-      { type: 'model', id: 'claude-a', display_name: 'A', created_at: '2025-01-01T00:00:00Z' },
-    ],
-    has_more: false,
-    first_id: 'claude-b',
-    last_id: 'claude-a',
-  };
-  assert.deepEqual(parseModels('anthropic', anthropic), ['claude-b', 'claude-a']);
-
-  const openai = {
-    object: 'list',
-    data: [
-      { id: 'gpt-old', object: 'model', created: 100, owned_by: 'openai' },
-      { id: 'text-embedding-3-small', object: 'model', created: 300, owned_by: 'openai' },
-      { id: 'gpt-new', object: 'model', created: 200, owned_by: 'openai' },
-      { id: 'whisper-1', object: 'model', created: 50, owned_by: 'openai' },
-      { id: 'gpt-new', object: 'model', created: 200, owned_by: 'openai' },
-    ],
-  };
-  assert.deepEqual(parseModels('openai', openai), ['gpt-new', 'gpt-old']);
-  // No filtering for other OpenAI-compatible endpoints
-  assert.deepEqual(parseModels('custom', openai), ['gpt-old', 'text-embedding-3-small', 'gpt-new', 'whisper-1']);
-
-  const gemini = {
-    models: [
-      { name: 'models/gemini-pro-x', displayName: 'Pro', supportedGenerationMethods: ['generateContent', 'countTokens'] },
-      { name: 'models/embedding-x', displayName: 'Emb', supportedGenerationMethods: ['embedContent'] },
-      { name: 'models/gemini-flash-x', supportedGenerationMethods: ['generateContent'] },
-    ],
-    nextPageToken: '',
-  };
-  assert.deepEqual(parseModels('gemini', gemini), ['gemini-pro-x', 'gemini-flash-x']);
-  assert.throws(() => parseModels('gemini', { data: [] }), AiError);
-  assert.throws(() => parseModels('openai', 'x'), AiError);
-});
-
 /* ---------- Error mapping ---------- */
 
 test('httpError: status codes map to AiError codes', () => {
@@ -335,10 +266,10 @@ test('httpError: status codes map to AiError codes', () => {
   const gemOther = JSON.stringify({ error: { code: 400, message: 'Invalid JSON payload', status: 'INVALID_ARGUMENT' } });
   assert.equal(httpError('gemini', 400, gemOther).code, 'provider');
 
-  const e404 = httpError('opencode', 404, JSON.stringify({ error: { message: 'model not found' } }));
+  const e404 = httpError('openai', 404, JSON.stringify({ error: { message: 'model not found' } }));
   assert.equal(e404.code, 'provider');
   assert.match(e404.message, /model not found \(HTTP 404\)/);
-  assert.match(e404.message, /chat\/completions/);
+  assert.match(e404.message, /Model adını ve adresi kontrol edin/);
 
   const e500 = httpError('openai', 500, '<html><body>Bad gateway</body></html>');
   assert.equal(e500.code, 'provider');
@@ -403,7 +334,6 @@ test('complete: fetch TypeError maps to network; the message mentions the CORS p
     throw new TypeError('Failed to fetch');
   };
   await rejects(complete(REQ, { fetch: failing, config: cfg('anthropic') }), 'network', /CORS/);
-  await rejects(complete(REQ, { fetch: failing, config: cfg('opencode') }), 'network', /OpenCode Go'nun tarayıcıdan çağrıya izin verdiği doğrulanmadı/);
   await rejects(
     complete(REQ, { fetch: failing, config: cfg('custom', { baseUrl: 'https://llm.ornek.com/v1' }) }),
     'network',
@@ -442,22 +372,12 @@ test('testConnection: a 2xx response with empty text also succeeds; 401 fails', 
   await rejects(testConnection({ fetch: mockFetch(() => json({ error: { message: 'no' } }, 401)).fetch, config: cfg('openai') }), 'auth');
 });
 
-test('listModels: fetches the list; without a key it sends no request', async () => {
-  const m = mockFetch(() => json({ data: [{ id: 'claude-b' }, { id: 'claude-a' }], has_more: false }));
-  assert.deepEqual(await listModels({ fetch: m.fetch, config: cfg('anthropic', { model: '' }) }), ['claude-b', 'claude-a']);
-  assert.equal(m.calls[0].url, 'https://api.anthropic.com/v1/models?limit=1000');
-  assert.equal(m.calls[0].init.method, 'GET');
-  assert.equal(m.calls[0].init.body, undefined);
-  await rejects(listModels({ fetch: m.fetch, config: cfg('anthropic', { key: '' }) }), 'not_configured');
-  assert.equal(m.calls.length, 1);
-});
-
 /* ---------- Settings storage ---------- */
 
 test('settings are stored per provider and every change emits an "ai" event', () => {
   let events = 0;
   const off = on('ai', () => events++);
-  assert.deepEqual(aiStatus(), { configured: false, provider: 'anthropic', providerLabel: 'Claude', model: '' });
+  assert.deepEqual(aiStatus(), { configured: false, provider: 'anthropic', providerLabel: 'Claude', model: 'claude-haiku-4-5-20251001' });
 
   config.setKey('anthropic', '  k-claude  ');
   config.setModel('anthropic', 'claude-x');
@@ -477,16 +397,40 @@ test('settings are stored per provider and every change emits an "ai" event', ()
   assert.deepEqual(aiStatus(), { configured: true, provider: 'custom', providerLabel: 'Özel adres', model: 'llama' });
 
   config.setProvider('openai');
-  config.setModelList('openai', ['gpt-x', 'gpt-y']);
   config.clearKey('openai');
   assert.equal(config.getKey('openai'), '');
-  assert.deepEqual(config.getModelList('openai'), []);
   assert.equal(config.getModel('openai'), 'gpt-x', 'the model name is remembered');
   assert.equal(aiStatus().configured, false);
   off();
 
   // The store holds only keys with the "fintools.screener." prefix
   assert.ok([...store.keys()].every((k) => k.startsWith('fintools.screener.ai.')));
+});
+
+test('the model defaults to the provider default until the user types one', () => {
+  store.clear();
+  for (const p of PROVIDERS) assert.equal(config.getModel(p.id), p.defaultModel);
+  assert.notEqual(config.getModel('anthropic'), '');
+  assert.equal(config.getModel('custom'), '', 'the custom endpoint has no default model');
+  config.setModel('openai', 'gpt-x');
+  assert.equal(config.getModel('openai'), 'gpt-x');
+  config.setModel('openai', '  ');
+  assert.equal(config.getModel('openai'), PROVIDERS.find((p) => p.id === 'openai')!.defaultModel);
+  assert.equal(config.getModel('gemini'), PROVIDERS.find((p) => p.id === 'gemini')!.defaultModel);
+  store.clear();
+});
+
+test('a stored provider that no longer exists (opencode) or is unknown falls back to the default provider', () => {
+  store.clear();
+  for (const stale of ['"opencode"', '"yok"', '42', 'null']) {
+    store.set('fintools.screener.ai.provider', stale);
+    store.set('fintools.screener.ai.key.opencode', '"k"');
+    store.set('fintools.screener.ai.models.opencode', '["a","b"]');
+    assert.equal(config.getProvider(), 'anthropic');
+    assert.equal(config.resolveConfig().provider, 'anthropic');
+    assert.equal(aiStatus().provider, 'anthropic');
+  }
+  store.clear();
 });
 
 test('a corrupt stored value falls back to the default', () => {
@@ -539,10 +483,9 @@ test('stockPrompt: the data figures, rule results, median, terms and rules', () 
   assert.match(p.system, /Yalnızca sana verilen verideki sayıları kullan/);
   assert.match(p.system, /Al, sat, tut/);
   assert.match(p.system, /110–170 kelime/);
-  assert.match(p.system, /Sahil dondurmacısı/);
-  assert.match(p.system, /Film Seti Kahvesi/);
-  assert.match(p.system, /Mahalle sandığı/);
   assert.match(p.system, /markdown/);
+  assert.match(p.system, /BIST ve ABD hisselerini birbiriyle kıyaslama/);
+  assert.doesNotMatch(p.system, /hikâye|matchingStories/);
   assert.match(p.user, /F\/K = P\/E/);
   assert.match(p.user, /Net borç\/FAVÖK = Net debt\/EBITDA/);
 
@@ -560,19 +503,10 @@ test('stockPrompt: the data figures, rule results, median, terms and rules', () 
   assert.ok(payload.ruleResult.checks.some((c: { check: string; status: string }) => c.check === 'Borç' && c.status === 'kaldı'));
   assert.equal(payload.industryMedian.stocksInMedian, 2);
   assert.equal(payload.movingAverages, null);
-  assert.deepEqual(payload.matchingStories, ['Sahil dondurmacısı']);
+  assert.equal('matchingStories' in payload, false);
+  assert.deepEqual(Object.keys(payload), ['dataDate', 'market', 'currency', 'stock', 'ruleResult', 'industryMedian', 'movingAverages']);
   // The prompt text refers to the keys in the data by name
-  assert.match(p.system, /"matchingStories"/);
   assert.match(p.user, /industryMedian ya da movingAverages null ise/);
-});
-
-test('matchingStories: cyclical, one-off jump, bank', () => {
-  const st = (k: string) => matchingStories(view(k), evaluate(view(k), DEF));
-  assert.deepEqual(st('TUPRS'), ['beachIcecream', 'filmSetCafe', 'inflationProfit']);
-  assert.deepEqual(st('TOASO'), ['filmSetCafe', 'inflationProfit']);
-  assert.deepEqual(st('GARAN'), ['neighborhoodFund']);
-  assert.deepEqual(st('VZ'), []);
-  assert.deepEqual(st('GUBRF'), []);
 });
 
 test('smaFigures: averages from the data or computed from the price series', () => {
@@ -608,6 +542,7 @@ test('industryPrompt: a single market, stocks with no data in a separate list', 
     { asOf: DATA.asOf },
   );
   assert.match(p.system, /130–200 kelime/);
+  assert.doesNotMatch(p.system, /hikâye|matchingStories/);
   const payload = JSON.parse(p.user.slice(p.user.indexOf('Veri (JSON):') + 'Veri (JSON):'.length));
   assert.deepEqual(payload.stocks.map((h: { symbol: string }) => h.symbol).sort(), ['PGSUS', 'THYAO']);
   assert.deepEqual(payload.stocksWithoutData, []);

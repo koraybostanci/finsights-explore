@@ -14,13 +14,12 @@ import { term } from '@fintools/shared/terms';
 import type { MarketId } from '../types.ts';
 
 import { aiErrorMessage } from '../ai/index.ts';
-import { listModels, testConnection } from '../ai/client.ts';
+import { testConnection } from '../ai/client.ts';
 import {
   clearKey,
   getBaseUrl,
   getKey,
   getModel,
-  getModelList,
   getProvider,
   setBaseUrl,
   setKey,
@@ -40,8 +39,6 @@ type Note = { kind: 'idle' } | { kind: 'busy'; text: string } | { kind: 'ok'; te
 
 let note: Note = { kind: 'idle' };
 let showKey = false;
-let manualModel = false;
-const MANUAL = '__manual__';
 
 function noteHtml(): string {
   if (note.kind === 'idle') return '';
@@ -52,22 +49,12 @@ function noteHtml(): string {
 
 function modelControl(): string {
   const p = getProvider();
-  const current = getModel(p);
-  const list = getModelList(p);
-  if (!list.length || manualModel) {
-    const back = list.length
-      ? ` <button type="button" class="st-link" id="st-model-list">Listeden seç</button>`
-      : '';
-    return `<input type="text" id="st-model" value="${esc(current)}" placeholder="Model kimliğini yazın" autocomplete="off" spellcheck="false">
-      <small>${list.length ? 'Model kimliğini elle yazıyorsunuz.' : 'Liste, anahtar girilince sağlayıcıdan alınır; model kimliğini elle de yazabilirsiniz.'}${back}</small>`;
-  }
-  const all = current && !list.includes(current) ? [current, ...list] : list;
-  const opts = [
-    `<option value=""${current ? '' : ' selected'}>Model seçin…</option>`,
-    ...all.map((m) => `<option value="${esc(m)}"${m === current ? ' selected' : ''}>${esc(m)}</option>`),
-    `<option value="${MANUAL}">Elle yaz…</option>`,
-  ].join('');
-  return `<select id="st-model">${opts}</select><small>${all.length} model listelendi. Listede yoksa "Elle yaz" ile kimliğini girebilirsiniz.</small>`;
+  const def = providerDef(p);
+  const hint = def.defaultModel
+    ? `Varsayılan: ${esc(def.defaultModel)}. Başka bir model kimliği de yazabilirsiniz.`
+    : 'Kullandığınız uç noktadaki model kimliğini yazın.';
+  return `<input type="text" id="st-model" value="${esc(getModel(p))}" placeholder="Model kimliğini yazın" autocomplete="off" spellcheck="false">
+      <small>${hint}</small>`;
 }
 
 function aiHtml(): string {
@@ -110,7 +97,6 @@ function aiHtml(): string {
       </div>
       <div class="toolbar">
         <button type="button" class="btn primary" id="st-test">Bağlantıyı sına</button>
-        <button type="button" class="btn" id="st-models">Modelleri getir</button>
         <button type="button" class="btn" id="st-key-del"${key ? '' : ' disabled'}>Anahtarı sil</button>
         <div class="st-status" id="st-status" role="status" aria-live="polite">${noteHtml()}</div>
       </div>
@@ -141,27 +127,8 @@ function saveFields(): void {
   if (key && key.value.trim() !== getKey(p)) setKey(p, key.value);
   const base = root?.querySelector<HTMLInputElement>('#st-base');
   if (base && base.value.trim() !== getBaseUrl()) setBaseUrl(base.value);
-  const model = root?.querySelector<HTMLInputElement | HTMLSelectElement>('#st-model');
-  if (model && model.value !== MANUAL && model.value.trim() !== getModel(p)) setModel(p, model.value);
-}
-
-async function fetchModels(silent = false): Promise<void> {
-  saveFields();
-  const p = getProvider();
-  setNote({ kind: 'busy', text: 'Modeller alınıyor…' });
-  try {
-    const models = await listModels();
-    if (getProvider() !== p) return;
-    manualModel = false;
-    note = models.length
-      ? { kind: 'ok', text: `${models.length} model bulundu${getModel(p) ? '' : '; birini seçin'}` }
-      : { kind: 'err', text: 'Sağlayıcı model listesi döndürmedi. Model kimliğini elle yazabilirsiniz.' };
-    renderAi();
-  } catch (e) {
-    if (getProvider() !== p) return;
-    if (silent) setNote({ kind: 'idle' });
-    else setNote({ kind: 'err', text: aiErrorMessage(e) });
-  }
+  const model = root?.querySelector<HTMLInputElement>('#st-model');
+  if (model && model.value.trim() !== getModel(p)) setModel(p, model.value);
 }
 
 async function runTest(): Promise<void> {
@@ -175,7 +142,7 @@ async function runTest(): Promise<void> {
         ? 'Önce geçerli bir adres girin.'
         : def.keyRequired && !getKey(p)
           ? 'Önce API anahtarını girin.'
-          : 'Önce bir model seçin ya da model kimliğini yazın.';
+          : 'Önce model kimliğini yazın.';
     setNote({ kind: 'err', text: missing });
     return;
   }
@@ -199,7 +166,6 @@ function onAiChange(e: Event): void {
       setProvider(t.value);
       note = { kind: 'idle' };
       showKey = false;
-      manualModel = false;
       renderAi();
     }
     return;
@@ -209,7 +175,6 @@ function onAiChange(e: Event): void {
     setKey(p, t.value);
     const del = root?.querySelector<HTMLButtonElement>('#st-key-del');
     if (del) del.disabled = !t.value.trim();
-    if (t.value.trim() && !getModelList(p).length) void fetchModels(true);
     return;
   }
   if (t.id === 'st-base' && t instanceof HTMLInputElement) {
@@ -227,14 +192,10 @@ function onAiChange(e: Event): void {
     }
     return;
   }
-  if (t.id === 'st-model' && (t instanceof HTMLInputElement || t instanceof HTMLSelectElement)) {
-    if (t.value === MANUAL) {
-      manualModel = true;
-      renderAi();
-      root?.querySelector<HTMLInputElement>('#st-model')?.focus();
-      return;
-    }
+  if (t.id === 'st-model' && t instanceof HTMLInputElement) {
     setModel(p, t.value);
+    // An emptied field falls back to the provider's default model
+    t.value = getModel(p);
     if (note.kind !== 'idle') setNote({ kind: 'idle' });
   }
 }
@@ -249,15 +210,10 @@ function onAiClick(e: Event): void {
     root?.querySelector<HTMLInputElement>('#st-key')?.focus();
   } else if (b.id === 'st-test') {
     void runTest();
-  } else if (b.id === 'st-models') {
-    void fetchModels();
   } else if (b.id === 'st-key-del') {
     clearKey(getProvider());
     note = { kind: 'ok', text: 'Anahtar silindi' };
     showKey = false;
-    renderAi();
-  } else if (b.id === 'st-model-list') {
-    manualModel = false;
     renderAi();
   }
 }
