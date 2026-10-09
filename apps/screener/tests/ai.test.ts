@@ -242,6 +242,8 @@ test('parseCompletion: Gemini drops thought parts and reports a block', () => {
   assert.equal(parseCompletion('gemini', { candidates: [{ content: { parts: [] }, finishReason: 'MAX_TOKENS' }] }).truncated, true);
 });
 
+/* ---------- Error mapping ---------- */
+
 test('httpError: status codes map to AiError codes', () => {
   const anth401 = JSON.stringify({ type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } });
   const e401 = httpError('anthropic', 401, anth401);
