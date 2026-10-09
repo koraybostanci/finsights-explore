@@ -73,7 +73,7 @@ To add a stock, add one object to `stocks`:
 - `industry`: an id from `industries` in the same file. To add one: `"id": { "nameTr": "...", "nameEn": "...", "cyclical": false }`. Stocks of one market with the same industry are compared with each other.
 - `tv`: TradingView symbol with exchange (`BIST:THYAO`, `NYSE:KO`). Required for US; BIST defaults to `BIST:<symbol>`.
 - `yf`: Yahoo symbol. Defaults to `<symbol>.IS` for BIST and `<symbol>` for US; write it out when it differs, for example `BRK-B`.
-- Optional: `bank` (uses `config/banks_manual.json` for NPL, CAR and NIM, which the sources do not provide; update `asOf` there when banks report), `cyclical` (overrides the industry's cyclical flag), `functionalCurrency` (functional currency note), `note` and `noteAsOf`.
+- Optional: `bank` (uses `config/banks_manual.json` for NPL, CAR and NIM, which the sources do not provide; update `asOf` there when banks report; the file has its own `schema` number, separate from the market data contract), `cyclical` (overrides the industry's cyclical flag), `functionalCurrency` (functional currency note), `note` and `noteAsOf`.
 
 The app shows a `note` only while the market's data is from the `noteAsOf` day or earlier; newer data hides it because it could contradict the new figures. To keep a note visible, rewrite it and set `noteAsOf` to the date of the data it describes.
 
