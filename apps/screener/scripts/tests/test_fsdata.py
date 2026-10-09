@@ -39,7 +39,7 @@ from fsdata.mapping import (  # noqa: E402
     simple_average,
     sma_set,
 )
-from fsdata.pipeline import build_seed, merge_series, run_fetch  # noqa: E402
+from fsdata.pipeline import build_seed, compose, merge_series, run_fetch, valid_doc  # noqa: E402
 from fsdata.sources import SourceError, TradingViewClient, YahooClient, parse_rows, unknown_field  # noqa: E402
 from fsdata.util import clean_number, r0, r2, tidy  # noqa: E402
 from fsdata.writer import validate_market, validate_prices  # noqa: E402
@@ -304,7 +304,7 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(res.doc["period"], {"BIST": "2026/6", "US": "2026/6"})
         self.assertEqual(res.doc["asOfBy"], {"BIST": NOW.isoformat(timespec="seconds"), "US": NOW.isoformat(timespec="seconds")})
         self.assertFalse(any("loss" in s for s in res.doc["stocks"]), "every synthetic row is profitable")
-        self.assertEqual(res.doc["schema"], 2)
+        self.assertEqual(res.doc["schema"], 3)
         by = {(s["market"], s["symbol"]): s for s in res.doc["stocks"]}
         self.assertEqual(len(by), len(UNIVERSE.stocks))
         thy = by[("BIST", "THYAO")]
@@ -419,6 +419,10 @@ class Validation(unittest.TestCase):
         doc = json.loads(json.dumps(SEED))
         doc["schema"] = 1
         self.assertTrue(validate_market(doc), "schema 1 is no longer accepted")
+        doc["schema"] = 2
+        self.assertTrue(validate_market(doc), "schema 2 is no longer accepted")
+        self.assertFalse(valid_doc(doc))
+        self.assertTrue(valid_doc(SEED))
         doc = json.loads(json.dumps(SEED))
         doc["stocks"][0]["industry"] = "nope"
         self.assertTrue(any("industry" in p for p in validate_market(doc)))
@@ -440,6 +444,24 @@ class Validation(unittest.TestCase):
         raw["stocks"][0]["industry"] = "does_not_exist"
         with self.assertRaises(ConfigError):
             parse_universe(raw)
+
+    def test_renamed_stock_keys(self):
+        raw = json.loads((APP_ROOT / "config" / "stocks.json").read_text(encoding="utf-8"))
+        self.assertEqual(raw["schema"], 3)
+        raw["stocks"][0]["cyclical"] = True
+        uni = parse_universe(raw)
+        self.assertIs(uni.stocks[0].cyclical, True)
+        self.assertEqual(compose(uni.stocks[0], {}, {})["cyclical"], True)
+        pgsus = next(s for s in uni.stocks if s.symbol == "PGSUS")
+        self.assertEqual(compose(pgsus, {}, {})["functionalCurrency"], "EUR")
+        old = json.loads(json.dumps(raw))
+        old["stocks"][0]["cyc"] = True
+        with self.assertRaises(ConfigError):
+            parse_universe(old)
+        old = json.loads(json.dumps(raw))
+        old["schema"] = 2
+        with self.assertRaises(ConfigError):
+            parse_universe(old)
 
     def test_universe_rules(self):
         self.assertEqual(len(UNIVERSE.market("BIST")), 30)

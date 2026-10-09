@@ -1,5 +1,5 @@
 {
- "schema": 2,
+ "schema": 3,
  "asOf": "2026-10-02T15:00:00+03:00",
  "asOfBy": {
   "BIST": "2026-10-02T15:00:00+03:00"
@@ -266,7 +266,7 @@
    "sma20": null,
    "sma50": null,
    "sma200": null,
-   "usd": "USD",
+   "functionalCurrency": "USD",
    "note": "FAVÖK gerilerken net kâr artmış; fark faaliyet dışı gelirlerden. Güçlü net nakit pozisyonu var.",
    "noteAsOf": "2026-10-02"
   },
@@ -289,7 +289,7 @@
    "sma20": null,
    "sma50": null,
    "sma200": null,
-   "usd": "USD",
+   "functionalCurrency": "USD",
    "note": "Kâr düşük bir bazdan toparlanıyor; çelik fiyatlarına bağlı döngüsel iş.",
    "noteAsOf": "2026-10-02"
   },
@@ -450,7 +450,7 @@
    "sma20": null,
    "sma50": null,
    "sma200": null,
-   "usd": "EUR",
+   "functionalCurrency": "EUR",
    "note": "Son dönemde zarara geçmiş; uçak finansmanı kaynaklı yüksek borç.",
    "noteAsOf": "2026-10-02"
   },
@@ -543,7 +543,7 @@
    "sma20": null,
    "sma50": null,
    "sma200": null,
-   "usd": "EUR",
+   "functionalCurrency": "EUR",
    "note": "Geçen yıl zarardan bu yıl kâra geçiş; PEG baz etkisiyle düşük görünüyor.",
    "noteAsOf": "2026-10-02"
   },
@@ -588,7 +588,7 @@
    "sma20": null,
    "sma50": null,
    "sma200": null,
-   "usd": "USD",
+   "functionalCurrency": "USD",
    "note": "Kaynak PEG'i pozitif gösteriyor ama 2026/6'da FAVÖK ve net kâr gerilemiş; veri tutarsız.",
    "noteAsOf": "2026-10-02"
   },

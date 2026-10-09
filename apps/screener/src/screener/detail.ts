@@ -20,7 +20,7 @@ export function extraInfo(s: StockView): string[] {
   if (s.pe != null && s.roe != null)
     parts.push(`Yaklaşık özkaynak kârlılığı %${nf(s.roe, 1)} (PD/DD ${nf(s.pb)} ÷ F/K ${nf(s.pe)}).`);
   if (s.pb != null && s.pb < 1) parts.push(`PD/DD ${nf(s.pb)}: piyasa şirketi özkaynağının altında fiyatlıyor.`);
-  if (s.usd) parts.push(`Fonksiyonel para birimi ${s.usd}; kârı kur hareketinden etkilenir.`);
+  if (s.functionalCurrency) parts.push(`Fonksiyonel para birimi ${s.functionalCurrency}; kârı kur hareketinden etkilenir.`);
   if (s.targetPrice != null && s.price != null && s.price !== 0) {
     const pot = (s.targetPrice / s.price - 1) * 100;
     parts.push(

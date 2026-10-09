@@ -15,7 +15,7 @@
  ],
  "properties": {
   "schema": {
-   "const": 2
+   "const": 3
   },
   "asOf": {
    "type": "string",
@@ -161,7 +161,7 @@
     "bank": {
      "type": "boolean"
     },
-    "cyc": {
+    "cyclical": {
      "type": "boolean"
     },
     "price": {
@@ -217,7 +217,7 @@
     "sma200": {
      "$ref": "#/definitions/positive"
     },
-    "usd": {
+    "functionalCurrency": {
      "type": "string"
     },
     "note": {

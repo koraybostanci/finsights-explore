@@ -23,10 +23,10 @@ class StockSpec:
     market: str
     industry: str
     bank: bool = False
-    cyc: bool | None = None
+    cyclical: bool | None = None
     tv: str = ""
     yf: str = ""
-    usd: str | None = None
+    functional_currency: str | None = None
     note: str | None = None
     note_as_of: str | None = None
 
@@ -99,10 +99,10 @@ def parse_universe(doc: Any, schema_path: Path | None = None) -> Universe:
                 market=s["market"],
                 industry=s["industry"],
                 bank=bool(s.get("bank", False)),
-                cyc=s.get("cyc"),
+                cyclical=s.get("cyclical"),
                 tv=tv,
                 yf=s.get("yf", yf_default),
-                usd=s.get("usd"),
+                functional_currency=s.get("functionalCurrency"),
                 note=s.get("note"),
                 note_as_of=s.get("noteAsOf"),
             )

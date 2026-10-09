@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 import { median, industryMedian, groupByIndustry } from '../src/lib/stats.ts';
 import { DEF, evaluate, cellColor } from '../src/lib/evaluate.ts';
-import { marketAsOf, marketHasData, setData, toView } from '../src/data/store.ts';
+import { data, dataError, loadData, marketAsOf, marketHasData, setData, toView } from '../src/data/store.ts';
 import { noteIsCurrent } from '../src/lib/note.ts';
 import type { MarketData, StockView } from '../src/types.ts';
 
@@ -15,6 +15,35 @@ const view = (k: string): StockView => {
   assert.ok(v, `${k} is not in the data`);
   return v;
 };
+
+test('toView: the stock override wins over the industry cyclical flag, otherwise the industry flag applies', () => {
+  const industries = { air: { nameTr: 'Havayolu', nameEn: 'Airlines', cyclical: true }, food: { nameTr: 'Gıda', nameEn: 'Food', cyclical: false } };
+  const { cyclical: _resolved, ...base } = { ...view('THYAO'), industry: 'air' };
+  assert.equal(toView(base, industries).cyclical, true);
+  assert.equal(toView({ ...base, cyclical: false }, industries).cyclical, false);
+  assert.equal(toView({ ...base, industry: 'food' }, industries).cyclical, false);
+  assert.equal(toView({ ...base, industry: 'food', cyclical: true }, industries).cyclical, true);
+});
+
+test('loadData: a schema-2 document is rejected, a schema-3 one is accepted', async () => {
+  const realFetch = globalThis.fetch;
+  const serve = (doc: unknown): void => {
+    globalThis.fetch = (async () => ({ ok: true, status: 200, json: async () => doc })) as unknown as typeof fetch;
+  };
+  try {
+    serve({ ...DATA, schema: 2 });
+    await loadData();
+    assert.equal(dataError(), 'Beklenmeyen veri biçimi');
+    assert.equal(data().stocks.length, 0);
+    serve(DATA);
+    await loadData();
+    assert.equal(dataError(), null);
+    assert.equal(data().stocks.length, DATA.stocks.length);
+  } finally {
+    globalThis.fetch = realFetch;
+    setData(DATA);
+  }
+});
 
 test('median skips empty values', () => {
   assert.equal(median([3, 1, 2]), 2);

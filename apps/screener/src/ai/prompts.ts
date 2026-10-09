@@ -141,7 +141,7 @@ export function stockPrompt(input: StockCommentInput, ctx: PromptContext): Promp
     hasData: s.hasData,
     analystTargetPrice: r(s.targetPrice),
   };
-  if (s.usd) stock.functionalCurrency = s.usd;
+  if (s.functionalCurrency) stock.functionalCurrency = s.functionalCurrency;
   if (s.bank) {
     stock.nplPct = r(s.npl);
     stock.carPct = r(s.car);
@@ -190,7 +190,7 @@ export function industryPrompt(input: IndustryCompareInput, ctx: PromptContext):
       ...stockFigures(row.stock),
       result: VLABEL[row.evaluation.verdict],
       warnings: row.evaluation.checks.filter((c) => c.status === 'warn' || c.status === 'bad').map((c) => c.short),
-      ...(row.stock.usd ? { functionalCurrency: row.stock.usd } : {}),
+      ...(row.stock.functionalCurrency ? { functionalCurrency: row.stock.functionalCurrency } : {}),
     })),
     stocksWithoutData: noData,
   };

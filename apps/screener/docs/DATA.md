@@ -2,7 +2,7 @@
 
 The Screener is static. Its numbers come from two kinds of JSON file that a scheduled GitHub Actions job (`.github/workflows/data.yml`) commits to the repository. Paths below are relative to `apps/screener/`.
 
-- `public/data/market.json`: one record per stock (`MarketData` in `src/types.ts`, schema 2)
+- `public/data/market.json`: one record per stock (`MarketData` in `src/types.ts`, schema 3)
 - `public/data/prices/<MARKET>-<SYMBOL>.json`: daily closes per stock (`PriceSeries`), the last 520 trading days, for example `prices/BIST-THYAO.json`
 
 Both are validated against `config/market.schema.json` and `config/prices.schema.json` before anything is written.
@@ -22,7 +22,7 @@ There is no free official API for BIST fundamentals. If a source stops working, 
 
 | Field | Meaning |
 |---|---|
-| `schema` | always `2` |
+| `schema` | always `3` |
 | `asOf` | time of the latest update of either market (ISO 8601 with offset) |
 | `asOfBy` | update time per market (`BIST`, `US`); a scheduled run fetches one market, so the two differ |
 | `source` | text shown in the data bar |
@@ -36,7 +36,7 @@ Stock record. Multiples and prices are rounded to two decimals, market cap to on
 |---|---|---|
 | `symbol`, `name`, `market`, `industry` | from `config/stocks.json` | |
 | `currency` | `TRY` for BIST, `USD` for US | |
-| `bank`, `cyc`, `usd` | optional, copied from the config | |
+| `bank`, `cyclical`, `functionalCurrency` | optional, copied from the config | |
 | `price` | last price | `close`; a row without a positive price is rejected |
 | `pe` | P/E, trailing 12 months | `price_earnings_ttm`; `null` when EPS is zero or negative |
 | `loss` | `true` when EPS is zero or negative; otherwise absent | `earnings_per_share_diluted_ttm`; tells "loss" from "no P/E in the source" |
@@ -73,7 +73,7 @@ To add a stock, add one object to `stocks`:
 - `industry`: an id from `industries` in the same file. To add one: `"id": { "nameTr": "...", "nameEn": "...", "cyclical": false }`. Stocks of one market with the same industry are compared with each other.
 - `tv`: TradingView symbol with exchange (`BIST:THYAO`, `NYSE:KO`). Required for US; BIST defaults to `BIST:<symbol>`.
 - `yf`: Yahoo symbol. Defaults to `<symbol>.IS` for BIST and `<symbol>` for US; write it out when it differs, for example `BRK-B`.
-- Optional: `bank` (uses `config/banks_manual.json` for NPL, CAR and NIM, which the sources do not provide; update `asOf` there when banks report), `cyc` (overrides the industry's cyclical flag), `usd` (functional currency note), `note` and `noteAsOf`.
+- Optional: `bank` (uses `config/banks_manual.json` for NPL, CAR and NIM, which the sources do not provide; update `asOf` there when banks report; the file has its own `schema` number, separate from the market data contract), `cyclical` (overrides the industry's cyclical flag), `functionalCurrency` (functional currency note), `note` and `noteAsOf`.
 
 The app shows a `note` only while the market's data is from the `noteAsOf` day or earlier; newer data hides it because it could contradict the new figures. To keep a note visible, rewrite it and set `noteAsOf` to the date of the data it describes.
 
