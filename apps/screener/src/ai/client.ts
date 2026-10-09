@@ -5,15 +5,13 @@
  * fetch and the configuration can be injected (tests use a fake fetch).
  */
 
-import { resolveConfig, setModelList } from './config.ts';
+import { resolveConfig } from './config.ts';
 import {
   buildCompletionRequest,
-  buildModelsRequest,
   httpError,
   isConfigured,
   networkError,
   parseCompletion,
-  parseModels,
   providerDef,
 } from './providers.ts';
 import type { CompletionRequest, HttpRequest, ResolvedConfig } from './providers.ts';
@@ -33,7 +31,6 @@ export interface CompleteOptions extends ClientDeps {
 }
 
 const COMPLETE_TIMEOUT = 90_000;
-const MODELS_TIMEOUT = 20_000;
 
 /** Sends the request; maps network errors, timeouts and non-2xx responses to AiError. Returns the body as text. */
 async function send(req: HttpRequest, cfg: ResolvedConfig, deps: ClientDeps, timeoutMs: number): Promise<string> {
@@ -97,21 +94,6 @@ export async function complete(req: CompletionRequest, opts: CompleteOptions = {
       out.truncated ? 'Model çıktı sınırına takıldı ve metin üretemedi.' : 'Model boş yanıt verdi.',
     );
   return out.text;
-}
-
-/**
- * Fetches and stores the provider's model list. Works even with no model selected;
- * the key (and, for a custom endpoint, the URL) is enough.
- */
-export async function listModels(deps: ClientDeps = {}): Promise<string[]> {
-  const cfg = deps.config ?? resolveConfig();
-  const def = providerDef(cfg.provider);
-  if (def.keyRequired && !cfg.key.trim()) throw new AiError('not_configured', 'Önce API anahtarını girin.');
-  const http = buildModelsRequest(cfg);
-  const body = await send(http, cfg, deps, MODELS_TIMEOUT);
-  const models = parseModels(cfg.provider, parseJson(body));
-  if (!deps.config) setModelList(cfg.provider, models);
-  return models;
 }
 
 /** Connection test: sends a very short request. Throws AiError on failure. */
