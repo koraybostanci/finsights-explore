@@ -63,7 +63,7 @@ async function explain(kind: string, id: string, market: MarketId, build: (asOf:
   }
 }
 
-/** Stock comment: explains a stock's multiples and averages in the language of the stories. */
+/** Stock comment: explains a stock's multiples and averages in plain language. */
 export async function commentStock(input: StockCommentInput, opts: AiCallOptions = {}): Promise<AiText> {
   const s = input.stock;
   return explain('stock', s.symbol, s.market, (asOf) => stockPrompt(input, { asOf }), opts);

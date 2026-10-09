@@ -13,7 +13,7 @@ import { TERMS } from '@fintools/shared/terms';
 import type { Evaluation, IndustryMedian, StockView } from '../types.ts';
 import type { IndustryCompareInput, StockCommentInput } from './types.ts';
 
-export const PROMPT_VERSION = 4;
+export const PROMPT_VERSION = 5;
 
 export interface Prompt {
   system: string;
@@ -21,33 +21,9 @@ export interface Prompt {
   maxTokens: number;
 }
 
-/** The stories: the names the model may refer to and what each one teaches. The model sees only the text before the colon (the name). */
-export const STORIES = {
-  aysesCoffee: "Ayşe'nin Kahvesi: bilanço (balance sheet), gelir tablosu (income statement) ve fiyat. Çarpanlar şirketi değil fiyatı ölçer; kâr ve özkaynak aynı kalsa bile fiyat değişince bütün çarpanlar değişir.",
-  cornerCafe: 'Köşe Kahvecisi: borçsuz ama yılda %5 büyüyen dükkân; F/K düşük görünse de PEG yüksek çıkar.',
-  chainCafe: 'Zincir Kahve: büyümesi faaliyetten gelen ama şubeleri krediyle açan dükkân; PEG cazip, borç yüksek.',
-  filmSetCafe:
-    'Film Seti Kahvesi: kârı tek seferlik bir kira geliriyle sıçrayan dükkân; PEG çok düşük görünür ama büyüme kalıcı değildir (baz etkisi, tek seferlik kalem).',
-  inflationProfit:
-    'Kahve satmadan gelen kâr: enflasyon muhasebesinde (IAS 29) borcun reel erimesi net parasal pozisyon kazancı olarak kâra yazılır. Net kâr sıçradıysa ilk soru: FAVÖK de büyüdü mü? Yalnızca BIST hisseleri için geçerlidir.',
-  beachIcecream:
-    'Sahil dondurmacısı: döngüsel işte kârın zirvede olduğu dönem F/K ve PEG yapay olarak düşük görünür; değer tuzağı (value trap).',
-  neighborhoodFund:
-    'Mahalle sandığı: banka borçla çalışır; FAVÖK ve net borç anlamsızdır. Özkaynak kârlılığına, takipteki kredilere ve PD/DD ≈ ÖK kârlılığı × F/K ilişkisine bakılır.',
-  dailyRevenue:
-    "Günlük hasılat ve hareketli ortalama: Ayşe'nin Kahvesi'nin günlük hasılatı inişli çıkışlıdır; ortalama gürültüyü süzer ama değişimi gecikmeyle gösterir. Ortalama, şirketin ucuz ya da pahalı olduğunu söylemez.",
-  twoCountries:
-    'İki ülke, iki kahveci: aynı F/K, faizi ve enflasyonu farklı iki ülkede aynı şeyi söylemez; bu yüzden BIST ve ABD hisseleri ayrı okunur.',
-} as const;
-
-export type StoryId = keyof typeof STORIES;
-
 function systemPrompt(minWords: number, maxWords: number): string {
   return [
-    'Sen Hisse Tarayıcı uygulamasının yardımcısısın. Okur hisse değerlemeyi Hisse Değerleme Rehberi\'ndeki kahveci hikâyeleriyle öğrenmiş olabilir; şimdi aynı mantığı gerçek hisselere uyguluyor. Görevin rakamları açıklamak: ne söylüyorlar, neyi söylemiyorlar ve sıradaki soru ne olmalı.',
-    '',
-    'Rehberdeki hikâyeler:',
-    ...Object.values(STORIES).map((s) => `- ${s}`),
+    'Sen Hisse Tarayıcı uygulamasının yardımcısısın. Okur temel analizi öğreniyor ve uygulamadaki bir hissenin ya da sektörün rakamlarını okumak istiyor. Görevin rakamları açıklamak: ne söylüyorlar, neyi söylemiyorlar ve sıradaki soru ne olmalı.',
     '',
     'Kurallar:',
     '1. Yalnızca sana verilen verideki sayıları kullan. Veride olmayan hiçbir rakam, tarih, haber, beklenti ya da şirket bilgisi ekleme. Eksik veri için "veri yok" de; tahmin yürütme.',
@@ -56,9 +32,8 @@ function systemPrompt(minWords: number, maxWords: number): string {
     '4. Türkçe yaz, okura "siz" diye seslen. Sakin ve sade bir öğretmen sesi kullan; abartılı sıfatlardan kaçın.',
     '5. Her teknik terimin ilk geçtiği yerde İngilizce karşılığını parantez içinde ver, ör. F/K (P/E). Sonraki geçişlerde yalnızca Türkçesini yaz.',
     '6. Sayıları Türkçe yazımla yaz: ondalık ayırıcı virgül (3,60), yüzde imi başta (%25).',
-    '7. Bir hikâyeyle yalnızca gerçekten uyuyorsa ve adını anarak bağ kur; uymuyorsa hiç anma. Veride "matchingStories" doluysa oradakilerden seç.',
-    '8. BIST ve ABD hisselerini birbiriyle kıyaslama. Kıyas yalnızca aynı piyasadaki aynı sektörle yapılır.',
-    `9. Uzunluk: ${minWords}–${maxWords} kelime.`,
+    '7. BIST ve ABD hisselerini birbiriyle kıyaslama. Kıyas yalnızca aynı piyasadaki aynı sektörle yapılır.',
+    `8. Uzunluk: ${minWords}–${maxWords} kelime.`,
   ].join('\n');
 }
 
@@ -148,25 +123,6 @@ export function smaFigures(input: StockCommentInput): Record<string, unknown> | 
   return out;
 }
 
-/** Which stories really fit the data; passed in so the model does not stray outside them. */
-export function matchingStories(s: StockView, e: Evaluation): StoryId[] {
-  const out: StoryId[] = [];
-  if (!s.hasData) return out;
-  if (s.bank) return ['neighborhoodFund'];
-  if (s.cyclical) out.push('beachIcecream');
-  const baseEffect = (s.peg != null && s.peg > 0 && s.peg <= 0.15) || (s.ebitdaGrowth != null && s.netIncomeGrowth == null && !!s.netIncomeGrowthNote);
-  const gap = s.ebitdaGrowth != null && s.netIncomeGrowth != null && s.netIncomeGrowth > s.ebitdaGrowth + 50;
-  if (baseEffect || gap) out.push('filmSetCafe');
-  if (gap && s.market === 'BIST') out.push('inflationProfit');
-  const debtHigh = e.checks.some((c) => c.id === 'debt' && c.status === 'bad');
-  const growthOk = e.checks.some((c) => c.id === 'growthQuality' && c.status === 'good');
-  if (debtHigh && growthOk && s.peg != null && s.peg > 0.15 && s.peg <= 1) out.push('chainCafe');
-  if (s.pe != null && s.peg != null && s.peg > 1 && s.netDebtEbitda != null && s.netDebtEbitda <= 0) out.push('cornerCafe');
-  return out;
-}
-
-const storyName = (id: StoryId): string => STORIES[id].split(':')[0];
-
 export interface PromptContext {
   /** Date of the data in the stock's market (marketAsOf) */
   asOf: string;
@@ -204,7 +160,6 @@ export function stockPrompt(input: StockCommentInput, ctx: PromptContext): Promp
     ruleResult: evaluationSummary(input.evaluation),
     industryMedian: input.median && input.median.n > 0 ? medianFigures(input.median) : null,
     movingAverages: sma,
-    matchingStories: matchingStories(s, input.evaluation).map(storyName),
   };
   const terms = termLine(s.bank ? [...STOCK_TERMS, ...BANK_TERMS] : STOCK_TERMS);
   const user = [

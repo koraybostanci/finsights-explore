@@ -20,7 +20,7 @@ import { complete, listModels, testConnection } from '../src/ai/client.ts';
 import type { FetchLike } from '../src/ai/client.ts';
 import * as config from '../src/ai/config.ts';
 import { CACHE_MAX, cacheGet, cacheKey, cachePut, cacheSize, hash } from '../src/ai/cache.ts';
-import { industryPrompt, matchingStories, PROMPT_VERSION, smaFigures, stockPrompt } from '../src/ai/prompts.ts';
+import { industryPrompt, PROMPT_VERSION, smaFigures, stockPrompt } from '../src/ai/prompts.ts';
 import { AiError, aiErrorMessage, aiStatus, aiTextHtml, commentStock, compareIndustry } from '../src/ai/index.ts';
 import { on, setData, toView } from '../src/data/store.ts';
 import { DEF, evaluate } from '../src/lib/evaluate.ts';
@@ -539,10 +539,9 @@ test('stockPrompt: the data figures, rule results, median, terms and rules', () 
   assert.match(p.system, /Yalnızca sana verilen verideki sayıları kullan/);
   assert.match(p.system, /Al, sat, tut/);
   assert.match(p.system, /110–170 kelime/);
-  assert.match(p.system, /Sahil dondurmacısı/);
-  assert.match(p.system, /Film Seti Kahvesi/);
-  assert.match(p.system, /Mahalle sandığı/);
   assert.match(p.system, /markdown/);
+  assert.match(p.system, /BIST ve ABD hisselerini birbiriyle kıyaslama/);
+  assert.doesNotMatch(p.system, /hikâye|matchingStories/);
   assert.match(p.user, /F\/K = P\/E/);
   assert.match(p.user, /Net borç\/FAVÖK = Net debt\/EBITDA/);
 
@@ -560,19 +559,10 @@ test('stockPrompt: the data figures, rule results, median, terms and rules', () 
   assert.ok(payload.ruleResult.checks.some((c: { check: string; status: string }) => c.check === 'Borç' && c.status === 'kaldı'));
   assert.equal(payload.industryMedian.stocksInMedian, 2);
   assert.equal(payload.movingAverages, null);
-  assert.deepEqual(payload.matchingStories, ['Sahil dondurmacısı']);
+  assert.equal('matchingStories' in payload, false);
+  assert.deepEqual(Object.keys(payload), ['dataDate', 'market', 'currency', 'stock', 'ruleResult', 'industryMedian', 'movingAverages']);
   // The prompt text refers to the keys in the data by name
-  assert.match(p.system, /"matchingStories"/);
   assert.match(p.user, /industryMedian ya da movingAverages null ise/);
-});
-
-test('matchingStories: cyclical, one-off jump, bank', () => {
-  const st = (k: string) => matchingStories(view(k), evaluate(view(k), DEF));
-  assert.deepEqual(st('TUPRS'), ['beachIcecream', 'filmSetCafe', 'inflationProfit']);
-  assert.deepEqual(st('TOASO'), ['filmSetCafe', 'inflationProfit']);
-  assert.deepEqual(st('GARAN'), ['neighborhoodFund']);
-  assert.deepEqual(st('VZ'), []);
-  assert.deepEqual(st('GUBRF'), []);
 });
 
 test('smaFigures: averages from the data or computed from the price series', () => {
@@ -608,6 +598,7 @@ test('industryPrompt: a single market, stocks with no data in a separate list', 
     { asOf: DATA.asOf },
   );
   assert.match(p.system, /130–200 kelime/);
+  assert.doesNotMatch(p.system, /hikâye|matchingStories/);
   const payload = JSON.parse(p.user.slice(p.user.indexOf('Veri (JSON):') + 'Veri (JSON):'.length));
   assert.deepEqual(payload.stocks.map((h: { symbol: string }) => h.symbol).sort(), ['PGSUS', 'THYAO']);
   assert.deepEqual(payload.stocksWithoutData, []);
