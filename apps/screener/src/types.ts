@@ -1,5 +1,5 @@
 /**
- * Data contract, schema 2.
+ * Data contract, schema 3.
  *
  * public/data/market.json has this shape: the data job under scripts/ writes it
  * and the app reads it.
@@ -31,8 +31,8 @@ export interface Stock {
   industry: string;
   /** Bank: evaluated with a separate method */
   bank?: boolean;
-  /** Overrides the industry flag at stock level */
-  cyc?: boolean;
+  /** Overrides the industry's cyclical flag for this stock */
+  cyclical?: boolean;
 
   /** Price */
   price: number | null;
@@ -67,7 +67,7 @@ export interface Stock {
   sma200: number | null;
 
   /** Functional currency note (BIST), e.g. "USD" */
-  usd?: string;
+  functionalCurrency?: string;
   /** Hand-written comment and the date it was written (ISO day) */
   note?: string;
   noteAsOf?: string;
@@ -79,7 +79,7 @@ export interface Stock {
 }
 
 export interface MarketData {
-  schema: 2;
+  schema: 3;
   /** Date of the latest data update (ISO 8601) */
   asOf: string;
   /**
@@ -114,7 +114,7 @@ export interface StockView extends Stock {
   industryTr: string;
   /** English industry name */
   industryEn: string;
-  /** Whether cyclical (from the industry when the stock has no flag) */
+  /** Resolved flag: the stock's own override when set, otherwise the industry's */
   cyclical: boolean;
   /** Whether it has a price and at least one multiple */
   hasData: boolean;

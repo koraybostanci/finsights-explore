@@ -70,13 +70,13 @@ class RunResult:
 
 
 def valid_doc(doc: Any) -> bool:
-    return isinstance(doc, dict) and doc.get("schema") == 2 and isinstance(doc.get("stocks"), list)
+    return isinstance(doc, dict) and doc.get("schema") == 3 and isinstance(doc.get("stocks"), list)
 
 
 def previous_records(doc: Any) -> dict[tuple[str, str], dict[str, Any]]:
     if not valid_doc(doc):
-        if isinstance(doc, dict) and doc.get("schema") not in (None, 2):
-            log.warning("previous market.json has schema %r, expected 2; its figures are not carried over", doc.get("schema"))
+        if isinstance(doc, dict) and doc.get("schema") not in (None, 3):
+            log.warning("previous market.json has schema %r, expected 3; its figures are not carried over", doc.get("schema"))
         return {}
     return {(s.get("market"), s.get("symbol")): s for s in doc["stocks"] if isinstance(s, dict)}
 
@@ -104,8 +104,8 @@ def compose(spec: StockSpec, banks: Mapping[tuple[str, str], Mapping[str, Any]],
     }
     if spec.bank:
         rec["bank"] = True
-    if spec.cyc is not None:
-        rec["cyc"] = spec.cyc
+    if spec.cyclical is not None:
+        rec["cyclical"] = spec.cyclical
     for key in ("price", "pe", "pb", "evEbitda", "peg", "netDebtEbitda", "marketCap", "ebitdaGrowth", "netIncomeGrowth"):
         rec[key] = fig.get(key)
     for key in ("ebitdaGrowthNote", "netIncomeGrowthNote"):
@@ -115,8 +115,8 @@ def compose(spec: StockSpec, banks: Mapping[tuple[str, str], Mapping[str, Any]],
         rec["loss"] = True
     for key in ("targetPrice", "sma20", "sma50", "sma200"):
         rec[key] = fig.get(key)
-    if spec.usd:
-        rec["usd"] = spec.usd
+    if spec.functional_currency:
+        rec["functionalCurrency"] = spec.functional_currency
     if spec.note is not None:
         rec["note"] = spec.note
         rec["noteAsOf"] = spec.note_as_of
@@ -138,7 +138,7 @@ def assemble(
     period: Mapping[str, str],
 ) -> dict[str, Any]:
     return {
-        "schema": 2,
+        "schema": 3,
         "asOf": as_of,
         "asOfBy": {m: as_of_by[m] for m in MARKETS if m in as_of_by},
         "source": source,

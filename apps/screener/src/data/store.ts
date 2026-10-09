@@ -39,7 +39,7 @@ export function emit(ev: StoreEvent): void {
 
 /* ---------- Market data ---------- */
 
-const EMPTY: MarketData = { schema: 2, asOf: '', source: '', period: {}, industries: {}, stocks: [] };
+const EMPTY: MarketData = { schema: 3, asOf: '', source: '', period: {}, industries: {}, stocks: [] };
 let DATA: MarketData = EMPTY;
 let VIEWS: StockView[] = [];
 let loadError: string | null = null;
@@ -50,7 +50,7 @@ export function toView(s: Stock, industries: Record<string, Industry>): StockVie
   const ind = industries[s.industry] ?? UNKNOWN_INDUSTRY;
   const roe = s.pe != null && s.pe !== 0 && s.pb != null ? (s.pb / s.pe) * 100 : null;
   const hasData = s.price != null && (s.pe != null || s.pb != null || s.evEbitda != null);
-  return { ...s, roe, industryTr: ind.nameTr, industryEn: ind.nameEn, cyclical: s.cyc ?? ind.cyclical, hasData };
+  return { ...s, roe, industryTr: ind.nameTr, industryEn: ind.nameEn, cyclical: s.cyclical ?? ind.cyclical, hasData };
 }
 
 /** For tests and data loading: installs the data directly. */
@@ -66,7 +66,7 @@ export async function loadData(url = './data/market.json'): Promise<void> {
     const res = await fetch(url, { cache: 'no-cache' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const d = (await res.json()) as MarketData;
-    if (!d || d.schema !== 2 || !Array.isArray(d.stocks)) throw new Error('Beklenmeyen veri biçimi');
+    if (!d || d.schema !== 3 || !Array.isArray(d.stocks)) throw new Error('Beklenmeyen veri biçimi');
     loadError = null;
     setData(d);
   } catch (e) {
