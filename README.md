@@ -57,6 +57,10 @@ Also:
 - Not yet confirmed: whether Workers Builds clones the whole repo when a root directory is set, and how the watch-path wildcards are matched. Check both on the first build. If the root directory does not work, set it to the repo root and use build command `npm --prefix apps/<app> ci && npm --prefix apps/<app> run check && npm --prefix apps/<app> run build` and deploy command `npx wrangler deploy --config apps/<app>/wrangler.jsonc`.
 - After the first deploy, put both URLs into `shared/src/sites.ts` (done: Learn at https://fintools-learn.bostanci-koray.workers.dev, Screener at https://fintools-screener.bostanci-koray.workers.dev). While a URL is empty the apps do not link to each other.
 
+### Manual deploy
+
+Until the repo is connected to Cloudflare, deploy from the app directory with `npm run deploy` (runs the checks, including the free-plan guard, then `npx wrangler deploy`). This needs a one-time `npx wrangler login`.
+
 ### Free plan only
 
 - The project uses Workers static assets only: free, with unlimited requests. Hitting a free limit stops the operation instead of billing.

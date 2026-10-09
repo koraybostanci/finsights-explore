@@ -4,7 +4,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 // Free-plan guard: both apps must stay assets-only Workers (see README, "Free plan only").
-const NOTE = 'The project must stay on the Cloudflare free plan: static assets only, no Worker script or paid bindings (README, "Free plan only").';
+const NOTE =
+  'The project must stay on the Cloudflare free plan: static assets only, no Worker script or paid bindings (README, "Free plan only"). ' +
+  'If a new key is free of charge, check the Cloudflare docs and then add it to the allow-list in this test.';
 const APPS = ['learn', 'screener'];
 const ALLOWED_TOP = new Set(['$schema', 'name', 'compatibility_date', 'assets']);
 const ALLOWED_ASSETS = new Set(['directory']);
@@ -50,7 +52,7 @@ for (const app of APPS) {
     const assets = config.assets;
     assert.ok(assets && typeof assets === 'object' && !Array.isArray(assets), `"assets" must be an object. ${NOTE}`);
     for (const key of Object.keys(assets)) {
-      assert.ok(ALLOWED_ASSETS.has(key), `Key "assets.${key}" in apps/${app}/wrangler.jsonc is not allowed (e.g. run_worker_first runs Worker code). ${NOTE}`);
+      assert.ok(ALLOWED_ASSETS.has(key), `Key "assets.${key}" in apps/${app}/wrangler.jsonc is not allowed (some assets keys, such as run_worker_first, run Worker code). ${NOTE}`);
     }
     assert.equal(typeof (assets as Record<string, unknown>).directory, 'string');
   });
