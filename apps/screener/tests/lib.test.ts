@@ -18,8 +18,7 @@ const view = (k: string): StockView => {
 
 test('toView: the stock override wins over the industry cyclical flag, otherwise the industry flag applies', () => {
   const industries = { air: { nameTr: 'Havayolu', nameEn: 'Airlines', cyclical: true }, food: { nameTr: 'Gıda', nameEn: 'Food', cyclical: false } };
-  const base = { ...view('THYAO'), industry: 'air' };
-  delete base.cyclical;
+  const { cyclical: _resolved, ...base } = { ...view('THYAO'), industry: 'air' };
   assert.equal(toView(base, industries).cyclical, true);
   assert.equal(toView({ ...base, cyclical: false }, industries).cyclical, false);
   assert.equal(toView({ ...base, industry: 'food' }, industries).cyclical, false);
