@@ -7,7 +7,7 @@ const CONNECT_SRC = "'self'";
 export default defineConfig({
   // './' keeps asset URLs relative, so the build works from any path or host.
   base: './',
-  build: { target: 'es2022', sourcemap: true },
+  build: { target: 'es2022', sourcemap: false },
   // @fintools/shared is linked from ../../shared, outside this project root; allow only it (and the project).
   // Without this the dev server answers cold requests for shared files with 403.
   server: { fs: { allow: ['.', '../../shared'] } },
