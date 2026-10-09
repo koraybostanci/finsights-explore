@@ -375,7 +375,7 @@ test('testConnection: a 2xx response with empty text also succeeds; 401 fails', 
 test('settings are stored per provider and every change emits an "ai" event', () => {
   let events = 0;
   const off = on('ai', () => events++);
-  assert.deepEqual(aiStatus(), { configured: false, provider: 'anthropic', providerLabel: 'Claude', model: 'claude-sonnet-4-5' });
+  assert.deepEqual(aiStatus(), { configured: false, provider: 'anthropic', providerLabel: 'Claude', model: 'claude-haiku-4-5-20251001' });
 
   config.setKey('anthropic', '  k-claude  ');
   config.setModel('anthropic', 'claude-x');

@@ -24,7 +24,10 @@ export interface ProviderDef {
   shape: ApiShape;
   /** Fixed base URL; empty for the custom endpoint (the user enters it) */
   baseUrl: string;
-  /** Model prefilled in the settings until the user types another one; empty for the custom endpoint */
+  /**
+   * Model prefilled in the settings until the user types another one; empty for the custom endpoint.
+   * These are cost-efficient defaults the user can override; they may need updating when providers retire models.
+   */
   defaultModel: string;
   /** Whether a key is required (local models do not need one) */
   keyRequired: boolean;
@@ -41,7 +44,7 @@ export const PROVIDERS: ProviderDef[] = [
     vendor: 'Anthropic',
     shape: 'anthropic',
     baseUrl: 'https://api.anthropic.com/v1',
-    defaultModel: 'claude-sonnet-4-5',
+    defaultModel: 'claude-haiku-4-5-20251001',
     keyRequired: true,
     tokenParam: 'max_tokens',
     corsVerified: true,
@@ -52,7 +55,7 @@ export const PROVIDERS: ProviderDef[] = [
     vendor: 'Google',
     shape: 'gemini',
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-    defaultModel: 'gemini-2.5-flash',
+    defaultModel: 'gemini-3.5-flash-lite',
     keyRequired: true,
     tokenParam: 'max_tokens',
     corsVerified: true,
@@ -63,7 +66,7 @@ export const PROVIDERS: ProviderDef[] = [
     vendor: 'OpenAI',
     shape: 'openai',
     baseUrl: 'https://api.openai.com/v1',
-    defaultModel: 'gpt-5-mini',
+    defaultModel: 'gpt-6-luna',
     keyRequired: true,
     tokenParam: 'max_completion_tokens',
     corsVerified: true,
